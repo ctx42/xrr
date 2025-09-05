@@ -15,10 +15,10 @@ func Test_NewMeta(t *testing.T) {
 	assert.Nil(t, have.m)
 }
 
-func Test_meta_Str(t *testing.T) {
+func Test_Metadata_Str(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{}
+		m := Metadata{}
 
 		// --- When ---
 		have := m.Str("A", "a")
@@ -29,7 +29,7 @@ func Test_meta_Str(t *testing.T) {
 
 	t.Run("existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{m: map[string]any{"A": "a"}}
+		m := Metadata{m: map[string]any{"A": "a"}}
 
 		// --- When ---
 		have := m.Str("A", "b")
@@ -40,10 +40,10 @@ func Test_meta_Str(t *testing.T) {
 	})
 }
 
-func Test_meta_Int(t *testing.T) {
+func Test_Metadata_Int(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{}
+		m := Metadata{}
 
 		// --- When ---
 		have := m.Int("A", 1)
@@ -54,7 +54,7 @@ func Test_meta_Int(t *testing.T) {
 
 	t.Run("existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{m: map[string]any{"A": 1}}
+		m := Metadata{m: map[string]any{"A": 1}}
 
 		// --- Given ---
 		have := m.Int("A", 2)
@@ -64,10 +64,10 @@ func Test_meta_Int(t *testing.T) {
 	})
 }
 
-func Test_meta_Int64(t *testing.T) {
+func Test_Metadata_Int64(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{}
+		m := Metadata{}
 
 		// --- When ---
 		have := m.Int64("A", 1)
@@ -78,7 +78,7 @@ func Test_meta_Int64(t *testing.T) {
 
 	t.Run("existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{m: map[string]any{"A": 1}}
+		m := Metadata{m: map[string]any{"A": 1}}
 
 		// --- Given ---
 		have := m.Int64("A", 2)
@@ -88,10 +88,10 @@ func Test_meta_Int64(t *testing.T) {
 	})
 }
 
-func Test_meta_Float64(t *testing.T) {
+func Test_Metadata_Float64(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{}
+		m := Metadata{}
 
 		// --- When ---
 		have := m.Float64("A", 1.0)
@@ -102,7 +102,7 @@ func Test_meta_Float64(t *testing.T) {
 
 	t.Run("existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{m: map[string]any{"A": 1.0}}
+		m := Metadata{m: map[string]any{"A": 1.0}}
 
 		// --- Given ---
 		have := m.Float64("A", 2.0)
@@ -112,10 +112,10 @@ func Test_meta_Float64(t *testing.T) {
 	})
 }
 
-func Test_meta_Bool(t *testing.T) {
+func Test_Metadata_Bool(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{}
+		m := Metadata{}
 
 		// --- When ---
 		have := m.Bool("A", true)
@@ -126,7 +126,7 @@ func Test_meta_Bool(t *testing.T) {
 
 	t.Run("existing", func(t *testing.T) {
 		// --- Given ---
-		m := meta{m: map[string]any{"A": false}}
+		m := Metadata{m: map[string]any{"A": false}}
 
 		// --- Given ---
 		have := m.Bool("A", true)
@@ -136,11 +136,11 @@ func Test_meta_Bool(t *testing.T) {
 	})
 }
 
-func Test_meta_Time(t *testing.T) {
+func Test_Metadata_Time(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---
 		tim := time.Now()
-		m := meta{}
+		m := Metadata{}
 
 		// --- When ---
 		have := m.Time("A", tim)
@@ -153,7 +153,7 @@ func Test_meta_Time(t *testing.T) {
 		// --- Given ---
 		tim0 := time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC)
 		tim1 := time.Date(2001, 1, 2, 3, 4, 5, 0, time.UTC)
-		m := meta{m: map[string]any{"A": tim0}}
+		m := Metadata{m: map[string]any{"A": tim0}}
 
 		// --- When ---
 		have := m.Time("A", tim1)
@@ -163,10 +163,23 @@ func Test_meta_Time(t *testing.T) {
 	})
 }
 
-func Test_meta_set(t *testing.T) {
+func Test_Metadata_Option(t *testing.T) {
+	// --- Given ---
+	m := Metadata{m: map[string]any{"A": 1, "B": 2}}
+
+	// --- When ---
+	have := m.Option()
+
+	// --- Then ---
+	e := &Error{}
+	have(e)
+	assert.Same(t, m.m, e.meta)
+}
+
+func Test_Metadata_set(t *testing.T) {
 	t.Run("nil map", func(t *testing.T) {
 		// --- Given ---
-		m := meta{}
+		m := Metadata{}
 
 		// --- When ---
 		have := m.set("A", 1)
@@ -177,7 +190,7 @@ func Test_meta_set(t *testing.T) {
 
 	t.Run("existing map", func(t *testing.T) {
 		// --- Given ---
-		m := meta{m: map[string]any{"A": 1}}
+		m := Metadata{m: map[string]any{"A": 1}}
 
 		// --- When ---
 		have := m.set("B", 2)

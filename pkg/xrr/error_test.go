@@ -7,17 +7,7 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	t.Run("without error code", func(t *testing.T) {
-		// --- When ---
-		err := New("msg")
-
-		// --- Then ---
-		assert.Equal(t, "msg", err.Error())
-		assert.Equal(t, ECGeneric, err.code)
-		assert.Nil(t, err.meta)
-	})
-
-	t.Run("with error code", func(t *testing.T) {
+	t.Run("without options", func(t *testing.T) {
 		// --- When ---
 		err := New("msg", "ECode")
 
@@ -27,14 +17,17 @@ func Test_New(t *testing.T) {
 		assert.Nil(t, err.meta)
 	})
 
-	t.Run("the first error code is used", func(t *testing.T) {
+	t.Run("with options", func(t *testing.T) {
+		// --- Given ---
+		opt := Meta().Int("A", 1).Int("B", 2).Option()
+
 		// --- When ---
-		err := New("msg", "ECode", "EOther")
+		err := New("msg", "ECode", opt)
 
 		// --- Then ---
 		assert.Equal(t, "msg", err.Error())
 		assert.Equal(t, "ECode", err.code)
-		assert.Nil(t, err.meta)
+		assert.Equal(t, map[string]any{"A": 1, "B": 2}, err.meta)
 	})
 }
 
@@ -52,7 +45,7 @@ func Test_Error_ErrorCode(t *testing.T) {
 func Test_Error_Unwrap(t *testing.T) {
 	t.Run("returns wrapped error", func(t *testing.T) {
 		// --- Given ---
-		err := New("msg")
+		err := New("msg", "ECode")
 
 		// --- When ---
 		have := err.Unwrap()

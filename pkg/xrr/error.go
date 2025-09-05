@@ -4,19 +4,23 @@ import (
 	"errors"
 )
 
-// Error represents an error with an optional erro code and structured metadata.
+// Error represents an error with an error code and structured metadata.
 type Error struct {
 	error                // Wrapped error.
 	code  string         // Error code.
 	meta  map[string]any // Structured metadata.
 }
 
-// New creates a new [Error] instance with the specified error code and message.
-//
-// If no error code is provided, [ECGeneric] is used as the default.
-// If multiple error codes are provided, only the first is used.
-func New(msg string, code ...string) *Error {
-	return &Error{error: errors.New(msg), code: DefaultCode(ECGeneric, code...)}
+// New creates a new [Error] instance with the specified message and error code.
+func New(msg, code string, opts ...func(*Error)) *Error {
+	err := &Error{
+		error: errors.New(msg),
+		code:  code,
+	}
+	for _, opt := range opts {
+		opt(err)
+	}
+	return err
 }
 
 // ErrorCode returns error code.
