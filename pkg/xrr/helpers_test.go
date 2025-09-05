@@ -39,3 +39,27 @@ func Test_DefaultCode(t *testing.T) {
 		assert.Equal(t, "First", have)
 	})
 }
+
+func Test_isNil_tabular(t *testing.T) {
+	var err error
+
+	tt := []struct {
+		testN string
+
+		value any
+		want  bool
+	}{
+		{"nil", nil, true},
+		{"typed nil", err, true},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			have := isNil(tc.value)
+
+			// --- Then ---
+			assert.Equal(t, tc.want, have)
+		})
+	}
+}
