@@ -2,7 +2,13 @@ package xrr
 
 import (
 	"errors"
+	"maps"
 )
+
+// WithCode is an option for [New] and [Wrap] setting the error code.
+func WithCode(code string) func(*Error) {
+	return func(e *Error) { e.code = code }
+}
 
 // Error represents an error with an error code and structured metadata.
 type Error struct {
