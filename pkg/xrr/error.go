@@ -1,6 +1,7 @@
 package xrr
 
 import (
+	"encoding/json"
 	"errors"
 	"maps"
 )
@@ -62,4 +63,15 @@ func (e *Error) Unwrap() error {
 		return nil
 	}
 	return e.error
+}
+
+func (e *Error) MarshalJSON() ([]byte, error) {
+	m := map[string]any{
+		"error": e.Error(),
+		"code":  e.code,
+	}
+	if len(e.meta) > 0 {
+		m["meta"] = e.meta
+	}
+	return json.Marshal(m)
 }

@@ -1,6 +1,7 @@
 package xrr
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -182,5 +183,33 @@ func Test_Error_Unwrap(t *testing.T) {
 
 		// --- Then ---
 		assert.Nil(t, have)
+	})
+}
+
+func Test_Error_MarshalJSON(t *testing.T) {
+	t.Run("without metadata", func(t *testing.T) {
+		// --- Given ---
+		e := New("msg", "ECode")
+
+		// --- When ---
+		data, err := json.Marshal(e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		exp := `{"error":"msg", "code":"ECode"}`
+		assert.JSON(t, exp, string(data))
+	})
+
+	t.Run("with metadata", func(t *testing.T) {
+		// --- Given ---
+		e := New("msg", "ECode", Meta().Str("key", "val").Option())
+
+		// --- When ---
+		data, err := json.Marshal(e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		exp := `{"error":"msg", "code":"ECode", "meta": {"key": "val"}}`
+		assert.JSON(t, exp, string(data))
 	})
 }
