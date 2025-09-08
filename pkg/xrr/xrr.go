@@ -27,3 +27,13 @@ type CodeFielder interface {
 	Coder
 	Fielder
 }
+
+// Metadater is an interface providing access to error metadata.
+type Metadater interface {
+	// MetaAll returns a copy of the metadata from the [Error] instance.
+	//
+	// It does not include metadata from wrapped errors. To retrieve metadata,
+	// recursively, use the [GetMeta] function instead. Returns nil if no
+	// metadata is present.
+	MetaAll() map[string]any
+}

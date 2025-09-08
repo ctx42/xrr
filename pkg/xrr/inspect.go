@@ -47,7 +47,7 @@ func GetMeta(err error) map[string]any {
 	}
 
 	switch e := err.(type) { // nolint: errorlint
-	case interface{ MetaAll() map[string]any }:
+	case Metadater:
 		hi := e.MetaAll()
 		lo := GetMeta(errors.Unwrap(err))
 		if len(lo) == 0 {
