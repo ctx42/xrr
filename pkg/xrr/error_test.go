@@ -213,3 +213,97 @@ func Test_Error_MarshalJSON(t *testing.T) {
 		assert.JSON(t, exp, string(data))
 	})
 }
+
+func Test_Error_UnmarshalJSON(t *testing.T) {
+	t.Run("without code and metadata", func(t *testing.T) {
+		// --- Given ---
+		data := []byte(`{"error": "msg"}`)
+		var e *Error
+
+		// --- When ---
+		err := json.Unmarshal(data, &e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.Equal(t, "msg", e.error.Error())
+		assert.Equal(t, ECGeneric, e.code)
+		assert.Nil(t, e.meta)
+	})
+
+	t.Run("with code and without metadata", func(t *testing.T) {
+		// --- Given ---
+		data := []byte(`{"error": "msg", "code":"ECode"}`)
+		var e *Error
+
+		// --- When ---
+		err := json.Unmarshal(data, &e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.Equal(t, "msg", e.error.Error())
+		assert.Equal(t, "ECode", e.code)
+		assert.Nil(t, e.meta)
+	})
+
+	t.Run("with code and metadata", func(t *testing.T) {
+		// --- Given ---
+		data := []byte(`{
+			"error": "msg", 
+			"code":  "ECode", 
+			"meta": {
+				"num": 123, 
+				"tim": "2022-01-18T13:57:00Z"
+			}
+		}`)
+		var e *Error
+
+		// --- When ---
+		err := json.Unmarshal(data, &e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.Equal(t, "msg", e.error.Error())
+		assert.Equal(t, "ECode", e.code)
+		assert.Len(t, 2, e.meta)
+		assert.Equal(t, float64(123), e.meta["num"])
+		assert.Equal(t, "2022-01-18T13:57:00Z", e.meta["tim"])
+	})
+
+	t.Run("error - without the error key", func(t *testing.T) {
+		// --- Given ---
+		data := []byte(`{"code":"code"}`)
+		var e *Error
+
+		// --- When ---
+		err := json.Unmarshal(data, &e)
+
+		// --- Then ---
+		assert.ErrorIs(t, ErrInvJSONError, err)
+	})
+
+	t.Run("error - invalid format", func(t *testing.T) {
+		// --- Given ---
+		data := []byte(`[1, 2, 3]`)
+		var e *Error
+
+		// --- When ---
+		err := json.Unmarshal(data, &e)
+
+		// --- Then ---
+		var target *json.UnmarshalTypeError
+		assert.ErrorAs(t, &target, err)
+	})
+
+	t.Run("error - invalid JSON", func(t *testing.T) {
+		// --- Given ---
+		data := []byte(`{!!!}`)
+		var e *Error
+
+		// --- When ---
+		err := json.Unmarshal(data, &e)
+
+		// --- Then ---
+		var target *json.SyntaxError
+		assert.ErrorAs(t, &target, err)
+	})
+}

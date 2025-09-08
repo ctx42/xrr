@@ -75,3 +75,43 @@ func (e *Error) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(m)
 }
+
+// UnmarshalJSON unmarshal JSON representation of the [Error].
+//
+// The minimal valid JSON representation for an [Error] is
+//
+//	{"error": "message"}
+//
+// and in this case, the error code is set to [ECGeneric].
+//
+// Notes:
+//   - all metadata numeric values will be unmarshalled as float64
+func (e *Error) UnmarshalJSON(data []byte) error {
+	m := make(map[string]any, 3)
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+
+	msgI, _ := m["error"]
+	msg, _ := msgI.(string)
+	if msg == "" {
+		return ErrInvJSONError
+	}
+
+	codeI, _ := m["code"]
+	code, _ := codeI.(string)
+	if code == "" {
+		code = ECGeneric
+	}
+
+	metaI, _ := m["meta"]
+	var meta map[string]any
+	if metaI != nil {
+		meta, _ = metaI.(map[string]any)
+	}
+
+	e.error = errors.New(msg)
+	e.code = code
+	e.meta = meta
+	return nil
+}
