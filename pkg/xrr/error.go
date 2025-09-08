@@ -3,6 +3,7 @@ package xrr
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"maps"
 )
 
@@ -114,4 +115,25 @@ func (e *Error) UnmarshalJSON(data []byte) error {
 	e.code = code
 	e.meta = meta
 	return nil
+}
+
+func (e *Error) Format(state fmt.State, verb rune) {
+	Format(e.error.Error(), e.code, state, verb)
+}
+
+// Format is a custom formatter for Immutable and Error instances.
+func Format(msg, code string, state fmt.State, verb rune) {
+	switch verb {
+	case 's', 'q':
+		if verb == 'q' {
+			msg = fmt.Sprintf("%q", msg)
+		}
+		_, _ = fmt.Fprint(state, msg)
+
+	case 'v':
+		_, _ = fmt.Fprint(state, msg)
+		if state.Flag('+') {
+			_, _ = fmt.Fprintf(state, " (%s)", code)
+		}
+	}
 }

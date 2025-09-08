@@ -3,6 +3,7 @@ package xrr
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
@@ -307,3 +308,62 @@ func Test_Error_UnmarshalJSON(t *testing.T) {
 		assert.ErrorAs(t, &target, err)
 	})
 }
+
+func Test_Error_Format(t *testing.T) {
+	t.Run("wrapped errors", func(t *testing.T) {
+		// --- Given ---
+		e0 := New("msg0", "ECode0")
+		e1 := Wrap(e0, WithCode("ECode1"))
+		e2 := Wrap(e1, WithCode("ECode2"))
+
+		// --- When ---
+		have := fmt.Sprintf("%+v", e2)
+
+		// --- Then ---
+		assert.Equal(t, "msg0 (ECode2)", have)
+	})
+
+	t.Run("joined errors", func(t *testing.T) {
+		// --- Given ---
+		e0 := New("msg0", "ECode0")
+		e1 := New("msg1", "ECode1")
+
+		// --- When ---
+		have := fmt.Sprintf("%+v", errors.Join(e0, e1))
+
+		// --- Then ---
+		assert.Equal(t, "msg0\nmsg1", have)
+	})
+}
+
+func Test_Error_Format_tabular(t *testing.T) {
+	tt := []struct {
+		testN string
+
+		msg    string
+		code   string
+		format string
+		want   string
+	}{
+		{"s", "msg", "ECode", "%s", `msg`},
+		{"q", "msg", "ECode", "%q", `"msg"`},
+		{"v", "msg", "ECode", "%v", `msg`},
+		{"+v", "msg", "ECode", "%+v", `msg (ECode)`},
+		{"T", "msg", "ECode", "%T", `*xrr.Error`},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- Given ---
+			e := New(tc.msg, tc.code)
+
+			// --- When ---
+			have := fmt.Sprintf(tc.format, e)
+
+			// --- Then ---
+			assert.Equal(t, tc.want, have)
+		})
+	}
+}
+
+func Test_Format(t *testing.T) { /* See Test_Error_Format_tabular */ }
