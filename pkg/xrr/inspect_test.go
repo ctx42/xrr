@@ -80,6 +80,75 @@ func Test_GetCode_tabular(t *testing.T) {
 	}
 }
 
+func Test_GetCodes_tabular(t *testing.T) {
+	var err error
+
+	tt := []struct {
+		testN string
+
+		err  error
+		want []string
+	}{
+		{"nil", nil, nil},
+		{"nil typed", err, nil},
+		{"std error", errors.New("msg"), nil},
+		{
+			"xrr std wrapped with metadata",
+			fmt.Errorf("wrapped: %w", New("msg", "ECode")),
+			[]string{"ECode"},
+		},
+		{
+			"xrr std wrapped multiple times",
+			fmt.Errorf("2: %w", fmt.Errorf("1: %w", New("msg", "ECode"))),
+			[]string{"ECode"},
+		},
+		{
+			"joined errors",
+			errors.Join(New("msg0", "ECode0"), New("msg1", "ECode1")),
+			[]string{"ECode0", "ECode1"},
+		},
+		{
+			"joined and std wrapped errors",
+			errors.Join(
+				New("msg0", "ECode0"),
+				New("msg1", "ECode1"),
+				fmt.Errorf("wrapped: %w", New("msg2", "ECode2")),
+			),
+			[]string{"ECode0", "ECode1", "ECode2"},
+		},
+		{
+			"tree",
+			&Error{
+				error: &Error{
+					error: errors.Join(
+						&Error{error: New("msg3", "EC3"), code: "EC4"},
+						&Error{
+							error: errors.Join(
+								New("msg1", "EC1"),
+								New("msg2", "EC2"),
+							),
+							code: "EC5",
+						},
+					),
+					code: "EC6",
+				},
+				code: "EC7",
+			},
+			[]string{"EC1", "EC2", "EC3", "EC4", "EC5", "EC6", "EC7"},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			have := GetCodes(tc.err)
+
+			// --- Then ---
+			assert.Equal(t, tc.want, have)
+		})
+	}
+}
+
 func Test_GetMeta_tabular(t *testing.T) {
 	var err error
 

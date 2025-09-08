@@ -2,6 +2,8 @@ package xrr
 
 import (
 	"errors"
+	"slices"
+	"sort"
 )
 
 // GetCode returns error code. If the error implements [Coder] interface, it
@@ -31,6 +33,41 @@ func GetCode(err error) string {
 		return c
 	}
 	return ECGeneric
+}
+
+// GetCodes recursively retrieves a unique list of error codes from an error
+// and its wrapped errors, ignoring empty codes and [ECGeneric].
+func GetCodes(err error) []string {
+	codes := getCodes(err)
+	sort.Strings(codes)
+	return slices.Compact(codes)
+}
+func getCodes(err error) []string {
+	if err == nil || isNil(err) {
+		return nil
+	}
+
+	switch e := err.(type) { // nolint: errorlint
+	case interface{ Unwrap() error }:
+		var codes []string
+		if code := GetCode(err); code != "" && code != ECGeneric {
+			codes = append(codes, code)
+		}
+		return append(codes, getCodes(e.Unwrap())...)
+
+	case interface{ Unwrap() []error }:
+		var codes []string
+		for _, je := range e.Unwrap() {
+			codes = append(codes, getCodes(je)...)
+		}
+		return codes
+
+	case Coder:
+		if codes := e.ErrorCode(); codes != "" && codes != ECGeneric {
+			return []string{codes}
+		}
+	}
+	return nil
 }
 
 // GetMeta recursively retrieves metadata from an error and its wrapped errors.
