@@ -1,0 +1,173 @@
+package xrr
+
+import (
+	"errors"
+	"fmt"
+	"testing"
+)
+
+// TstTreeCase1 returns test error tree - case 1.
+//
+// Shape:
+//
+//	   a
+//	   │
+//	┌──b──┐
+//	c   ┌─d─┐
+//	│   │   │
+//	e   f   g
+func TstTreeCase1() error {
+	return &Error{
+		msg:  "msg b",
+		code: "a",
+		err: &Error{
+			msg:  "msg b",
+			code: "b",
+			err: errors.Join(
+				&Error{
+					msg:  "msg c",
+					code: "c",
+					err:  &Error{msg: "msg e", code: "e"},
+				},
+				&Error{
+					msg:  "msg d",
+					code: "d",
+					err: errors.Join(
+						&Error{msg: "msg f", code: "f"},
+						&Error{msg: "msg g", code: "g"},
+					),
+				},
+			),
+		},
+	}
+}
+
+// TstTreeCase2 returns test error tree - case 2.
+//
+// Shape:
+//
+//	   a
+//	   │
+//	┌──b──┐
+//	c   ┌─d─┐
+//	│   │   │
+//	e   f   g
+//	│       │
+//	h       i
+func TstTreeCase2() error {
+	return &Error{
+		msg:  "msg a",
+		code: "a",
+		err: &Error{
+			msg:  "msg b",
+			code: "b",
+			err: errors.Join(
+				&Error{
+					msg:  "msg c",
+					code: "c",
+					err: &Error{
+						msg:  "msg e",
+						code: "e",
+						err:  &Error{msg: "msg h", code: "h"},
+					},
+				},
+				&Error{
+					msg:  "msg d",
+					code: "d",
+					err: errors.Join(
+						&Error{msg: "msg f", code: "f"},
+						&Error{
+							msg:  "msg g",
+							code: "g",
+							err:  &Error{msg: "msg i", code: "i"},
+						},
+					),
+				},
+			),
+		},
+	}
+}
+
+// TstTreeCase3 returns test error tree - case 3.
+//
+// Shape:
+//
+//	   a
+//	   │
+//	┌──b──┐
+//	c   ┌─d─┐
+//	│   │   │
+//	e   f   g
+//	│   │
+//	h   i
+func TstTreeCase3() error {
+	return &Error{
+		msg:  "msg a",
+		code: "a",
+		err: &Error{
+			msg:  "msg b",
+			code: "b",
+			err: errors.Join(
+				&Error{
+					msg:  "msg c",
+					code: "c",
+					err: &Error{
+						msg:  "msg e",
+						code: "e",
+						err:  &Error{msg: "msg h", code: "h"},
+					},
+				},
+				&Error{
+					msg:  "msg d",
+					code: "d",
+					err: errors.Join(
+						&Error{
+							msg:  "msg f",
+							code: "f",
+							err:  &Error{msg: "msg f", code: "i"},
+						},
+						&Error{msg: "msg g", code: "g"},
+					),
+				},
+			),
+		},
+	}
+}
+
+// TstTreeCase4 returns test error tree - case 4.
+//
+// Shape:
+//
+//	┌─────┐
+//	a   ┌─b─┐
+//	│   │   │
+//	c   d   e
+func TstTreeCase4() error {
+	return errors.Join(
+		&Error{
+			msg:  "msg a",
+			code: "a",
+			err:  &Error{msg: "msg c", code: "c"},
+		},
+		&Error{
+			msg:  "msg b",
+			code: "b",
+			err: errors.Join(
+				&Error{msg: "msg d", code: "d"},
+				&Error{msg: "msg e", code: "e"},
+			),
+		},
+	)
+}
+
+// TODO(rz):
+func Test_Name(t *testing.T) {
+	e := New("A", "EC_CONN_ERROR")
+	e1 := fmt.Errorf("BB: %w", e)
+
+	e2 := Wrap(e1, Meta().Str("SN", "1234").Option())
+
+	code := GetCode(e2)
+	fmt.Println(code)
+	// fmt.Println(e2)
+}

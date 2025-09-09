@@ -135,6 +135,30 @@ func Test_Wrap(t *testing.T) {
 	})
 }
 
+func Test_Error_Error(t *testing.T) {
+	t.Run("xrr error", func(t *testing.T) {
+		// --- Given ---
+		e := New("msg", "ECode")
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "msg", have)
+	})
+
+	t.Run("wrapped error", func(t *testing.T) {
+		// --- Given ---
+		e := Wrap(errors.New("msg"), WithCode("ECode"))
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "msg", have)
+	})
+}
+
 func Test_Error_ErrorCode(t *testing.T) {
 	// --- Given ---
 	err := &Error{code: "ECode"}
@@ -170,9 +194,7 @@ func Test_Error_Unwrap(t *testing.T) {
 		have := errors.Unwrap(err)
 
 		// --- Then ---
-		var x *Error
-		assert.Type(t, &x, err)
-		assert.Same(t, x.error, have)
+		assert.Nil(t, have)
 	})
 
 	t.Run("returns nil for nil instance", func(t *testing.T) {
@@ -197,8 +219,8 @@ func Test_Error_MarshalJSON(t *testing.T) {
 
 		// --- Then ---
 		assert.NoError(t, err)
-		exp := `{"error":"msg", "code":"ECode"}`
-		assert.JSON(t, exp, string(data))
+		want := `{"error":"msg", "code":"ECode"}`
+		assert.JSON(t, want, string(data))
 	})
 
 	t.Run("with metadata", func(t *testing.T) {
@@ -210,8 +232,8 @@ func Test_Error_MarshalJSON(t *testing.T) {
 
 		// --- Then ---
 		assert.NoError(t, err)
-		exp := `{"error":"msg", "code":"ECode", "meta": {"key": "val"}}`
-		assert.JSON(t, exp, string(data))
+		want := `{"error":"msg", "code":"ECode", "meta": {"key": "val"}}`
+		assert.JSON(t, want, string(data))
 	})
 }
 
@@ -226,7 +248,7 @@ func Test_Error_UnmarshalJSON(t *testing.T) {
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.Equal(t, "msg", e.error.Error())
+		assert.Equal(t, "msg", e.Error())
 		assert.Equal(t, ECGeneric, e.code)
 		assert.Nil(t, e.meta)
 	})
@@ -241,7 +263,7 @@ func Test_Error_UnmarshalJSON(t *testing.T) {
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.Equal(t, "msg", e.error.Error())
+		assert.Equal(t, "msg", e.Error())
 		assert.Equal(t, "ECode", e.code)
 		assert.Nil(t, e.meta)
 	})
@@ -263,7 +285,7 @@ func Test_Error_UnmarshalJSON(t *testing.T) {
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.Equal(t, "msg", e.error.Error())
+		assert.Equal(t, "msg", e.Error())
 		assert.Equal(t, "ECode", e.code)
 		assert.Len(t, 2, e.meta)
 		assert.Equal(t, float64(123), e.meta["num"])

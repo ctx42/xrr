@@ -2,7 +2,6 @@ package xrr
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"maps"
 )
@@ -14,9 +13,10 @@ func WithCode(code string) func(*Error) {
 
 // Error represents an error with an error code and structured metadata.
 type Error struct {
-	error                // Wrapped error.
-	code  string         // Error code.
-	meta  map[string]any // Structured metadata.
+	msg  string         // Error message.
+	code string         // Error code.
+	meta map[string]any // Structured metadata.
+	err  error          // Wrapped error.
 }
 
 // New creates a new [Error] instance with the specified message and error code.
@@ -24,8 +24,8 @@ type Error struct {
 // code argument.
 func New(msg, code string, opts ...func(*Error)) error {
 	err := &Error{
-		error: errors.New(msg),
-		code:  code,
+		msg:  msg,
+		code: code,
 	}
 	for _, opt := range opts {
 		opt(err)
@@ -45,11 +45,18 @@ func Wrap(err error, opts ...func(*Error)) error {
 	if len(opts) == 0 {
 		return err
 	}
-	e := &Error{error: err, code: GetCode(err)}
+	e := &Error{err: err, code: GetCode(err)}
 	for _, opt := range opts {
 		opt(e)
 	}
 	return e
+}
+
+func (e *Error) Error() string {
+	if e.msg == "" && e.err != nil {
+		return e.err.Error()
+	}
+	return e.msg
 }
 
 // ErrorCode returns error code.
@@ -63,7 +70,7 @@ func (e *Error) Unwrap() error {
 	if e == nil {
 		return nil
 	}
-	return e.error
+	return e.err
 }
 
 func (e *Error) MarshalJSON() ([]byte, error) {
@@ -111,14 +118,14 @@ func (e *Error) UnmarshalJSON(data []byte) error {
 		meta, _ = metaI.(map[string]any)
 	}
 
-	e.error = errors.New(msg)
+	e.msg = msg
 	e.code = code
 	e.meta = meta
 	return nil
 }
 
 func (e *Error) Format(state fmt.State, verb rune) {
-	Format(e.error.Error(), e.code, state, verb)
+	Format(e.Error(), e.code, state, verb)
 }
 
 // Format is a custom formatter for Immutable and Error instances.

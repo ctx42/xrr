@@ -1,114 +1,125 @@
 package xrr
 
-import (
-	"errors"
-	"slices"
-	"sort"
-)
+// IsCode walks the error chain (tree) and returns true if any of the errors
+// has a given error code.
+func IsCode(err error, code string) bool {
+	var is bool
+	cb := func(err error) bool {
+		if GetCode(err) == code {
+			is = true
+			return false
+		}
+		return true
+	}
+	walk(err, cb)
+	return is
+}
 
-// GetCode returns error code. If the error implements [Coder] interface, it
-// will be used. Otherwise, it goes through error chains (and joins) to find
-// the first non-empty error code.
-//
-// For nil error it will return an empty string. If the error code is not found,
-// returns [ECGeneric] error code.
+// GetCode returns error code associated with the provided error. If error does
+// not implement [Coder] interface the [ECGeneric] error code is returned. For
+// nil error it will return an empty string.
 func GetCode(err error) string {
 	if err == nil || isNil(err) {
 		return ""
 	}
-
-	switch e := err.(type) { // nolint: errorlint
-	case Coder:
+	if e, ok := err.(Coder); ok {
 		return e.ErrorCode()
-
-	case interface{ Unwrap() []error }:
-		// Get the first code from the joined errors.
-		for _, je := range e.Unwrap() {
-			return GetCode(je)
-		}
-	}
-
-	// We really go out of our way to get an error code.
-	if c := GetCode(errors.Unwrap(err)); c != "" {
-		return c
 	}
 	return ECGeneric
 }
 
 // GetCodes recursively retrieves a unique list of error codes from an error
-// and its wrapped errors, ignoring empty codes and [ECGeneric].
+// and its wrapped errors, ignoring empty error codes.
 func GetCodes(err error) []string {
-	codes := getCodes(err)
-	sort.Strings(codes)
-	return slices.Compact(codes)
-}
-func getCodes(err error) []string {
-	if err == nil || isNil(err) {
-		return nil
+	set := make(map[string]struct{}, 10)
+	var ret []string
+
+	cb := func(err error) bool {
+		code := GetCode(err)
+		if _, ok := set[code]; !ok {
+			set[code] = struct{}{}
+			ret = append(ret, code)
+		}
+		return true
 	}
-
-	switch e := err.(type) { // nolint: errorlint
-	case interface{ Unwrap() error }:
-		var codes []string
-		if code := GetCode(err); code != "" && code != ECGeneric {
-			codes = append(codes, code)
-		}
-		return append(codes, getCodes(e.Unwrap())...)
-
-	case interface{ Unwrap() []error }:
-		var codes []string
-		for _, je := range e.Unwrap() {
-			codes = append(codes, getCodes(je)...)
-		}
-		return codes
-
-	case Coder:
-		if codes := e.ErrorCode(); codes != "" && codes != ECGeneric {
-			return []string{codes}
-		}
-	}
-	return nil
+	walk(err, cb)
+	return ret
 }
 
 // GetMeta recursively retrieves metadata from an error and its wrapped errors.
 //
-// It returns a map containing metadata from the error, merging metadata in a
-// top-down order (metadata from the outermost error takes precedence). If any
-// of the errors implements the MetaAll method, it's called to get its metadata.
-// For errors implementing Unwrap() []error, metadata is collected from all
-// wrapped errors, prioritizing earlier errors in the sequence over later ones.
-// Returns nil if no metadata is found or the error is nil.
+// The error chain (tree) is traversed using breath-first search approach with
+// errors closer to the top and more on the left override metadata from lover
+// and more to the right parts of the tree.
 func GetMeta(err error) map[string]any {
-	if err == nil || isNil(err) {
-		return nil
-	}
-
-	switch e := err.(type) { // nolint: errorlint
-	case Metadater:
-		hi := e.MetaAll()
-		lo := GetMeta(errors.Unwrap(err))
-		if len(lo) == 0 {
-			return hi
+	var m map[string]any
+	cb := func(err error) bool {
+		if err == nil {
+			return true
 		}
-		for k, v := range hi {
-			lo[k] = v
-		}
-		return lo
-
-	case interface{ Unwrap() []error }:
-		var meta map[string]any
-		ers := e.Unwrap()
-		for i := len(ers) - 1; i >= 0; i-- {
-			if m := GetMeta(ers[i]); m != nil {
-				if meta == nil {
-					meta = make(map[string]any, len(m))
+		if e, ok := err.(Metadater); ok {
+			if meta := e.MetaAll(); len(meta) > 0 {
+				if m == nil {
+					m = make(map[string]any, len(meta))
 				}
-				for k, v := range m {
-					meta[k] = v
+				for k, v := range meta {
+					m[k] = v
 				}
 			}
 		}
-		return meta
+		return true
 	}
-	return GetMeta(errors.Unwrap(err))
+	walkReverse(err, cb)
+	return m
+}
+
+// walk walks the error chain (tree) using breadth-first search (BFS) and calls
+// the callback for each error. Return true from the callback if you want to
+// continue walking the tree or false to stop.
+func walk(err error, cb func(err error) bool) bool {
+	if err == nil || isNil(err) {
+		return true
+	}
+	switch x := err.(type) {
+	case interface{ Unwrap() error }:
+		if !cb(err) {
+			return false
+		}
+		if e := x.Unwrap(); e != nil {
+			return walk(e, cb)
+		}
+		return true
+	case interface{ Unwrap() []error }:
+		for _, je := range x.Unwrap() {
+			if !walk(je, cb) {
+				return false
+			}
+		}
+		return true
+	}
+	return cb(err)
+}
+
+// walkReverse works like [walk] but in the reverse order.
+func walkReverse(err error, cb func(err error) bool) bool {
+	if err == nil || isNil(err) {
+		return true
+	}
+	switch x := err.(type) {
+	case interface{ Unwrap() error }:
+		if e := x.Unwrap(); e != nil {
+			if !walkReverse(e, cb) {
+				return false
+			}
+		}
+	case interface{ Unwrap() []error }:
+		ers := x.Unwrap()
+		for i := len(ers) - 1; i >= 0; i-- {
+			if !walkReverse(ers[i], cb) {
+				return false
+			}
+		}
+		return true
+	}
+	return cb(err)
 }
