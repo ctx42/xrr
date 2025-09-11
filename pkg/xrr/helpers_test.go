@@ -1,10 +1,64 @@
 package xrr
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
 )
+
+func Test_Split(t *testing.T) {
+	t.Run("joined error", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("msg0")
+		e1 := New("msg1", "ECode")
+		ers := errors.Join(e0, e1)
+
+		// --- When ---
+		have := Split(ers)
+
+		// --- Then ---
+		assert.Len(t, 2, have)
+		assert.Same(t, e0, have[0])
+		assert.Same(t, e1, have[1])
+	})
+
+	t.Run("single error", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("msg0")
+		ers := errors.Join(e0)
+
+		// --- When ---
+		have := Split(ers)
+
+		// --- Then ---
+		assert.Len(t, 1, have)
+		assert.Same(t, e0, have[0])
+	})
+
+	t.Run("not joined error", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("msg0")
+
+		// --- When ---
+		have := Split(e0)
+
+		// --- Then ---
+		assert.Len(t, 1, have)
+		assert.Same(t, e0, have[0])
+	})
+
+	t.Run("nil error", func(t *testing.T) {
+		// --- Given ---
+		var err error
+
+		// --- When ---
+		have := Split(err)
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
+}
 
 func Test_DefaultCode(t *testing.T) {
 	t.Run("nil slice", func(t *testing.T) {
