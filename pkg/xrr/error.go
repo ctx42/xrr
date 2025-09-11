@@ -43,7 +43,10 @@ func Wrap(err error, opts ...func(*Error)) error {
 		return nil
 	}
 	if len(opts) == 0 {
-		return err
+		//goland:noinspection GoTypeAssertionOnErrors
+		if _, ok := err.(*Error); ok { // TODO(rz): test this.
+			return err
+		}
 	}
 	e := &Error{err: err, code: GetCode(err)}
 	for _, opt := range opts {

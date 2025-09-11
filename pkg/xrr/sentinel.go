@@ -7,6 +7,9 @@ const (
 	// ECInvJSONError represents error code indicating a JSON string has
 	// invalid syntax or structure to be the [Error] representation.
 	ECInvJSONError = "ECInvJSONError"
+
+	// ECFields represents generic [Fields] error code.
+	ECFields = "ECFields"
 )
 
 var (
@@ -16,4 +19,7 @@ var (
 	// ErrInvJSONError represents an error indicating a JSON string has invalid
 	// syntax or structure to be the [Error] representation.
 	ErrInvJSONError = New("invalid JSON error representation", ECInvJSONError)
+
+	// ErrFields represents generic [Fields] error.
+	ErrFields = New("fields error", ECFields)
 )

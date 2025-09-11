@@ -13,6 +13,13 @@ type TErrFields map[string]error
 func (f TErrFields) Error() string               { return "fields error" }
 func (f TErrFields) ErrFields() map[string]error { return f }
 
+// TErrMarshalJSON represents test error struct implementing [json.Marshaler]
+// interface which returns 'err' error.
+type TErrMarshalJSON struct{ err error }
+
+func (tm *TErrMarshalJSON) Error() string                { return "test error" }
+func (tm *TErrMarshalJSON) MarshalJSON() ([]byte, error) { return nil, tm.err }
+
 // TstTreeCase1 returns test error tree - case 1.
 //
 // Shape:

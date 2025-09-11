@@ -293,7 +293,7 @@ func (fs Fields) MarshalJSON() ([]byte, error) {
 			ret[k] = data
 			continue
 		}
-		data, err := json.Marshal(Wrap(v, WithCode(GetCode(v))))
+		data, err := json.Marshal(Wrap(v))
 		if err != nil {
 			return nil, err
 		}
