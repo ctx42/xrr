@@ -246,7 +246,6 @@ func (fs Fields) Merge(errs map[string]error) Fields {
 		//goland:noinspection GoAssignmentToReceiver
 		fs = Fields{}
 	}
-	// TODO: What if the fields are not yet flatten? Flatten errs before merge?
 	for key, err := range errs {
 		if fs[key] == nil {
 			fs[key] = err
