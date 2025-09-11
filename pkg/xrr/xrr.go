@@ -16,8 +16,7 @@ type Coder interface {
 
 // Fielder is the interface that wraps the ErrFields method.
 //
-// ErrFields returns a list of errors for field names. It is mostly useful when
-// returning validation errors.
+// ErrFields returns errors for field names. It is used for validation errors.
 type Fielder interface {
 	ErrFields() map[string]error
 }

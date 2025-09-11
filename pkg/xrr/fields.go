@@ -9,6 +9,8 @@ import (
 )
 
 // Fields represents a collection of errors that are indexed by field names.
+//
+// The field (name) indexed errors are mostly useful for validation errors.
 type Fields map[string]error
 
 // FieldError return a new instance of [Fields] with the given error. Returns
@@ -42,43 +44,39 @@ func GetFields(err error) map[string]error {
 	return nil
 }
 
-// GetFieldError returns error for given field name if it exists and the found
-// error has the target in its chain. The [errors.As] is used to check if the
-// found error has the target in its chain.
-func GetFieldError(field string, target error) error {
-	if target == nil {
-		return nil
-	}
-	var fs Fields
-	if errors.As(target, &fs) {
+// GetFieldError returns error for given field name. It expects the error to
+// be an instance of [Fields]. Returns nil when err is nil, not an instance of
+// [Fields] or when there is no error for the given field name.
+func GetFieldError(err error, field string) error {
+	if fs := GetFields(err); fs != nil {
 		return get(fs, field)
 	}
-	return target
+	return nil
 }
 
-// FieldErrorIs returns true if err is [Fields], has error for field name and
-// the error is want.
-func FieldErrorIs(err error, field string, want error) bool {
-	return errors.Is(GetFieldError(field, err), want)
+// FieldErrorIs returns true if err is an instance of [Fields] with the given
+// field name and the [errors.Is] returns true for the error and the target.
+func FieldErrorIs(err error, field string, target error) bool {
+	return errors.Is(GetFieldError(err, field), target)
 }
 
-// FieldNames if err is a [Fields] instance, it returns the alphabetical list
-// of field names, otherwise it returns nil.
+// FieldNames returns alphabetically sorted fields names if the error is an
+// instance of [Fields]. Otherwise, it returns nil.
 func FieldNames(err error) []string {
-	var fe Fields
-	if !errors.As(err, &fe) {
+	fs := GetFields(err)
+	if fs == nil {
 		return nil
 	}
 	var names []string
-	for name, _ := range fe {
+	for name, _ := range fs {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 	return names
 }
 
-// FieldRename if err is a [Fields] instance, it renames the field name from
-// "from" to "to". If err is not a [Fields] instance, it is no-op.
+// FieldRename if the error an instance of [Fields], it renames the given field
+// name from "from" to "to". If err is not a [Fields] instance, it is no-op.
 func FieldRename(err error, from, to string) {
 	var fe Fields
 	if from != to && errors.As(err, &fe) {
@@ -100,7 +98,6 @@ func MergeFields(ers ...error) error {
 	}
 	return nil
 }
-
 func mergeFields(ers ...error) Fields {
 	if len(ers) == 0 {
 		return nil

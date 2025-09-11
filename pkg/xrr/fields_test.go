@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
@@ -90,7 +91,7 @@ func Test_GetFields(t *testing.T) {
 func Test_GetFieldError(t *testing.T) {
 	t.Run("nil error", func(t *testing.T) {
 		// --- When ---
-		have := GetFieldError("f0", nil)
+		have := GetFieldError(nil, "f0")
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -101,10 +102,10 @@ func Test_GetFieldError(t *testing.T) {
 		err := errors.New("em0")
 
 		// --- When ---
-		have := GetFieldError("f0", err)
+		have := GetFieldError(err, "f0")
 
 		// --- Then ---
-		assert.Same(t, err, have)
+		assert.Nil(t, have)
 	})
 
 	t.Run("field does not exist", func(t *testing.T) {
@@ -112,7 +113,7 @@ func Test_GetFieldError(t *testing.T) {
 		fs := Fields{"f0": errors.New("em0")}
 
 		// --- When ---
-		have := GetFieldError("f1", fs)
+		have := GetFieldError(fs, "f1")
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -124,10 +125,53 @@ func Test_GetFieldError(t *testing.T) {
 		fs := Fields{"f0": err}
 
 		// --- When ---
-		have := GetFieldError("f0", fs)
+		have := GetFieldError(fs, "f0")
 
 		// --- Then ---
 		assert.Same(t, err, have)
+	})
+}
+
+func Test_FieldErrorIs(t *testing.T) {
+	t.Run("nil error", func(t *testing.T) {
+		// --- When ---
+		have := FieldErrorIs(nil, "f0", io.EOF)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("not instance of Fields", func(t *testing.T) {
+		// --- Given ---
+		err := errors.New("em0")
+
+		// --- When ---
+		have := FieldErrorIs(err, "f0", io.EOF)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("field does not exist", func(t *testing.T) {
+		// --- Given ---
+		fs := Fields{"f0": errors.New("em0")}
+
+		// --- When ---
+		have := FieldErrorIs(fs, "f1", io.EOF)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("field exist", func(t *testing.T) {
+		// --- Given ---
+		fs := Fields{"f0": io.EOF}
+
+		// --- When ---
+		have := FieldErrorIs(fs, "f0", io.EOF)
+
+		// --- Then ---
+		assert.True(t, have)
 	})
 }
 

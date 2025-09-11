@@ -80,7 +80,7 @@ func Test_Wrap(t *testing.T) {
 		err := Wrap(e)
 
 		// --- Then ---
-		assert.Same(t, e, err)
+		assert.Same(t, e, errors.Unwrap(err))
 	})
 
 	t.Run("wrap std error and set error code", func(t *testing.T) {
