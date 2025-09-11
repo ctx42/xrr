@@ -133,6 +133,17 @@ func Test_Wrap(t *testing.T) {
 		assert.Equal(t, "ECode", x.code)
 		assert.Equal(t, map[string]any{"A": 1, "B": 2}, x.meta)
 	})
+
+	t.Run("wrap error without options is no-op", func(t *testing.T) {
+		// --- Given ---
+		e := New("msg a", "a")
+
+		// --- When ---
+		err := Wrap(e)
+
+		// --- Then ---
+		assert.Same(t, e, err)
+	})
 }
 
 func Test_Error_Error(t *testing.T) {

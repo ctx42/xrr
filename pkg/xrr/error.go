@@ -43,8 +43,13 @@ func Wrap(err error, opts ...func(*Error)) error {
 		return nil
 	}
 	if len(opts) == 0 {
+		// Giving no options and asking to wrap an error is used mostly to take
+		// advantage of marshaling and unmarshalling Error instances implement.
+		// But if the passed error is already and instance of Error, we can
+		// just return it.
+		//
 		//goland:noinspection GoTypeAssertionOnErrors
-		if _, ok := err.(*Error); ok { // TODO(rz): test this.
+		if _, ok := err.(*Error); ok {
 			return err
 		}
 	}
