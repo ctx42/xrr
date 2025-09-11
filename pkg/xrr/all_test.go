@@ -4,6 +4,15 @@ import (
 	"errors"
 )
 
+// TstErrStd is an error used in tests.
+var TstErrStd = errors.New("std tst msg")
+
+// TErrFields represents an error implementing [Fielder] interface.
+type TErrFields map[string]error
+
+func (f TErrFields) Error() string               { return "fields error" }
+func (f TErrFields) ErrFields() map[string]error { return f }
+
 // TstTreeCase1 returns test error tree - case 1.
 //
 // Shape:

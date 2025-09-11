@@ -34,3 +34,14 @@ func isNil(v any) bool {
 	defer func() { _ = recover() }()
 	return v == nil || reflect.ValueOf(v).IsNil()
 }
+
+// prefix adds prefix to the key if the prefix is not empty.
+func prefix(pref, key string) string {
+	if pref != "" {
+		if key == "" {
+			return pref
+		}
+		return pref + "." + key
+	}
+	return key
+}

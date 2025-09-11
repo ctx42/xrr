@@ -117,3 +117,28 @@ func Test_isNil_tabular(t *testing.T) {
 		})
 	}
 }
+
+func Test_prefix(t *testing.T) {
+	tt := []struct {
+		testN string
+
+		prefix string
+		key    string
+		exp    string
+	}{
+		{"1", "", "key", "key"},
+		{"2", "pref", "key", "pref.key"},
+		{"3", "pref", "", "pref"},
+		{"4", "", "", ""},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			have := prefix(tc.prefix, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exp, have)
+		})
+	}
+}
