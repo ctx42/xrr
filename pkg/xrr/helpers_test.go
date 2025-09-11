@@ -60,6 +60,43 @@ func Test_Split(t *testing.T) {
 	})
 }
 
+func Test_IsJoined(t *testing.T) {
+	t.Run("joined error", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("msg0")
+		e1 := New("msg1", "ECode")
+		ers := errors.Join(e0, e1)
+
+		// --- When ---
+		have := IsJoined(ers)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("not joined error", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("msg0")
+
+		// --- When ---
+		have := IsJoined(e0)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("nil error", func(t *testing.T) {
+		// --- Given ---
+		var err error
+
+		// --- When ---
+		have := IsJoined(err)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+}
+
 func Test_DefaultCode(t *testing.T) {
 	t.Run("nil slice", func(t *testing.T) {
 		// --- When ---

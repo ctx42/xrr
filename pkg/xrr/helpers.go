@@ -19,6 +19,13 @@ func Split(err error) []error {
 	return []error{err}
 }
 
+// IsJoined returns true if the provided error is not nil and implements
+// `Unwrap() []error` interface. Returns false if the error is nil.
+func IsJoined(err error) bool {
+	var joinErr interface{ Unwrap() []error }
+	return errors.As(err, &joinErr)
+}
+
 // DefaultCode returns the first non-empty code from the slice of codes.
 func DefaultCode(otherwise string, codes ...string) string {
 	for _, code := range codes {
