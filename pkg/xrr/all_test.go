@@ -2,8 +2,6 @@ package xrr
 
 import (
 	"errors"
-	"fmt"
-	"testing"
 )
 
 // TstTreeCase1 returns test error tree - case 1.
@@ -158,16 +156,4 @@ func TstTreeCase4() error {
 			),
 		},
 	)
-}
-
-// TODO(rz):
-func Test_Name(t *testing.T) {
-	e := New("A", "EC_CONN_ERROR")
-	e1 := fmt.Errorf("BB: %w", e)
-
-	e2 := Wrap(e1, Meta().Str("SN", "1234").Option())
-
-	code := GetCode(e2)
-	fmt.Println(code)
-	// fmt.Println(e2)
 }

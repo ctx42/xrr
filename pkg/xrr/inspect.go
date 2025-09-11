@@ -15,9 +15,9 @@ func IsCode(err error, code string) bool {
 	return is
 }
 
-// GetCode returns error code associated with the provided error. If error does
-// not implement [Coder] interface the [ECGeneric] error code is returned. For
-// nil error it will return an empty string.
+// GetCode returns error code associated with the provided error. If an error
+// does not implement [Coder] interface, the [ECGeneric] error code is returned.
+// For nil error it will return an empty string.
 func GetCode(err error) string {
 	if err == nil || isNil(err) {
 		return ""
@@ -48,15 +48,12 @@ func GetCodes(err error) []string {
 
 // GetMeta recursively retrieves metadata from an error and its wrapped errors.
 //
-// The error chain (tree) is traversed using breath-first search approach with
-// errors closer to the top and more on the left override metadata from lover
-// and more to the right parts of the tree.
+// The error chain (tree) is traversed using the breath-first search approach
+// with errors closer to the top and more on the left override metadata from
+// the lover and more to the right parts of the tree.
 func GetMeta(err error) map[string]any {
 	var m map[string]any
 	cb := func(err error) bool {
-		if err == nil {
-			return true
-		}
 		if e, ok := err.(Metadater); ok {
 			if meta := e.MetaAll(); len(meta) > 0 {
 				if m == nil {
