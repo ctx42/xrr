@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac <rzajac@gmail.com>
+// SPDX-License-Identifier: MIT
+
 package xrr
 
 // IsCode walks the error chain (tree) and returns true if any of the errors
