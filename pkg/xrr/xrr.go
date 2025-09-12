@@ -21,12 +21,6 @@ type Fielder interface {
 	ErrFields() map[string]error
 }
 
-// CodeFielder combines [Coder] and [Fielder] interfaces.
-type CodeFielder interface {
-	Coder
-	Fielder
-}
-
 // Metadater is an interface providing access to error metadata.
 type Metadater interface {
 	// MetaAll returns a copy of the metadata from the [Error] instance.

@@ -6,6 +6,12 @@ import (
 	"maps"
 )
 
+// Compile time checks.
+var (
+	_ Coder     = (*Error)(nil)
+	_ Metadater = (*Error)(nil)
+)
+
 // WithCode is an option for [New] and [Wrap] setting the error code.
 func WithCode(code string) func(*Error) {
 	return func(e *Error) { e.code = code }
@@ -49,7 +55,7 @@ func Wrap(err error, opts ...func(*Error)) error {
 		// just return it.
 		//
 		//goland:noinspection GoTypeAssertionOnErrors
-		if _, ok := err.(*Error); ok {
+		if _, ok := err.(*Error); ok { // nolint: errorlint
 			return err
 		}
 	}

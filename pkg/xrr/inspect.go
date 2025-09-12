@@ -77,7 +77,7 @@ func walk(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true
 	}
-	switch x := err.(type) {
+	switch x := err.(type) { // nolint: errorlint
 	case interface{ Unwrap() error }:
 		if !cb(err) {
 			return false
@@ -102,7 +102,7 @@ func walkReverse(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true
 	}
-	switch x := err.(type) {
+	switch x := err.(type) { // nolint: errorlint
 	case interface{ Unwrap() error }:
 		if e := x.Unwrap(); e != nil {
 			if !walkReverse(e, cb) {
