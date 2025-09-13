@@ -68,14 +68,14 @@ import (
 //	  ]
 //	}
 type Envelope struct {
-	cause   error
-	leading error
+	cause error
+	lead  error
 }
 
 // Enclose creates a new instance of [Envelope] from cause and optional leading
 // error. Returns nil if the cause is nil. When more than one leading error is
 // provided, only the first one is used.
-func Enclose(cause error, leading ...error) error {
+func Enclose(cause error, lead ...error) error {
 	if cause == nil {
 		return nil
 	}
@@ -86,15 +86,15 @@ func Enclose(cause error, leading ...error) error {
 	// nolint: errorlint
 	//goland:noinspection ALL
 	if e, ok := cause.(Envelope); ok {
-		if len(leading) > 0 {
-			e.leading = leading[0]
+		if len(lead) > 0 {
+			e.lead = lead[0]
 		}
 		return e
 	}
 
 	enc := Envelope{cause: cause}
-	if len(leading) > 0 {
-		enc.leading = leading[0]
+	if len(lead) > 0 {
+		enc.lead = lead[0]
 	}
 	return enc
 }
@@ -109,33 +109,33 @@ func (e Envelope) ErrCode() string { return GetCode(e.cause) }
 func (e Envelope) Unwrap() error { return e.cause }
 
 // Lead returns the leading error.
-func (e Envelope) Lead() error { return e.leading }
+func (e Envelope) Lead() error { return e.lead }
 
 // Is returns true if err is the same error as envelop or cause.
 func (e Envelope) Is(target error) bool {
-	return errors.Is(e.leading, target) || errors.Is(e.cause, target)
+	return errors.Is(e.lead, target) || errors.Is(e.cause, target)
 }
 
 func (e Envelope) MarshalJSON() ([]byte, error) {
 	var ef Fields
 	if errors.As(e.cause, &ef) {
-		if e.leading == nil {
-			e.leading = ErrFields
+		if e.lead == nil {
+			e.lead = ErrFields
 		}
-		return encloseFieldsError(e.leading, ef)
+		return encloseFieldsError(e.lead, ef)
 	}
 
 	if IsJoined(e.cause) {
 		ers := Split(e.cause)
-		if e.leading == nil && len(ers) > 0 {
-			e.leading = ers[0]
+		if e.lead == nil && len(ers) > 0 {
+			e.lead = ers[0]
 			ers = ers[1:]
 		}
-		return encloseMultiError(e.leading, ers...)
+		return encloseMultiError(e.lead, ers...)
 	}
 
-	if e.leading != nil {
-		return encloseMultiError(e.leading, e.cause)
+	if e.lead != nil {
+		return encloseMultiError(e.lead, e.cause)
 	}
 	return encloseMultiError(e.cause)
 }
