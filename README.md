@@ -101,12 +101,8 @@ map of errors underneath.
 type Fields map[string]error
 ```
 
-This makes it straightforward to return detailed responses in for example APIs 
-or process / handle field-specific errors.
-
-```go
-type Fields map[string]error
-```
+This makes it straightforward to return detailed responses in APIs or 
+process / handle field-specific errors.
 
 Example:
 
