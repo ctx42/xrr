@@ -473,7 +473,7 @@ func Test_Fields_Is(t *testing.T) {
 		}
 
 		// --- When ---
-		have := errors.Is(fs, TstErrStd)
+		have := fs.Is(TstErrStd)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -493,7 +493,7 @@ func Test_Fields_Is(t *testing.T) {
 		}
 
 		// --- When ---
-		have := errors.Is(fs, TstErrStd)
+		have := fs.Is(TstErrStd)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -504,7 +504,7 @@ func Test_Fields_Is(t *testing.T) {
 		fs := Fields{"f0": nil}
 
 		// --- When ---
-		have := errors.Is(fs, TstErrStd)
+		have := fs.Is(TstErrStd)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -515,7 +515,7 @@ func Test_Fields_Is(t *testing.T) {
 		fs := Fields{"f0": errors.New("em0")}
 
 		// --- When ---
-		have := errors.Is(fs, nil)
+		have := fs.Is(nil)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -762,10 +762,26 @@ func Test_Fields_Filter(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
-	t.Run("nil", func(t *testing.T) {
+	t.Run("nil instance", func(t *testing.T) {
 		// --- Given ---
 		var fs Fields
 		fs = nil
+
+		// --- When ---
+		err := fs.Filter()
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.Nil(t, err)
+	})
+
+	t.Run("all fields nil", func(t *testing.T) {
+		// --- Given ---
+		fs := Fields{
+			"f0": nil,
+			"f1": nil,
+			"f2": nil,
+		}
 
 		// --- When ---
 		err := fs.Filter()
@@ -1038,32 +1054,48 @@ func Test_Fields_Get(t *testing.T) {
 }
 
 func Test_Fields_MarshalJSON(t *testing.T) {
-	// --- Given ---
-	fs := Fields{
-		"f0": Fields{
-			"s0": New("em00", "ECode00"),
-			"s1": New("em01", "ECode01"),
-			"s2": Fields{
-				"s0": errors.New("em020"),
+	t.Run("with many levels", func(t *testing.T) {
+		// --- Given ---
+		fs := Fields{
+			"f0": Fields{
+				"s0": New("em00", "ECode00"),
+				"s1": New("em01", "ECode01"),
+				"s2": Fields{
+					"s0": errors.New("em020"),
+				},
 			},
-		},
-		"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
-		"f2": New("em2", "ECode2"),
-	}
+			"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
+			"f2": New("em2", "ECode2"),
+		}
 
-	// --- When ---
-	have, err := json.MarshalIndent(fs, "", "  ")
+		// --- When ---
+		have, err := fs.MarshalJSON()
 
-	// --- Then ---
-	assert.NoError(t, err)
-	want := `{
-		"f0.s0": {"code":"ECode00","error":"em00"},
-		"f0.s1": {"code":"ECode01","error":"em01"},
-		"f0.s2.s0": {"code":"ECGeneric","error":"em020"},
-		"f1":{"code":"ECode1","error":"em1","meta":{"key":"val"}},
-		"f2":{"code":"ECode2","error":"em2"}
-	}`
-	assert.JSON(t, want, string(have))
+		// --- Then ---
+		assert.NoError(t, err)
+		want := `{
+			"f0.s0": {"code": "ECode00", "error": "em00"},
+			"f0.s1": {"code": "ECode01", "error": "em01"},
+			"f0.s2.s0": {"code": "ECGeneric", "error": "em020"},
+			"f1": {"code": "ECode1", "error": "em1", "meta": {"key": "val"}},
+			"f2": {"code": "ECode2", "error": "em2"}
+		}`
+		assert.JSON(t, want, string(have))
+	})
+
+	t.Run("field marshaller error", func(t *testing.T) {
+		// --- Given ---
+		fs := Fields{
+			"f0": &TErrMarshalJSON{errors.New("abc")},
+		}
+
+		// --- When ---
+		have, err := fs.MarshalJSON()
+
+		// --- Then ---
+		assert.ErrorEqual(t, "abc", err)
+		assert.Nil(t, have)
+	})
 }
 
 func Test_Flatten(t *testing.T) {
