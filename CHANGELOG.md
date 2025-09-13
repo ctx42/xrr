@@ -1,0 +1,38 @@
+## v0.1.0 (Sat, 13 Sep 2025 08:11:00 UTC)
+- feat: Initial commit.
+- feat: Add `xrr.DefaultCode` helper.
+- feat: Define `xrr` package interfaces and generic error code.
+- feat: Define `xrr.Error` structure with a basic constructor and core methods: `xrr/Error.ErrorCode`, `xrr.Error.Unwrap`.
+- misc: Add a ` dev ` directory with development-related configuration: Idea test runner configuration.
+- feat: Add the `meta` struct with setters for basic types to build Error metadata.
+- feat!: Rename `vrr.meta` to `vrr.Metadata`.
+- feat: Add `vrr.GetCode` inspection helper.
+- feat: Implement `xrr.GetMeta` helper.
+- feat: Implement `xrr.WithCode` configuration option and `xrr/Error.MetaAll`.
+- chore: Update dependencies.
+- feat: Implement `xrr/Error.MarshalJSON` method.
+- feat: Add sentinel errors dealing with `xrr.Error` JSON representation.
+- feat: Implement `xrr/Error.UnmarshalJSON` method.
+- feat: Implement `xrr/Error.Format` method implementing `fmt.Formatter` interface.
+- feat: Implement `xrr.GetCodes` helper recursively returning all error codes.
+- feat: Implement recursive error chain (tree) walk.
+- chore: Remove dead code.
+- feat: Implement `xrr.Split` helper.
+- feat: Implement thread safe error collection `xrr.SyncErrors`.
+- feat: Implement error collection `xrr.Errors`.
+- feat: Implement `xrr.Fields`.
+- feat: Implement `xrr.Fields`.
+- feat: Implement `xrr.IsJoin` helper returning true when an error is implementing `Unwrap() []error`.
+- feat: Implement `xrr.Envelope`.
+- test: Add `xrr.Wrap` tests.
+- doc: Update code documentation.
+- doc: Add README documentation.
+- chore: Update dependencies.
+- chore: Add MIT license.
+- feat: Add `xrrtest` package with custom assertions related to `xrr` types.
+- doc: Add `Envelope` documentation to README.md file.
+- doc: Improve the `Envelope` code documentation.
+- test: Improve `Fields` tests.
+- test: Add github workflow.
+- doc: Update README.md file.
+
