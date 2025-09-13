@@ -6,6 +6,12 @@
 * [Errors with Codes and Metadata](#errors-with-codes-and-metadata)
   * [Error Codes](#error-codes)
   * [Bridge Errors and Logging](#bridge-errors-and-logging)
+* [Other Error Types](#other-error-types)
+  * [Fields](#fields)
+  * [Envelope](#envelope)
+    * [Regular Error](#regular-error)
+    * [Joined Errors](#joined-errors)
+    * [Fields Error](#fields-error)
 <!-- TOC -->
 
 # Errors with Codes and Metadata
