@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
+	"github.com/ctx42/testing/pkg/must"
 )
 
 func Test_Enclose(t *testing.T) {
@@ -157,41 +158,63 @@ func Test_Envelope_Is(t *testing.T) {
 }
 
 func Test_Envelope_MarshalJSON(t *testing.T) {
-	t.Run("error with metadata without lead error", func(t *testing.T) {
+	t.Run("std cause without lead", func(t *testing.T) {
+		// --- Given ---
+		cause := errors.New("cause")
+
+		// --- When ---
+		have := Enclose(cause)
+
+		// --- Then ---
+		data := must.Value(json.Marshal(have))
+		want := `
+		{
+			"error": "cause",
+			"code": "ECGeneric"
+		}`
+		assert.JSON(t, want, string(data))
+	})
+
+	t.Run("xrr cause with metadata without lead", func(t *testing.T) {
 		// --- Given ---
 		cause := New("cause", "ECC", Meta().Int("A", 0).Option())
 
 		// --- When ---
-		data, err := json.Marshal(Enclose(cause))
+		have := Enclose(cause)
 
 		// --- Then ---
-		assert.NoError(t, err)
-		want := `{"error":"cause","code":"ECC","meta":{"A": 0}}`
+		data := must.Value(json.Marshal(have))
+		want := `
+		{
+			"error": "cause",
+			"code": "ECC",
+			"meta": {"A": 0}
+		}`
 		assert.JSON(t, want, string(data))
 	})
 
-	t.Run("error with metadata with lead error", func(t *testing.T) {
+	t.Run("xrr cause with metadata with lead", func(t *testing.T) {
 		// --- Given ---
 		cause := New("cause", "ECC", Meta().Int("A", 0).Option())
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		data, err := json.Marshal(Enclose(cause, lead))
+		have := Enclose(cause, lead)
 
 		// --- Then ---
-		assert.NoError(t, err)
+		data := must.Value(json.Marshal(have))
 		want := `
 		{
-			"error":"lead",
-			"code":"ECL",
-			"errors":[
+			"error": "lead",
+			"code": "ECL",
+			"errors": [
 				{"error":"cause","code":"ECC","meta":{"A": 0}}
 			]
 		}`
 		assert.JSON(t, want, string(data))
 	})
 
-	t.Run("fields error with lead error", func(t *testing.T) {
+	t.Run("xrr fields error with lead", func(t *testing.T) {
 		// --- Given ---
 		cause := Fields{
 			"f0": errors.New("f0"),
@@ -200,10 +223,10 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		data, err := json.Marshal(Enclose(cause, lead))
+		have := Enclose(cause, lead)
 
 		// --- Then ---
-		assert.NoError(t, err)
+		data := must.Value(json.Marshal(have))
 		want := `
 		{
 			"error":"lead",
@@ -216,7 +239,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		assert.JSON(t, want, string(data))
 	})
 
-	t.Run("fields error without lead error", func(t *testing.T) {
+	t.Run("xrr fields error without lead", func(t *testing.T) {
 		// --- Given ---
 		cause := Fields{
 			"f0": errors.New("f0"),
@@ -224,10 +247,10 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		}
 
 		// --- When ---
-		data, err := json.Marshal(Enclose(cause))
+		have := Enclose(cause)
 
 		// --- Then ---
-		assert.NoError(t, err)
+		data := must.Value(json.Marshal(have))
 		want := `
 		{
 			"error":"fields error",
@@ -240,16 +263,16 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		assert.JSON(t, want, string(data))
 	})
 
-	t.Run("single joined error with lead error", func(t *testing.T) {
+	t.Run("single joined error with lead", func(t *testing.T) {
 		// --- Given ---
 		cause := errors.Join(errors.New("e0"))
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		data, err := json.Marshal(Enclose(cause, lead))
+		have := Enclose(cause, lead)
 
 		// --- Then ---
-		assert.NoError(t, err)
+		data := must.Value(json.Marshal(have))
 		want := `
 		{
 			"error":"lead",
@@ -261,7 +284,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		assert.JSON(t, want, string(data))
 	})
 
-	t.Run("joined errors with a lead error", func(t *testing.T) {
+	t.Run("joined errors with a lead", func(t *testing.T) {
 		// --- Given ---
 		cause := errors.Join(
 			New("msg a", "a", Meta().Int("A", 0).Option()),
@@ -270,10 +293,10 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		data, err := json.Marshal(Enclose(cause, lead))
+		have := Enclose(cause, lead)
 
 		// --- Then ---
-		assert.NoError(t, err)
+		data := must.Value(json.Marshal(have))
 		want := `
 		{
 			"error": "lead",
@@ -286,15 +309,15 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		assert.JSON(t, want, string(data))
 	})
 
-	t.Run("joined errors without lead error", func(t *testing.T) {
+	t.Run("joined errors without lead", func(t *testing.T) {
 		// --- Given ---
 		cause := errors.Join(New("e0", "ECE0", Meta().Int("A", 0).Option()), errors.New("e1"))
 
 		// --- When ---
-		data, err := json.Marshal(Enclose(cause))
+		have := Enclose(cause)
 
 		// --- Then ---
-		assert.NoError(t, err)
+		data := must.Value(json.Marshal(have))
 		want := `
 		{
 			"error":"e0",
@@ -313,9 +336,10 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		cause := errors.Join(New("msg b", "b"), e1)
 
 		// --- When ---
-		data, err := json.Marshal(Enclose(cause))
+		have := Enclose(cause)
 
 		// --- Then ---
+		data, err := json.Marshal(have)
 		var jme *json.MarshalerError
 		assert.ErrorAs(t, &jme, err)
 		want := "json: error calling MarshalJSON for type xrr.Envelope: " +
@@ -335,7 +359,7 @@ func Test_encloseFieldsError(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		data, err := encloseFieldsError(lead, cause)
+		have, err := encloseFieldsError(lead, cause)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -348,7 +372,7 @@ func Test_encloseFieldsError(t *testing.T) {
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			}
 		}`
-		assert.JSON(t, want, string(data))
+		assert.JSON(t, want, string(have))
 	})
 
 	t.Run("lead with metadata", func(t *testing.T) {
@@ -360,7 +384,7 @@ func Test_encloseFieldsError(t *testing.T) {
 		lead := New("lead", "ECL", Meta().Int("B", 1).Option())
 
 		// --- When ---
-		data, err := encloseFieldsError(lead, cause)
+		have, err := encloseFieldsError(lead, cause)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -374,7 +398,7 @@ func Test_encloseFieldsError(t *testing.T) {
 			},
 			"meta":{"B": 1}
 		}`
-		assert.JSON(t, want, string(data))
+		assert.JSON(t, want, string(have))
 	})
 }
 
@@ -386,7 +410,7 @@ func Test_encloseMultiError(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		data, err := encloseMultiError(lead, e0, e1)
+		have, err := encloseMultiError(lead, e0, e1)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -399,7 +423,7 @@ func Test_encloseMultiError(t *testing.T) {
 				{"error":"e1","code":"ECGeneric"}
 			]
 		}`
-		assert.JSON(t, want, string(data))
+		assert.JSON(t, want, string(have))
 	})
 
 	t.Run("lead with metadata", func(t *testing.T) {
@@ -408,7 +432,7 @@ func Test_encloseMultiError(t *testing.T) {
 		lead := New("lead", "ECL", Meta().Int("B", 1).Option())
 
 		// --- When ---
-		data, err := encloseMultiError(lead, cause)
+		have, err := encloseMultiError(lead, cause)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -421,7 +445,7 @@ func Test_encloseMultiError(t *testing.T) {
 			],
 			"meta":{"B": 1} 
 		}`
-		assert.JSON(t, want, string(data))
+		assert.JSON(t, want, string(have))
 	})
 
 	t.Run("lead with no errors", func(t *testing.T) {
@@ -429,12 +453,12 @@ func Test_encloseMultiError(t *testing.T) {
 		lead := New("lead", "ECL", Meta().Int("A", 0).Option())
 
 		// --- When ---
-		data, err := encloseMultiError(lead)
+		have, err := encloseMultiError(lead)
 
 		// --- Then ---
 		assert.NoError(t, err)
 		want := `{"error":"lead", "code":"ECL", "meta":{"A": 0}}`
-		assert.JSON(t, want, string(data))
+		assert.JSON(t, want, string(have))
 	})
 }
 
@@ -444,11 +468,11 @@ func Test_marshalError(t *testing.T) {
 		e := errors.New("e")
 
 		// --- When ---
-		data, err := marshalError(e)
+		have, err := marshalError(e)
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.JSON(t, `{"error": "e", "code": "ECGeneric"}`, string(data))
+		assert.JSON(t, `{"error": "e", "code": "ECGeneric"}`, string(have))
 	})
 
 	t.Run("xrr error", func(t *testing.T) {
@@ -468,12 +492,12 @@ func Test_marshalError(t *testing.T) {
 		e := &TErrMarshalJSON{errors.New("e")}
 
 		// --- When ---
-		data, err := marshalError(e)
+		have, err := marshalError(e)
 
 		// --- Then ---
 		wMsg := "json: " +
 			"error calling MarshalJSON for type *xrr.TErrMarshalJSON: e"
 		assert.ErrorEqual(t, wMsg, err)
-		assert.Nil(t, data)
+		assert.Nil(t, have)
 	})
 }

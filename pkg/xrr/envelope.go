@@ -10,34 +10,39 @@ import (
 
 // Envelope provides facilities to create JSON envelope for errors.
 //
-// Cause is regular error and leading is not provided:
+// Envelope has two fields `cause` and `lead`. The `cause` is the error we
+// encountered during the execution of our program. The `lead` is the error
+// we want to put as the top-level error in the JSON message. See examples
+// below.
+//
+// - the `lead` error is not provided:
 //
 //	{
 //	  "error": "cause",
 //	  "code": "ECCause"
 //	}
 //
-// Cause and leading are regular errors:
+// - the `cause` and `lead` are provided:
 //
 //	{
-//	  "error": "main error",
-//	  "code": "ECMain",
+//	  "error": "lead",
+//	  "code": "ECLead",
 //	  "errors": [
 //	    {"code": "ECCause", "error": "cause"},
 //	  ]
 //	}
 //
-// Cause is instance of [Fields] and leading error is provided:
+// - the `cause` is an instance of [Fields] with `lead` error provided:
 //
 //	{
-//	  "error": "main",
-//	  "code": "ECMain",
+//	  "error": "lead",
+//	  "code": "ECLead",
 //	  "fields": {
 //	    "field": {"code": "ECCause", "error": "cause"},
 //	  }
 //	}
 //
-// Cause is instance of [Fields] and leading error is not provided:
+// - the `cause` is instance of [Fields] and `lead` error is not provided:
 //
 //	{
 //	  "error": "fields error",
@@ -47,24 +52,24 @@ import (
 //	  }
 //	}
 //
-// Cause is join errors and leading error is provided:
+// - the `cause` is join errors and `lead` error is provided:
 //
 //	{
-//	  "error": "main error",
-//	  "code": "ECMain",
+//	  "error": "lead",
+//	  "code": "ECLead",
 //	  "errors": [
-//	    "{"code":"ECE0","error":"msg 0"},
-//	    "{"code":"ECE1","error":"msg 1"}
+//	    "{"code":"ECCause0","error":"cause 0"},
+//	    "{"code":"ECCause1","error":"cause 1"}
 //	  ]
 //	}
 //
-// Cause is join errors and leading error is not provided:
+// - the `cause` is join errors and `lead` error is not provided:
 //
 //	{
-//	  "error": "msg 0",
-//	  "code": "ECE0",
+//	  "error": "cause 0",
+//	  "code": "ECCause0",
 //	  "errors": [
-//	    "{"code":"ECF1","error":"msg 1"}
+//	    "{"code":"ECCause1","error":"cause 1"}
 //	  ]
 //	}
 type Envelope struct {
