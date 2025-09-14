@@ -1,3 +1,8 @@
+## v0.2.0 (Sun, 14 Sep 2025 18:45:18 UTC)
+- feat: Add `xrrtest.AssertMsg` asserting just the error message.
+- test: Improve the `xrrtest` package tests readability.
+- feat: Implement `xrrtest.AssertFieldsEqual` asserting the `xrr.Fields` string representation equals the provided one.
+
 ## v0.1.0 (Sat, 13 Sep 2025 08:11:00 UTC)
 - feat: Initial commit.
 - feat: Add `xrr.DefaultCode` helper.
