@@ -124,16 +124,16 @@ func Test_AssertEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
+			"[xrr] expected error to have a message:\n" +
+			"  want: \"other error\"\n" +
+			"  have: \"some error\""
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
 		err := errors.New("some error")
 
 		// --- When ---
-		have := AssertEqual(tspy, "some error (ECGeneric)", err)
+		have := AssertEqual(tspy, "other error", err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -962,6 +962,65 @@ func Test_AssertFields(t *testing.T) {
 		// --- Then ---
 		assert.False(t, success)
 		assert.Nil(t, have)
+	})
+}
+
+func Test_AssertFieldsEqual(t *testing.T) {
+	t.Run("success - fields message equal", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := xrr.Fields{
+			"f0": errors.New("m0"),
+			"f1": xrr.New("m1", "EC1"),
+		}
+		want := "f0: m0 (ECGeneric); f1: m1 (EC1)"
+
+		// --- When ---
+		have := AssertFieldsEqual(tspy, want, err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("error - nil error", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		wMsg := "[xrr] expected error not to be nil"
+		tspy.ExpectLogEqual(wMsg)
+		tspy.Close()
+
+		// --- When ---
+		have := AssertFieldsEqual(tspy, "want", nil)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("error - fields message not equal", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		wMsg := "" +
+			"[xrr] expected error to have a message:\n" +
+			"  want: \"f0: m0 (ECGeneric); f1: m1 (EC1)\"\n" +
+			"  have: \"f0: other (ECGeneric); f1: m1 (EC1)\""
+		tspy.ExpectLogEqual(wMsg)
+		tspy.Close()
+
+		err := xrr.Fields{
+			"f0": errors.New("other"),
+			"f1": xrr.New("m1", "EC1"),
+		}
+		want := "f0: m0 (ECGeneric); f1: m1 (EC1)"
+
+		// --- When ---
+		have := AssertFieldsEqual(tspy, want, err)
+
+		// --- Then ---
+		assert.False(t, have)
 	})
 }
 

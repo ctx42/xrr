@@ -47,11 +47,11 @@ func AssertError(t tester.T, err error) (*xrr.Error, bool) {
 // error message to the test log, and returns false.
 func AssertEqual(t tester.T, want string, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	have := fmt.Sprintf("%+v", xe)
+	have := fmt.Sprintf("%+v", err)
 	if e := check.Equal(want, have); e != nil {
 		const hHeader = "[xrr] expected error to have a message"
 		t.Error(notice.From(e).SetHeader(hHeader))
@@ -287,6 +287,28 @@ func AssertFields(t tester.T, err error) (xrr.Fields, bool) {
 		return nil, false // nolint: nilerr
 	}
 	return xe, true
+}
+
+// AssertFieldsEqual asserts that the provided error is non-nil and is an
+// instance of [xrr.Fields]. Then asserts the string error message equals to
+// the one provided. Returns true if it does, otherwise marks the test as
+// failed, writes an error message to the test log, and returns false.
+//
+// Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
+// without unwrapping.
+func AssertFieldsEqual(t tester.T, want string, err error) bool {
+	t.Helper()
+	xe, success := AssertFields(t, err)
+	if !success {
+		return false
+	}
+	have := fmt.Sprintf("%+v", xe)
+	if e := check.Equal(want, have); e != nil {
+		const hHeader = "[xrr] expected error to have a message"
+		t.Error(notice.From(e).SetHeader(hHeader))
+		return false
+	}
+	return true
 }
 
 // AssertFieldCnt asserts that the provided error is non-nil and is an instance
