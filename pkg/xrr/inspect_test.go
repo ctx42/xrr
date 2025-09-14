@@ -250,9 +250,7 @@ func Test_GetMeta_tabular(t *testing.T) {
 		},
 		//      A7,B0
 		//        │
-		//        │
 		//   ┌──A6,C1───┐
-		//   │          │
 		//   │          │
 		// A4,D2    ┌─A5,E2─┐
 		//   │      │       │

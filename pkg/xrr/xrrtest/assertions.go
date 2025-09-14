@@ -41,35 +41,17 @@ func AssertError(t tester.T, err error) (*xrr.Error, bool) {
 	return xe, true
 }
 
-// AssertMsg asserts that the provided error is non-nil, then asserts the
-// error has the wanted error message. Returns true if it is, otherwise marks
-// the test as failed, writes an error message to the test log, and returns
-// false.
-func AssertMsg(t tester.T, want string, err error) bool {
-	t.Helper()
-	if e := check.NotNil(err); e != nil {
-		t.Error(notice.New("[xrr] expected error not to be nil"))
-		return false
-	}
-	if e := check.ErrorEqual(want, err); e != nil {
-		const hHeader = "[xrr] expected error to have the message"
-		t.Error(notice.From(e).SetHeader(hHeader))
-		return false
-	}
-	return true
-}
-
-// AssertEqual asserts that the provided error is non-nil, then asserts the
-// error has the wanted error message and error code. Returns true if it is,
-// otherwise marks the test as failed, writes an error message to the test log,
-// and returns false.
+// AssertEqual asserts that the provided error is non-nil and is an instance of
+// [xrr.Error], then asserts the error has the wanted error message and error
+// code. Returns true if it is, otherwise marks the test as failed, writes an
+// error message to the test log, and returns false.
 func AssertEqual(t tester.T, want string, err error) bool {
 	t.Helper()
-	if e := check.NotNil(err); e != nil {
-		t.Error(notice.New("[xrr] expected error not to be nil"))
+	xe, success := AssertError(t, err)
+	if !success {
 		return false
 	}
-	have := fmt.Sprintf("%+v", err)
+	have := fmt.Sprintf("%+v", xe)
 	if e := check.Equal(want, have); e != nil {
 		const hHeader = "[xrr] expected error to have a message"
 		t.Error(notice.From(e).SetHeader(hHeader))
@@ -78,12 +60,9 @@ func AssertEqual(t tester.T, want string, err error) bool {
 	return true
 }
 
-// AssertCode asserts err is not nil, is an instance of [xrr.Error] and has
+// AssertCode asserts err is not nil, implements [xrr.Coder] interface, and has
 // the given error code. Returns true if it does, otherwise marks the test as
 // failed, writes an error message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
 func AssertCode(t tester.T, want string, err error) bool {
 	t.Helper()
 	if e := check.NotNil(err); e != nil {
@@ -104,20 +83,17 @@ func AssertCode(t tester.T, want string, err error) bool {
 	return true
 }
 
-// AssertKeys asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. Then asserts the error metadata has a given number of keys.
-// Returns true if it does otherwise, marks the test as failed, writes an error
-// message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
-func AssertKeys(t tester.T, want int, err error) bool {
+// AssertKeyCnt asserts that the provided error is non-nil and error metadata,
+// retrieved using [xrr.GetMeta], has a given number of keys. Returns true if
+// it does otherwise, marks the test as failed, writes an error message to the
+// test log, and returns false.
+func AssertKeyCnt(t tester.T, want int, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	if e := check.Len(want, xe.MetaAll()); e != nil {
+	if e := check.Len(want, xrr.GetMeta(err)); e != nil {
 		const hHeader = "[xrr] expected error number of metadata keys"
 		t.Error(notice.From(e).SetHeader(hHeader))
 		return false
@@ -125,21 +101,17 @@ func AssertKeys(t tester.T, want int, err error) bool {
 	return true
 }
 
-// AssertNoKey asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. Then asserts its metadata does not contain the key with the
-// given name. Returns true if the error is [xrr.Error] instance, and it
-// doesn't contain the given metadata key. Otherwise, marks the test as failed,
+// AssertNoKey asserts that the provided error is non-nil and error metadata,
+// retrieved using [xrr.GetMeta], does not contain the key with the given name.
+// Returns true if the key doesn't exist otherwise, marks the test as failed,
 // writes an error message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
 func AssertNoKey(t tester.T, key string, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	if e := check.HasNoKey(key, xe.MetaAll()); e != nil {
+	if e := check.HasNoKey(key, xrr.GetMeta(err)); e != nil {
 		const hHeader = "[xrr] expected error without the metadata key"
 		t.Error(notice.From(e).SetHeader(hHeader))
 		return false
@@ -147,22 +119,19 @@ func AssertNoKey(t tester.T, key string, err error) bool {
 	return true
 }
 
-// AssertStr asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. Then asserts its metadata has the key with the given value.
-// Returns true if it has, otherwise marks the test as failed, writes an error
-// message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
+// AssertStr asserts that the provided error is non-nil and error metadata,
+// retrieved using [xrr.GetMeta], has the key with the given value. Returns
+// true if it does otherwise, marks the test as failed, writes an error message
+// to the test log, and returns false.
 func AssertStr(t tester.T, key, want string, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	have, e := check.HasKey(key, xe.MetaAll())
+	have, e := check.HasKey(key, xrr.GetMeta(err))
 	if e != nil {
-		const hHeader = "[xrr] expected error to have metadata key"
+		const hHeader = "[xrr] expected error to have the metadata key"
 		t.Error(notice.From(e).SetHeader(hHeader))
 		return false
 	}
@@ -174,22 +143,19 @@ func AssertStr(t tester.T, key, want string, err error) bool {
 	return true
 }
 
-// AssertInt asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. Then asserts its metadata has the key with the given value.
-// Returns true if it has, otherwise marks the test as failed, writes an error
+// AssertInt asserts that the provided error is non-nil and error metadata,
+// retrieved using [xrr.GetMeta], has the key with the given value. Returns
+// true if it has, otherwise marks the test as failed, writes an error
 // message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
 func AssertInt(t tester.T, key string, want int, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	have, e := check.HasKey(key, xe.MetaAll())
+	have, e := check.HasKey(key, xrr.GetMeta(err))
 	if e != nil {
-		const hHeader = "[xrr] expected error to have metadata key"
+		const hHeader = "[xrr] expected error to have the metadata key"
 		t.Error(notice.From(e).SetHeader(hHeader))
 		return false
 	}
@@ -201,22 +167,19 @@ func AssertInt(t tester.T, key string, want int, err error) bool {
 	return true
 }
 
-// AssertInt64 asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. Then asserts its metadata has the key with the given value.
-// Returns true if it has, otherwise marks the test as failed, writes an error
-// message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
+// AssertInt64 asserts that the provided error is non-nil and error metadata,
+// retrieved using [xrr.GetMeta], has the key with the given value. Returns
+// true if it has otherwise, marks the test as failed, writes an error message
+// to the test log, and returns false.
 func AssertInt64(t tester.T, key string, want int64, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	have, e := check.HasKey(key, xe.MetaAll())
+	have, e := check.HasKey(key, xrr.GetMeta(err))
 	if e != nil {
-		const hHeader = "[xrr] expected error to have metadata key"
+		const hHeader = "[xrr] expected error to have the metadata key"
 		t.Error(notice.From(e).SetHeader(hHeader))
 		return false
 	}
@@ -228,22 +191,19 @@ func AssertInt64(t tester.T, key string, want int64, err error) bool {
 	return true
 }
 
-// AssertFloat64 asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. Then asserts its metadata has the key with the given value.
-// Returns true if it has, otherwise marks the test as failed, writes an error
-// message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
+// AssertFloat64 asserts that the provided error is non-nil and error metadata,
+// retrieved using [xrr.GetMeta], has the key with the given value. Returns
+// true if it has otherwise, marks the test as failed, writes an error message
+// to the test log, and returns false.
 func AssertFloat64(t tester.T, key string, want float64, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	have, e := check.HasKey(key, xe.MetaAll())
+	have, e := check.HasKey(key, xrr.GetMeta(err))
 	if e != nil {
-		const hHeader = "[xrr] expected error to have metadata key"
+		const hHeader = "[xrr] expected error to have the metadata key"
 		t.Error(notice.From(e).SetHeader(hHeader))
 		return false
 	}
@@ -255,22 +215,19 @@ func AssertFloat64(t tester.T, key string, want float64, err error) bool {
 	return true
 }
 
-// AssertBool asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. Then asserts its metadata has the key with the given value.
-// Returns true if it has, otherwise marks the test as failed, writes an error
-// message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
+// AssertBool asserts that the provided error is non-nil and error metadata,
+// retrieved using [xrr.GetMeta], has the key with the given value. Returns
+// true if it has otherwise, marks the test as failed, writes an error message
+// to the test log, and returns false.
 func AssertBool(t tester.T, key string, want bool, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	have, e := check.HasKey(key, xe.MetaAll())
+	have, e := check.HasKey(key, xrr.GetMeta(err))
 	if e != nil {
-		const hHeader = "[xrr] expected error to have metadata key"
+		const hHeader = "[xrr] expected error to have the metadata key"
 		t.Error(notice.From(e).SetHeader(hHeader))
 		return false
 	}
@@ -282,22 +239,19 @@ func AssertBool(t tester.T, key string, want bool, err error) bool {
 	return true
 }
 
-// AssertTime asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. Then asserts its metadata has the key with the given value.
-// Returns true if it has, otherwise marks the test as failed, writes an error
-// message to the test log, and returns false.
-//
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
+// AssertTime asserts that the provided error is non-nil and error metadata,
+// retrieved using [xrr.GetMeta], has the key with the given value. Returns
+// true if it has, otherwise marks the test as failed, writes an error message
+// to the test log, and returns false.
 func AssertTime(t tester.T, key string, want time.Time, err error) bool {
 	t.Helper()
-	xe, success := AssertError(t, err)
-	if !success {
+	if e := check.NotNil(err); e != nil {
+		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return false
 	}
-	have, e := check.HasKey(key, xe.MetaAll())
+	have, e := check.HasKey(key, xrr.GetMeta(err))
 	if e != nil {
-		const hHeader = "[xrr] expected error to have metadata key"
+		const hHeader = "[xrr] expected error to have the metadata key"
 		t.Error(notice.From(e).SetHeader(hHeader))
 		return false
 	}
@@ -387,7 +341,7 @@ func AssertHasField(t tester.T, field string, err error) (error, bool) {
 //
 // Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
 // without unwrapping.
-func AssertFieldEqual(t tester.T, field, msg string, err error) bool {
+func AssertFieldEqual(t tester.T, field, want string, err error) bool {
 	t.Helper()
 	xe, success := AssertFields(t, err)
 	if !success {
@@ -395,18 +349,23 @@ func AssertFieldEqual(t tester.T, field, msg string, err error) bool {
 	}
 	ve, e := check.HasKey(field, xe)
 	if e != nil {
-		t.Error(notice.From(e, "xrr"))
+		msg := notice.From(e, "xrr").
+			Remove("map").
+			Append("fields", "%s", dump.New().Any(xe))
+		t.Error(msg)
 		return false
 	}
-	if e = check.ErrorEqual(msg, ve); e != nil {
-		msg := notice.From(e, "xrr").Append("fields", "%s", dump.New().Any(xe))
+	if e = check.ErrorEqual(want, ve); e != nil {
+		msg := notice.From(e, "xrr").
+			Remove("map").
+			Append("fields", "%s", dump.New().Any(xe))
 		t.Error(msg)
 		return false
 	}
 	return true
 }
 
-// AssertFieldCode asserts error is an instance of [xrr.Fields], and has the
+// AssertFieldCode asserts error is an instance of [xrr.Fields] and has the
 // given field name with an error having the given error code. Returns true if
 // it does, otherwise marks the test as failed, writes an error message to the
 // test log, and returns false.
@@ -419,6 +378,7 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 	if !success {
 		return false
 	}
+
 	ve, e := check.HasKey(field, xe)
 	if e != nil {
 		hHeader := "[xrr] expected field to exist"
@@ -431,7 +391,7 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 		t.Error(msg)
 		return false
 	}
-	if e := check.Equal(code, xrr.GetCode(ve)); e != nil {
+	if e = check.Equal(code, xrr.GetCode(ve)); e != nil {
 		const hHeader = "[xrr] expected field to have the given error code"
 		msg := notice.From(e).
 			SetHeader(hHeader).
@@ -443,10 +403,10 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 	return true
 }
 
-// AssertFieldIs asserts error is instance of [xrr.Fields], and has the
+// AssertFieldIs asserts error is an instance of [xrr.Fields] and has the
 // given field name with an error which has "want" error in its chain.
-// Assertion uses [errors.Is] to check field error chain. Returns true if it
-// does, otherwise marks the test as failed, writes an error message to the
+// Assertion uses [errors.Is] to check the field error chain. Returns true if
+// it does, otherwise marks the test as failed, writes an error message to the
 // test log, and returns false.
 //
 // Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]

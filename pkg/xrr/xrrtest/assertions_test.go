@@ -5,6 +5,7 @@ package xrrtest
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 )
 
 func Test_AssertError(t *testing.T) {
-	t.Run("success - error is instance of xrr.Error", func(t *testing.T) {
+	t.Run("success - error is an instance of xrr.Error", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
@@ -68,59 +69,8 @@ func Test_AssertError(t *testing.T) {
 	})
 }
 
-func Test_AssertMsg(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.Close()
-
-		err := xrr.New("msg", "ECode")
-
-		// --- When ---
-		have := AssertMsg(tspy, "msg", err)
-
-		// --- Then ---
-		assert.True(t, have)
-	})
-
-	t.Run("error - nil error", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "[xrr] expected error not to be nil"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		// --- When ---
-		have := AssertMsg(tspy, "key", nil)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - message not equal", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected error to have the message:\n" +
-			"  want: \"other\"\n" +
-			"  have: \"msg\""
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		err := xrr.New("msg", "ECode")
-
-		// --- When ---
-		have := AssertMsg(tspy, "other", err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-}
-
 func Test_AssertEqual(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
+	t.Run("success - error message with code equal", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
@@ -149,7 +99,7 @@ func Test_AssertEqual(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - message and code not equal", func(t *testing.T) {
+	t.Run("error - message with code is not equal", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
@@ -168,10 +118,30 @@ func Test_AssertEqual(t *testing.T) {
 		// --- Then ---
 		assert.False(t, have)
 	})
+
+	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		wMsg := "" +
+			"[xrr] expected *xrr.Error instance:\n" +
+			"  target: *xrr.Error\n" +
+			"   error: *errors.errorString"
+		tspy.ExpectLogEqual(wMsg)
+		tspy.Close()
+
+		err := errors.New("some error")
+
+		// --- When ---
+		have := AssertEqual(tspy, "some error (ECGeneric)", err)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
 }
 
 func Test_AssertCode(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
+	t.Run("success - code equals", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
@@ -241,8 +211,8 @@ func Test_AssertCode(t *testing.T) {
 	})
 }
 
-func Test_AssertKeys(t *testing.T) {
-	t.Run("no metadata keys", func(t *testing.T) {
+func Test_AssertKeyCnt(t *testing.T) {
+	t.Run("success - error has no metadata keys", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
@@ -250,25 +220,53 @@ func Test_AssertKeys(t *testing.T) {
 		err := xrr.New("msg", "ECode")
 
 		// --- When ---
-		have := AssertKeys(tspy, 0, err)
+		have := AssertKeyCnt(tspy, 0, err)
 
 		// --- Then ---
 		assert.True(t, have)
 	})
 
-	t.Run("some metadata keys", func(t *testing.T) {
+	t.Run("success - metadata key count equals", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
 
-		meta := xrr.Meta().Str("str", "a").Int("int", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertKeys(tspy, 2, err)
+		have := AssertKeyCnt(tspy, 7, err)
 
 		// --- Then ---
 		assert.True(t, have)
+	})
+
+	t.Run("success - wrapped error", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := fmt.Errorf("w: %w", TstError())
+
+		// --- When ---
+		have := AssertKeyCnt(tspy, 7, err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("error - nil error", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		wMsg := "[xrr] expected error not to be nil"
+		tspy.ExpectLogEqual(wMsg)
+		tspy.Close()
+
+		// --- When ---
+		have := AssertKeyCnt(tspy, 1, nil)
+
+		// --- Then ---
+		assert.False(t, have)
 	})
 
 	t.Run("error - different number of metadata keys", func(t *testing.T) {
@@ -286,27 +284,7 @@ func Test_AssertKeys(t *testing.T) {
 		err := xrr.New("msg", "ECode", meta.Option())
 
 		// --- When ---
-		have := AssertKeys(tspy, 3, err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		err := errors.New("some error")
-
-		// --- When ---
-		have := AssertKeys(tspy, 1, err)
+		have := AssertKeyCnt(tspy, 3, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -314,12 +292,12 @@ func Test_AssertKeys(t *testing.T) {
 }
 
 func Test_AssertNoKey(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
+	t.Run("success - error has no metadata key", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.New("msg", "ECode")
+		err := TstError()
 
 		// --- When ---
 		have := AssertNoKey(tspy, "key", err)
@@ -349,40 +327,24 @@ func Test_AssertNoKey(t *testing.T) {
 		tspy.ExpectError()
 		wMsg := "" +
 			"[xrr] expected error without the metadata key:\n" +
-			"    key: \"key\"\n" +
-			"  value: \"val\"\n" +
-			"    map:\n" +
+			"    key: \"A\"\n" +
+			"  value: 6\n    map:\n" +
 			"         map[string]any{\n" +
-			"           \"key\": \"val\",\n" +
+			"           \"A\": 6,\n" +
+			"           \"bool\": true,\n" +
+			"           \"float64\": 4,\n" +
+			"           \"int\": 2,\n" +
+			"           \"int64\": 3,\n" +
+			"           \"str\": \"abc\",\n" +
+			"           \"tim\": \"2000-01-02T03:04:05Z\",\n" +
 			"         }"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Str("key", "val")
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertNoKey(tspy, "key", err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		err := errors.New("some error")
-
-		// --- When ---
-		have := AssertNoKey(tspy, "key", err)
+		have := AssertNoKey(tspy, "A", err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -395,11 +357,24 @@ func Test_AssertStr(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		meta := xrr.Meta().Str("key", "val")
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertStr(tspy, "key", "val", err)
+		have := AssertStr(tspy, "str", "abc", err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("success - wrapped error has the key value pair", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := fmt.Errorf("w: %w", TstError())
+
+		// --- When ---
+		have := AssertStr(tspy, "str", "abc", err)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -414,7 +389,7 @@ func Test_AssertStr(t *testing.T) {
 		tspy.Close()
 
 		// --- When ---
-		have := AssertStr(tspy, "key", "val", nil)
+		have := AssertStr(tspy, "str", "abc", nil)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -425,16 +400,21 @@ func Test_AssertStr(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected error to have metadata key:\n" +
+			"[xrr] expected error to have the metadata key:\n" +
 			"  key: \"key\"\n" +
-			"  map:\n" +
-			"       map[string]any{\n" +
-			"         \"other\": \"val\",\n       }"
+			"  map:\n       map[string]any{\n" +
+			"         \"A\": 6,\n" +
+			"         \"bool\": true,\n" +
+			"         \"float64\": 4,\n" +
+			"         \"int\": 2,\n" +
+			"         \"int64\": 3,\n" +
+			"         \"str\": \"abc\",\n" +
+			"         \"tim\": \"2000-01-02T03:04:05Z\",\n" +
+			"       }"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Str("other", "val")
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
 		have := AssertStr(tspy, "key", "val", err)
@@ -454,31 +434,10 @@ func Test_AssertStr(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Int("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertStr(tspy, "key", "val", err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		err := errors.New("some error")
-
-		// --- When ---
-		have := AssertStr(tspy, "key", "val", err)
+		have := AssertStr(tspy, "int", "abc", err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -491,11 +450,24 @@ func Test_AssertInt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		meta := xrr.Meta().Int("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertInt(tspy, "key", 1, err)
+		have := AssertInt(tspy, "int", 2, err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("success - wrapped error has the key value pair", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := fmt.Errorf("w: %w", TstError())
+
+		// --- When ---
+		have := AssertInt(tspy, "int", 2, err)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -510,7 +482,7 @@ func Test_AssertInt(t *testing.T) {
 		tspy.Close()
 
 		// --- When ---
-		have := AssertInt(tspy, "key", 1, nil)
+		have := AssertInt(tspy, "int", 2, nil)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -521,20 +493,24 @@ func Test_AssertInt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected error to have metadata key:\n" +
+			"[xrr] expected error to have the metadata key:\n" +
 			"  key: \"key\"\n" +
-			"  map:\n" +
-			"       map[string]any{\n" +
-			"         \"other\": 1,\n" +
+			"  map:\n       map[string]any{\n" +
+			"         \"A\": 6,\n" +
+			"         \"bool\": true,\n" +
+			"         \"float64\": 4,\n" +
+			"         \"int\": 2,\n" +
+			"         \"int64\": 3,\n" +
+			"         \"str\": \"abc\",\n" +
+			"         \"tim\": \"2000-01-02T03:04:05Z\",\n" +
 			"       }"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Int("other", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertInt(tspy, "key", 1, err)
+		have := AssertInt(tspy, "key", 2, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -547,35 +523,14 @@ func Test_AssertInt(t *testing.T) {
 		wMsg := "" +
 			"[xrr] expected error metadata key:\n" +
 			"  want type: int\n" +
-			"  have type: int64"
+			"  have type: string"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Int64("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertInt(tspy, "key", 1, err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		err := errors.New("some error")
-
-		// --- When ---
-		have := AssertInt(tspy, "key", 1, err)
+		have := AssertInt(tspy, "str", 1, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -588,11 +543,24 @@ func Test_AssertInt64(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		meta := xrr.Meta().Int64("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertInt64(tspy, "key", 1, err)
+		have := AssertInt64(tspy, "int64", 3, err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("success - wrapped error has the key value pair", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := fmt.Errorf("w: %w", TstError())
+
+		// --- When ---
+		have := AssertInt64(tspy, "int64", 3, err)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -607,7 +575,7 @@ func Test_AssertInt64(t *testing.T) {
 		tspy.Close()
 
 		// --- When ---
-		have := AssertInt64(tspy, "key", 1, nil)
+		have := AssertInt64(tspy, "int64", 3, nil)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -618,20 +586,24 @@ func Test_AssertInt64(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected error to have metadata key:\n" +
+			"[xrr] expected error to have the metadata key:\n" +
 			"  key: \"key\"\n" +
-			"  map:\n" +
-			"       map[string]any{\n" +
-			"         \"other\": 1,\n" +
+			"  map:\n       map[string]any{\n" +
+			"         \"A\": 6,\n" +
+			"         \"bool\": true,\n" +
+			"         \"float64\": 4,\n" +
+			"         \"int\": 2,\n" +
+			"         \"int64\": 3,\n" +
+			"         \"str\": \"abc\",\n" +
+			"         \"tim\": \"2000-01-02T03:04:05Z\",\n" +
 			"       }"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Int64("other", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertInt64(tspy, "key", 1, err)
+		have := AssertInt64(tspy, "key", 2, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -644,35 +616,14 @@ func Test_AssertInt64(t *testing.T) {
 		wMsg := "" +
 			"[xrr] expected error metadata key:\n" +
 			"  want type: int64\n" +
-			"  have type: int"
+			"  have type: string"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Int("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertInt64(tspy, "key", 1, err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		err := errors.New("some error")
-
-		// --- When ---
-		have := AssertInt64(tspy, "key", 1, err)
+		have := AssertInt64(tspy, "str", 1, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -685,11 +636,24 @@ func Test_AssertFloat64(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		meta := xrr.Meta().Float64("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertFloat64(tspy, "key", 1, err)
+		have := AssertFloat64(tspy, "float64", 4, err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("success - wrapped error has the key value pair", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := fmt.Errorf("w: %w", TstError())
+
+		// --- When ---
+		have := AssertFloat64(tspy, "float64", 4, err)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -715,20 +679,24 @@ func Test_AssertFloat64(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected error to have metadata key:\n" +
+			"[xrr] expected error to have the metadata key:\n" +
 			"  key: \"key\"\n" +
-			"  map:\n" +
-			"       map[string]any{\n" +
-			"         \"other\": 1,\n" +
+			"  map:\n       map[string]any{\n" +
+			"         \"A\": 6,\n" +
+			"         \"bool\": true,\n" +
+			"         \"float64\": 4,\n" +
+			"         \"int\": 2,\n" +
+			"         \"int64\": 3,\n" +
+			"         \"str\": \"abc\",\n" +
+			"         \"tim\": \"2000-01-02T03:04:05Z\",\n" +
 			"       }"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Float64("other", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertFloat64(tspy, "key", 1, err)
+		have := AssertFloat64(tspy, "key", 2, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -741,35 +709,14 @@ func Test_AssertFloat64(t *testing.T) {
 		wMsg := "" +
 			"[xrr] expected error metadata key:\n" +
 			"  want type: float64\n" +
-			"  have type: int"
+			"  have type: string"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Int("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertFloat64(tspy, "key", 1, err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		err := errors.New("some error")
-
-		// --- When ---
-		have := AssertFloat64(tspy, "key", 1, err)
+		have := AssertFloat64(tspy, "str", 1, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -782,11 +729,24 @@ func Test_AssertBool(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		meta := xrr.Meta().Bool("key", true)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertBool(tspy, "key", true, err)
+		have := AssertBool(tspy, "bool", true, err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("success - wrapped error has the key value pair", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := fmt.Errorf("w: %w", TstError())
+
+		// --- When ---
+		have := AssertBool(tspy, "bool", true, err)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -801,7 +761,7 @@ func Test_AssertBool(t *testing.T) {
 		tspy.Close()
 
 		// --- When ---
-		have := AssertBool(tspy, "key", true, nil)
+		have := AssertBool(tspy, "bool", true, nil)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -812,17 +772,21 @@ func Test_AssertBool(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected error to have metadata key:\n" +
+			"[xrr] expected error to have the metadata key:\n" +
 			"  key: \"key\"\n" +
-			"  map:\n" +
-			"       map[string]any{\n" +
-			"         \"other\": true,\n" +
+			"  map:\n       map[string]any{\n" +
+			"         \"A\": 6,\n" +
+			"         \"bool\": true,\n" +
+			"         \"float64\": 4,\n" +
+			"         \"int\": 2,\n" +
+			"         \"int64\": 3,\n" +
+			"         \"str\": \"abc\",\n" +
+			"         \"tim\": \"2000-01-02T03:04:05Z\",\n" +
 			"       }"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Bool("other", true)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
 		have := AssertBool(tspy, "key", true, err)
@@ -838,35 +802,14 @@ func Test_AssertBool(t *testing.T) {
 		wMsg := "" +
 			"[xrr] expected error metadata key:\n" +
 			"  want type: bool\n" +
-			"  have type: int"
+			"  have type: string"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Int("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		have := AssertBool(tspy, "key", true, err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		err := errors.New("some error")
-
-		// --- When ---
-		have := AssertBool(tspy, "key", true, err)
+		have := AssertBool(tspy, "str", true, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -879,12 +822,26 @@ func Test_AssertTime(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		tim := time.Date(2022, 3, 18, 0, 0, 0, 0, time.UTC)
-		meta := xrr.Meta().Time("key", tim)
-		err := xrr.New("msg", "ECode", meta.Option())
+		tim := time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC)
+		err := TstError()
 
 		// --- When ---
-		have := AssertTime(tspy, "key", tim, err)
+		have := AssertTime(tspy, "tim", tim, err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("success - wrapped error has the key value pair", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		tim := time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC)
+		err := fmt.Errorf("w: %w", TstError())
+
+		// --- When ---
+		have := AssertTime(tspy, "tim", tim, err)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -899,7 +856,7 @@ func Test_AssertTime(t *testing.T) {
 		tspy.Close()
 
 		// --- When ---
-		have := AssertTime(tspy, "key", time.Time{}, nil)
+		have := AssertTime(tspy, "key", time.Now(), nil)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -910,41 +867,24 @@ func Test_AssertTime(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected error to have metadata key:\n" +
+			"[xrr] expected error to have the metadata key:\n" +
 			"  key: \"key\"\n" +
-			"  map: map[string]any(nil)"
+			"  map:\n       map[string]any{\n" +
+			"         \"A\": 6,\n" +
+			"         \"bool\": true,\n" +
+			"         \"float64\": 4,\n" +
+			"         \"int\": 2,\n" +
+			"         \"int64\": 3,\n" +
+			"         \"str\": \"abc\",\n" +
+			"         \"tim\": \"2000-01-02T03:04:05Z\",\n" +
+			"       }"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.New("msg", "ECode")
+		err := TstError()
 
 		// --- When ---
 		have := AssertTime(tspy, "key", time.Now(), err)
-
-		// --- Then ---
-		assert.False(t, have)
-	})
-
-	t.Run("error - timezone does not match", func(t *testing.T) {
-		// --- Given ---
-		tspy := tester.New(t)
-		tspy.ExpectError()
-		wMsg := "" +
-			"[xrr] expected error metadata key:\n" +
-			"  want: 2022-03-18T00:00:00Z\n" +
-			"  have: 2022-03-17T23:00:00Z ( 2022-03-18T00:00:00+01:00 )\n" +
-			"  diff: 1h0m0s"
-		tspy.ExpectLogEqual(wMsg)
-		tspy.Close()
-
-		tz, _ := time.LoadLocation("Europe/Warsaw")
-		tim := time.Date(2022, 3, 18, 0, 0, 0, 0, tz)
-		meta := xrr.Meta().Time("key", tim)
-		err := xrr.New("msg", "ECode", meta.Option())
-
-		// --- When ---
-		exp := time.Date(2022, 3, 18, 0, 0, 0, 0, time.UTC)
-		have := AssertTime(tspy, "key", exp, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -957,16 +897,14 @@ func Test_AssertTime(t *testing.T) {
 		wMsg := "" +
 			"[xrr] expected error metadata key:\n" +
 			"  want type: time.Time\n" +
-			"  have type: int"
+			"  have type: string"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		meta := xrr.Meta().Int("key", 1)
-		err := xrr.New("msg", "ECode", meta.Option())
+		err := TstError()
 
 		// --- When ---
-		exp := time.Date(2022, 3, 18, 0, 0, 0, 0, time.UTC)
-		have := AssertTime(tspy, "key", exp, err)
+		have := AssertTime(tspy, "str", time.Now(), err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -1228,12 +1166,12 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy.ExpectError()
 		wMsg := "" +
 			"[xrr] expected map to have a key:\n" +
-			"  key: \"f2\"\n" +
-			"  map:\n" +
-			"       map[string]error{\n" +
-			"         \"f0\": \"m0\",\n" +
-			"         \"f1\": \"m1\",\n" +
-			"       }"
+			"     key: \"f2\"\n" +
+			"  fields:\n" +
+			"          map[string]error{\n" +
+			"            \"f0\": \"m0\",\n" +
+			"            \"f1\": \"m1\",\n" +
+			"          }"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
@@ -1249,7 +1187,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - filed exists but message is different", func(t *testing.T) {
+	t.Run("error - filed exists but has a different message", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
