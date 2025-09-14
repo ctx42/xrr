@@ -68,6 +68,57 @@ func Test_AssertError(t *testing.T) {
 	})
 }
 
+func Test_AssertMsg(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := xrr.New("msg", "ECode")
+
+		// --- When ---
+		have := AssertMsg(tspy, "msg", err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("error - nil error", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		wMsg := "[xrr] expected error not to be nil"
+		tspy.ExpectLogEqual(wMsg)
+		tspy.Close()
+
+		// --- When ---
+		have := AssertMsg(tspy, "key", nil)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("error - message not equal", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		wMsg := "" +
+			"[xrr] expected error to have the message:\n" +
+			"  want: \"other\"\n" +
+			"  have: \"msg\""
+		tspy.ExpectLogEqual(wMsg)
+		tspy.Close()
+
+		err := xrr.New("msg", "ECode")
+
+		// --- When ---
+		have := AssertMsg(tspy, "other", err)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+}
+
 func Test_AssertEqual(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		// --- Given ---
@@ -149,14 +200,14 @@ func Test_AssertCode(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
+	t.Run("error - error is not an instance of xrr.Coder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
-			"   error: *errors.errorString"
+			"[xrr] expected xrr.Coder instance:\n" +
+			"  target: xrr.Coder\n" +
+			"     src: *errors.errorString"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
