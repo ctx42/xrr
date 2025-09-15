@@ -1,3 +1,6 @@
+## v0.3.0 (Mon, 15 Sep 2025 13:39:41 UTC)
+- chore: Update dependencies.
+
 ## v0.2.0 (Sun, 14 Sep 2025 18:45:18 UTC)
 - feat: Add `xrrtest.AssertMsg` asserting just the error message.
 - test: Improve the `xrrtest` package tests readability.
