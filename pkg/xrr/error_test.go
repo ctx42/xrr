@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
@@ -21,6 +22,18 @@ func Test_WithCode(t *testing.T) {
 
 	// --- Then ---
 	assert.Equal(t, "ECode", e.code)
+}
+
+func Test_WithMeta(t *testing.T) {
+	// --- Given ---
+	m := map[string]any{"A": 1, "B": 2}
+	e := &Error{}
+
+	// --- When ---
+	WithMeta(m)(e)
+
+	// --- Then ---
+	assert.Same(t, m, e.meta)
 }
 
 func Test_New(t *testing.T) {
@@ -146,6 +159,60 @@ func Test_Wrap(t *testing.T) {
 
 		// --- Then ---
 		assert.Same(t, e, err)
+	})
+}
+
+func Test_Wrapf(t *testing.T) {
+	t.Run("no %w in format", func(t *testing.T) {
+		// --- When ---
+		err := Wrapf("a %s", "msg")
+
+		// --- Then ---
+		assert.NotSameType(t, &Error{}, err)
+		assert.Equal(t, "a msg", err.Error())
+	})
+
+	t.Run("more than one %w in format", func(t *testing.T) {
+		// --- When ---
+		//goland:noinspection GoPrintFunctions
+		err := Wrapf("a %w: %w", io.EOF, io.ErrUnexpectedEOF)
+
+		// --- Then ---
+		assert.NotSameType(t, &Error{}, err)
+		assert.ErrorEqual(t, "a EOF: unexpected EOF", err)
+	})
+
+	t.Run("wrap nil error", func(t *testing.T) {
+		// --- When ---
+		//goland:noinspection GoPrintFunctions
+		err := Wrapf("a %w", nil)
+
+		// --- Then ---
+		assert.NotSameType(t, &Error{}, err)
+		assert.ErrorEqual(t, "a %!w(<nil>)", err)
+	})
+
+	t.Run("one %w in format", func(t *testing.T) {
+		// --- When ---
+		//goland:noinspection GoPrintFunctions
+		err := Wrapf("an %w", ErrInvJSON)
+
+		// --- Then ---
+		var xe *Error
+		assert.Type(t, &xe, err)
+		assert.ErrorIs(t, ErrInvJSON, xe)
+		assert.Equal(t, ECInvJSON, xe.ErrorCode())
+		assert.ErrorEqual(t, "an invalid JSON", err)
+	})
+
+	t.Run("one %w in format and error without error code", func(t *testing.T) {
+		// --- When ---
+		//goland:noinspection GoPrintFunctions
+		err := Wrapf("an %w", errors.New("error"))
+
+		// --- Then ---
+		assert.NotSameType(t, &Error{}, err)
+		assert.ErrorEqual(t, "an error", err)
 	})
 }
 

@@ -5,8 +5,10 @@ package xrr
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"maps"
+	"strings"
 )
 
 // Compile time checks.
@@ -18,6 +20,13 @@ var (
 // WithCode is an option for [New] and [Wrap] setting the error code.
 func WithCode(code string) func(*Error) {
 	return func(e *Error) { e.code = code }
+}
+
+// WithMeta is an option for [New] and [Wrap] setting the metadata.
+// The provided map must not be modified or reused by the caller after passing
+// it to this function.
+func WithMeta(meta map[string]any) func(*Error) {
+	return func(e *Error) { e.meta = meta }
 }
 
 // Error represents an error with an error code and structured metadata.
@@ -44,9 +53,11 @@ func New(msg, code string, opts ...func(*Error)) error {
 
 // Wrap wraps an error in an [Error] instance, applying the given options.
 //
-// It returns nil if the input error is nil or no options were provided. The
-// returned error retains the same error code as the input error, obtained via
-// [GetCode] function. To override the error code, use the [WithCode] option.
+// It returns nil if the input error is nil, if there are no options and the
+// provided error is already an instance of [Error], it will be returned
+// without modification. The returned error retains the same error code as the
+// input error, obtained via [GetCode] function. To override the error code,
+// use the [WithCode] option.
 func Wrap(err error, opts ...func(*Error)) error {
 	if err == nil {
 		return nil
@@ -65,6 +76,35 @@ func Wrap(err error, opts ...func(*Error)) error {
 	e := &Error{err: err, code: GetCode(err)}
 	for _, opt := range opts {
 		opt(e)
+	}
+	return e
+}
+
+// Wrapf formats an error message using the provided format string and
+// arguments, wrapping an underlying error if present and preserving its error
+// code. It supports the %w verb to wrap an existing error, similar to
+// [fmt.Errorf]. If the format string contains exactly one %w verb, the wrapped
+// error's code (if any) is retrieved and applied to the new error using
+// [WithCode]. If no %w verb is present or multiple %w verbs are used, the
+// function behaves like [fmt.Errorf], returning a new error without additional
+// wrapping.
+func Wrapf(format string, args ...any) error {
+	switch strings.Count(format, "%w") {
+	case 0:
+		return fmt.Errorf(format, args...)
+	case 1:
+		// Case we are interested in.
+	default:
+		return fmt.Errorf(format, args...)
+	}
+
+	e := fmt.Errorf(format, args...)
+	ue := errors.Unwrap(e)
+	if ue == nil {
+		return e
+	}
+	if code := GetCode(ue); code != "" && code != ECGeneric {
+		return Wrap(e, WithCode(code))
 	}
 	return e
 }
