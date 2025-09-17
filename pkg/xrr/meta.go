@@ -40,13 +40,13 @@ func (m Metadata) Float64(key string, value float64) Metadata {
 }
 
 // Bool adds the key with val as a boolean to the metadata collection. Key will be
-// // overridden with the new value if it already exists.
+// overridden with the new value if it already exists.
 func (m Metadata) Bool(key string, value bool) Metadata {
 	return m.set(key, value)
 }
 
 // Time adds the key with val as a time to the metadata collection. Key will be
-// // overridden with the new value if it already exists.
+// overridden with the new value if it already exists.
 func (m Metadata) Time(key string, value time.Time) Metadata {
 	return m.set(key, value)
 }
