@@ -1,3 +1,7 @@
+## v0.4.0 (Wed, 17 Sep 2025 20:06:55 UTC)
+- doc: Update documentation.
+- feat!: Rename `vrr/Envelope.ErrCode` method to `vrr/Envelope.ErrorCode` to match the `vrr.Coder` interface.
+
 ## v0.3.0 (Mon, 15 Sep 2025 13:39:41 UTC)
 - chore: Update dependencies.
 
