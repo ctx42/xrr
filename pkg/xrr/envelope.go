@@ -107,8 +107,8 @@ func Enclose(cause error, lead ...error) error {
 // Error returns the cause error message.
 func (e Envelope) Error() string { return e.cause.Error() }
 
-// ErrCode returns the cause error error code.
-func (e Envelope) ErrCode() string { return GetCode(e.cause) }
+// ErrorCode returns the cause error error code.
+func (e Envelope) ErrorCode() string { return GetCode(e.cause) }
 
 // Unwrap returns the cause of the error.
 func (e Envelope) Unwrap() error { return e.cause }

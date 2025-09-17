@@ -42,7 +42,7 @@ func AddField(ers *Fields, field string, err error) {
 // interface. Otherwise, it returns nil.
 func GetFields(err error) map[string]error {
 	if mg, ok := err.(Fielder); ok {
-		return mg.ErrFields()
+		return mg.ErrorFields()
 	}
 	return nil
 }
@@ -147,11 +147,11 @@ func mergeFields(ers ...error) Fields {
 	return first
 }
 
-func (fs Fields) ErrFields() map[string]error { return fs }
+func (fs Fields) ErrorFields() map[string]error { return fs }
 
 // Error returns string representation of field errors.
 func (fs Fields) Error() string {
-	return formatFields(fs.ErrFields(), false)
+	return formatFields(fs.ErrorFields(), false)
 }
 
 // Is implements the interface used by [errors.Is].
@@ -178,7 +178,7 @@ func (fs Fields) Format(state fmt.State, verb rune) {
 
 	case 'v':
 		if state.Flag('+') {
-			_, _ = fmt.Fprint(state, formatFields(fs.ErrFields(), true))
+			_, _ = fmt.Fprint(state, formatFields(fs.ErrorFields(), true))
 		} else {
 			msg := fs.Error()
 			_, _ = fmt.Fprint(state, msg)
@@ -325,7 +325,7 @@ func flatten(visitor map[string]error, pref string, fields map[string]error) {
 	for field, err := range fields {
 		var fs Fields
 		if errors.As(err, &fs) {
-			flatten(visitor, prefix(pref, field), fs.ErrFields())
+			flatten(visitor, prefix(pref, field), fs.ErrorFields())
 			continue
 		}
 		visitor[prefix(pref, field)] = err

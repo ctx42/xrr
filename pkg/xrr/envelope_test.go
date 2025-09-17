@@ -105,14 +105,14 @@ func Test_Envelope_Error(t *testing.T) {
 	assert.Equal(t, "cause", err)
 }
 
-func Test_Envelope_ErrCode(t *testing.T) {
+func Test_Envelope_ErrorCode(t *testing.T) {
 	// --- Given ---
 	cause := New("cause", "ECC")
 	lead := New("lead", "ECL")
 	e := Envelope{cause: cause, lead: lead}
 
 	// --- When ---
-	have := e.ErrCode()
+	have := e.ErrorCode()
 
 	// --- Then ---
 	assert.Equal(t, "ECC", have)

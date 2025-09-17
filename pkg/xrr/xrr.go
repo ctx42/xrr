@@ -17,11 +17,11 @@ type Coder interface {
 	ErrorCode() string
 }
 
-// Fielder is the interface that wraps the ErrFields method.
+// Fielder is the interface that wraps the ErrorFields method.
 //
-// ErrFields returns errors for field names. It is used for validation errors.
+// ErrorFields returns errors for field names. It is used for validation errors.
 type Fielder interface {
-	ErrFields() map[string]error
+	ErrorFields() map[string]error
 }
 
 // Metadater is an interface providing access to error metadata.

@@ -10,11 +10,11 @@ import (
 // TstErrStd is an error used in tests.
 var TstErrStd = errors.New("std tst msg")
 
-// TErrFields represents an error implementing [Fielder] interface.
-type TErrFields map[string]error
+// TErrorFields represents an error implementing [Fielder] interface.
+type TErrorFields map[string]error
 
-func (f TErrFields) Error() string               { return "fields error" }
-func (f TErrFields) ErrFields() map[string]error { return f }
+func (f TErrorFields) Error() string                 { return "fields error" }
+func (f TErrorFields) ErrorFields() map[string]error { return f }
 
 // TErrMarshalJSON represents test error struct implementing [json.Marshaler]
 // interface which returns 'err' error.

@@ -79,7 +79,7 @@ func Test_AddField(t *testing.T) {
 func Test_GetFields(t *testing.T) {
 	// --- Given ---
 	err := New("message", "code")
-	fls := TErrFields(map[string]error{"key": err})
+	fls := TErrorFields(map[string]error{"key": err})
 
 	// --- When ---
 	m := GetFields(fls)
@@ -389,7 +389,7 @@ func Test_MergeFields(t *testing.T) {
 	})
 }
 
-func Test_Fields_ErrFields(t *testing.T) {
+func Test_Fields_ErrorFields(t *testing.T) {
 	// --- Given ---
 	m := map[string]error{
 		"f0": errors.New("em0"),
@@ -398,7 +398,7 @@ func Test_Fields_ErrFields(t *testing.T) {
 	}
 
 	// --- When ---
-	have := Fields(m).ErrFields()
+	have := Fields(m).ErrorFields()
 
 	// --- Then ---
 	assert.Equal(t, m, have)
