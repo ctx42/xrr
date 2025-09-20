@@ -1,3 +1,11 @@
+## v0.5.0 (Sat, 20 Sep 2025 09:30:06 UTC)
+- feat: Only the supported types are used for `xrr.Error` metadata when using `xrr.WithMeta`.
+- fix: Error code was set to empty string instead od `xrr.ECGeneric`.
+- chore: More realistic test fixtures.
+- test: Add tests for `xrr/Error.Error` method.
+- feat: Implement custom error string marshaling where joined error messages are concatenated with ";" instead of "\n".
+- feat!: The `xrr.Split` and `xrr.IsJoined` no longer use `errors.As` and test the passed instance directly.
+
 ## v0.4.0 (Wed, 17 Sep 2025 20:06:55 UTC)
 - doc: Update documentation.
 - feat!: Rename `vrr/Envelope.ErrCode` method to `vrr/Envelope.ErrorCode` to match the `vrr.Coder` interface.
