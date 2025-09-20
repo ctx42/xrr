@@ -5,6 +5,7 @@ package xrr
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -25,6 +26,19 @@ func Test_Split(t *testing.T) {
 		assert.Len(t, 2, have)
 		assert.Same(t, e0, have[0])
 		assert.Same(t, e1, have[1])
+	})
+
+	t.Run("wrapped joined error", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("msg0")
+		e1 := New("msg1", "ECode")
+		ers := fmt.Errorf("abc: %w", errors.Join(e0, e1))
+
+		// --- When ---
+		have := Split(ers)
+
+		// --- Then ---
+		assert.Len(t, 1, have)
 	})
 
 	t.Run("single error", func(t *testing.T) {
@@ -219,6 +233,19 @@ func Test_IsJoined(t *testing.T) {
 
 		// --- Then ---
 		assert.True(t, have)
+	})
+
+	t.Run("wrapped joined error", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("msg0")
+		e1 := New("msg1", "ECode")
+		ers := fmt.Errorf("abc: %w", errors.Join(e0, e1))
+
+		// --- When ---
+		have := IsJoined(ers)
+
+		// --- Then ---
+		assert.False(t, have)
 	})
 
 	t.Run("not joined error", func(t *testing.T) {

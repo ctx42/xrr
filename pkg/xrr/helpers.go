@@ -21,9 +21,8 @@ func Split(err error) []error {
 	if err == nil {
 		return nil
 	}
-	var joinErr joined
-	if errors.As(err, &joinErr) {
-		return joinErr.Unwrap()
+	if es, ok := err.(joined); ok {
+		return es.Unwrap()
 	}
 	return []error{err}
 }
@@ -64,8 +63,8 @@ func join(ers ...error) []error {
 // IsJoined returns true if the provided error is not nil and implements
 // `Unwrap() []error` interface. Returns false if the error is nil.
 func IsJoined(err error) bool {
-	var joinErr interface{ Unwrap() []error }
-	return errors.As(err, &joinErr) // TODO(rz): this should be type assertion.
+	_, ok := err.(joined)
+	return ok
 }
 
 // DefaultCode returns the first non-empty code from the slice of codes.
