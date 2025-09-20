@@ -18,6 +18,30 @@ func Test_NewMeta(t *testing.T) {
 	assert.Nil(t, have.m)
 }
 
+func Test_Metadata_Bool(t *testing.T) {
+	t.Run("not existing", func(t *testing.T) {
+		// --- Given ---
+		m := Metadata{}
+
+		// --- When ---
+		have := m.Bool("A", true)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": true}, have.m)
+	})
+
+	t.Run("existing", func(t *testing.T) {
+		// --- Given ---
+		m := Metadata{m: map[string]any{"A": false}}
+
+		// --- Given ---
+		have := m.Bool("A", true)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": true}, have.m)
+	})
+}
+
 func Test_Metadata_Str(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---
@@ -115,30 +139,6 @@ func Test_Metadata_Float64(t *testing.T) {
 	})
 }
 
-func Test_Metadata_Bool(t *testing.T) {
-	t.Run("not existing", func(t *testing.T) {
-		// --- Given ---
-		m := Metadata{}
-
-		// --- When ---
-		have := m.Bool("A", true)
-
-		// --- Then ---
-		assert.Equal(t, map[string]any{"A": true}, have.m)
-	})
-
-	t.Run("existing", func(t *testing.T) {
-		// --- Given ---
-		m := Metadata{m: map[string]any{"A": false}}
-
-		// --- Given ---
-		have := m.Bool("A", true)
-
-		// --- Then ---
-		assert.Equal(t, map[string]any{"A": true}, have.m)
-	})
-}
-
 func Test_Metadata_Time(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---
@@ -166,6 +166,58 @@ func Test_Metadata_Time(t *testing.T) {
 	})
 }
 
+func Test_Metadata_MetaSetAll(t *testing.T) {
+	t.Run("not existing", func(t *testing.T) {
+		// --- Given ---
+		src := map[string]any{"A": 1, "B": 2}
+		m := Metadata{}
+
+		// --- When ---
+		have := m.MetaSetAll(src)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": 1, "B": 2}, have.m)
+	})
+
+	t.Run("overwrites existing", func(t *testing.T) {
+		// --- Given ---
+		src := map[string]any{"A": 2}
+		m := Metadata{m: map[string]any{"A": 1.0}}
+
+		// --- Given ---
+		have := m.MetaSetAll(src)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": 2}, have.m)
+	})
+}
+
+func Test_Metadata_MetaSetFrom(t *testing.T) {
+	t.Run("not existing", func(t *testing.T) {
+		// --- Given ---
+		src := TMetaAll(map[string]any{"A": 1, "B": 2})
+		m := Metadata{}
+
+		// --- When ---
+		have := m.MetaSetFrom(src)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": 1, "B": 2}, have.m)
+	})
+
+	t.Run("overwrites existing", func(t *testing.T) {
+		// --- Given ---
+		src := TMetaAll(map[string]any{"A": 2})
+		m := Metadata{m: map[string]any{"A": 1.0}}
+
+		// --- Given ---
+		have := m.MetaSetFrom(src)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": 2}, have.m)
+	})
+}
+
 func Test_Metadata_Option(t *testing.T) {
 	// --- Given ---
 	m := Metadata{m: map[string]any{"A": 1, "B": 2}}
@@ -176,7 +228,7 @@ func Test_Metadata_Option(t *testing.T) {
 	// --- Then ---
 	e := &Error{}
 	have(e)
-	assert.Same(t, m.m, e.meta)
+	assert.Equal(t, map[string]any{"A": 1, "B": 2}, e.meta)
 }
 
 func Test_Metadata_set(t *testing.T) {

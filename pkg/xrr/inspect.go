@@ -3,6 +3,10 @@
 
 package xrr
 
+import (
+	"time"
+)
+
 // IsCode walks the error chain (tree) and returns true if any of the errors
 // has a given error code.
 func IsCode(err error, code string) bool {
@@ -36,7 +40,6 @@ func GetCode(err error) string {
 func GetCodes(err error) []string {
 	set := make(map[string]struct{}, 10)
 	var ret []string
-
 	cb := func(err error) bool {
 		code := GetCode(err)
 		if _, ok := set[code]; !ok {
@@ -73,6 +76,79 @@ func GetMeta(err error) map[string]any {
 	return m
 }
 
+// GetBool recursively walks the error chain (tree) and returns the first bool
+// value associated with the provided key. Returns the key value and true if
+// the key was found. Otherwise, returns a false and false.
+func GetBool(err error, key string) (bool, bool) {
+	return getKey[bool](err, key)
+}
+
+// GetStr recursively walks the error chain (tree) and returns the first string
+// value associated with the provided key. Returns the key value and true if
+// the key was found. Otherwise, returns an empty string and false.
+func GetStr(err error, key string) (string, bool) {
+	return getKey[string](err, key)
+}
+
+// GetInt recursively walks the error chain (tree) and returns the first int
+// value associated with the provided key. Returns the key value and true if
+// the key was found. Otherwise, returns a zero value and false.
+func GetInt(err error, key string) (int, bool) {
+	return getKey[int](err, key)
+}
+
+// GetInt64 recursively walks the error chain (tree) and returns the first
+// int64 value associated with the provided key. Returns the key value and true
+// if the key was found. Otherwise, returns a zero value and false.
+func GetInt64(err error, key string) (int64, bool) {
+	return getKey[int64](err, key)
+}
+
+// GetFloat64 recursively walks the error chain (tree) and returns the first
+// float64 value associated with the provided key. Returns the key value and
+// true if the key was found. Otherwise, returns a zero value and false.
+func GetFloat64(err error, key string) (float64, bool) {
+	return getKey[float64](err, key)
+}
+
+// GetTime recursively walks the error chain (tree) and returns the first
+// [time.Time] value associated with the provided key. Returns the key value
+// and true if the key was found. Otherwise, returns a zero value and false.
+func GetTime(err error, key string) (time.Time, bool) {
+	return getKey[time.Time](err, key)
+}
+
+// GetDuration recursively walks the error chain (tree) and returns the first
+// [time.Duration] value associated with the provided key. Returns the key value
+// and true if the key was found. Otherwise, returns a zero value and false.
+func GetDuration(err error, key string) (time.Duration, bool) {
+	return getKey[time.Duration](err, key)
+}
+
+// getKey recursively walks the error chain (tree) and returns the first string
+// value associated with the provided key. Returns the key value and true if
+// the key was found. Otherwise, returns an empty string and false.
+func getKey[T metaType](err error, key string) (T, bool) {
+	var value T
+	var found bool
+	cb := func(err error) bool {
+		if e, ok := err.(Metadater); ok {
+			if meta := e.MetaAll(); len(meta) > 0 {
+				if v, exist := meta[key]; exist {
+					if vv, success := v.(T); success {
+						value = vv
+						found = true
+						return false
+					}
+				}
+			}
+		}
+		return true
+	}
+	walk(err, cb)
+	return value, found
+}
+
 // walk walks the error chain (tree) using breadth-first search (BFS) and calls
 // the callback for each error. Return true from the callback if you want to
 // continue walking the tree or false to stop.
@@ -89,6 +165,16 @@ func walk(err error, cb func(err error) bool) bool {
 			return walk(e, cb)
 		}
 		return true
+
+	case Fielder:
+		_, ers := sortFields(x.ErrorFields())
+		for _, fe := range ers {
+			if !walk(fe, cb) {
+				return false
+			}
+		}
+		return true
+
 	case interface{ Unwrap() []error }:
 		for _, je := range x.Unwrap() {
 			if !walk(je, cb) {
@@ -112,6 +198,16 @@ func walkReverse(err error, cb func(err error) bool) bool {
 				return false
 			}
 		}
+
+	case Fielder:
+		_, ers := sortFields(x.ErrorFields())
+		for i := len(ers) - 1; i >= 0; i-- {
+			if !walkReverse(ers[i], cb) {
+				return false
+			}
+		}
+		return true
+
 	case interface{ Unwrap() []error }:
 		ers := x.Unwrap()
 		for i := len(ers) - 1; i >= 0; i-- {

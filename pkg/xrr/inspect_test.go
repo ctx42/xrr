@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/ctx42/testing/pkg/assert"
 )
@@ -176,9 +177,22 @@ func Test_GetCodes_tabular(t *testing.T) {
 			},
 			[]string{"a", "b", ECGeneric},
 		},
+		{
+			"nil errors are ignored",
+			&Error{
+				code: "a",
+				err: &Error{
+					code: "b",
+					err: &Fields{
+						"x": nil,
+						"y": New("msg y", "y"),
+						"z": nil,
+					},
+				},
+			},
+			[]string{"a", "b", "y"},
+		},
 	}
-
-	// TODO(rz): nil errors are ignored - implement Fields first.
 
 	for _, tc := range tt {
 		t.Run(tc.testN, func(t *testing.T) {
@@ -288,6 +302,14 @@ func Test_GetMeta_tabular(t *testing.T) {
 				"H": 3,
 			},
 		},
+		{
+			"fields",
+			&Fields{
+				"a": New("msg a", "a", Meta().Int("A", 1).Int("B", 1).Option()),
+				"b": New("msg b", "b", Meta().Int("A", 1).Int("B", 2).Option()),
+			},
+			map[string]any{"A": 1, "B": 1},
+		},
 	}
 
 	for _, tc := range tt {
@@ -297,6 +319,289 @@ func Test_GetMeta_tabular(t *testing.T) {
 
 			// --- Then ---
 			assert.Equal(t, tc.want, have)
+		})
+	}
+}
+
+func Test_GetBool(t *testing.T) {
+	tree := func() error {
+		return &Error{
+			meta: map[string]any{"A": true},
+			err: &Error{
+				meta: map[string]any{"A": false, "B": 3},
+			},
+		}
+	}
+
+	tt := []struct {
+		testN string
+
+		err   error
+		key   string
+		value bool
+		exist bool
+	}{
+		{"nil error", nil, "key", false, false},
+		{"not existing key", tree(), "X", false, false},
+		{"returns the first found key", tree(), "A", true, true},
+		{"key found but type mismatch", tree(), "B", false, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			value, exist := GetBool(tc.err, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exist, exist)
+			assert.Equal(t, tc.value, value)
+		})
+	}
+}
+
+func Test_GetStr(t *testing.T) {
+	tree := func() error {
+		return &Error{
+			meta: map[string]any{"A": "1"},
+			err: &Error{
+				meta: map[string]any{"A": "2", "B": 3},
+			},
+		}
+	}
+
+	tt := []struct {
+		testN string
+
+		err   error
+		key   string
+		value string
+		exist bool
+	}{
+		{"nil error", nil, "key", "", false},
+		{"not existing key", tree(), "X", "", false},
+		{"returns the first found key", tree(), "A", "1", true},
+		{"key found but type mismatch", tree(), "B", "", false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			value, exist := GetStr(tc.err, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exist, exist)
+			assert.Equal(t, tc.value, value)
+		})
+	}
+}
+
+func Test_GetInt(t *testing.T) {
+	tree := func() error {
+		return &Error{
+			meta: map[string]any{"A": 1},
+			err: &Error{
+				meta: map[string]any{"A": 2, "B": "3"},
+			},
+		}
+	}
+
+	tt := []struct {
+		testN string
+
+		err   error
+		key   string
+		value int
+		exist bool
+	}{
+		{"nil error", nil, "key", 0, false},
+		{"not existing key", tree(), "X", 0, false},
+		{"returns the first found key", tree(), "A", 1, true},
+		{"key found but type mismatch", tree(), "B", 0, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			value, exist := GetInt(tc.err, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exist, exist)
+			assert.Equal(t, tc.value, value)
+		})
+	}
+}
+
+func Test_GetInt64(t *testing.T) {
+	tree := func() error {
+		return &Error{
+			meta: map[string]any{"A": int64(1)},
+			err: &Error{
+				meta: map[string]any{"A": int64(2), "B": "3"},
+			},
+		}
+	}
+
+	tt := []struct {
+		testN string
+
+		err   error
+		key   string
+		value int64
+		exist bool
+	}{
+		{"nil error", nil, "key", 0, false},
+		{"not existing key", tree(), "X", 0, false},
+		{"returns the first found key", tree(), "A", 1, true},
+		{"key found but type mismatch", tree(), "B", 0, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			value, exist := GetInt64(tc.err, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exist, exist)
+			assert.Equal(t, tc.value, value)
+		})
+	}
+}
+
+func Test_GetFloat64(t *testing.T) {
+	tree := func() error {
+		return &Error{
+			meta: map[string]any{"A": float64(1)},
+			err: &Error{
+				meta: map[string]any{"A": float64(2), "B": "3"},
+			},
+		}
+	}
+
+	tt := []struct {
+		testN string
+
+		err   error
+		key   string
+		value float64
+		exist bool
+	}{
+		{"nil error", nil, "key", 0, false},
+		{"not existing key", tree(), "X", 0, false},
+		{"returns the first found key", tree(), "A", 1, true},
+		{"key found but type mismatch", tree(), "B", 0, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			value, exist := GetFloat64(tc.err, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exist, exist)
+			assert.Equal(t, tc.value, value)
+		})
+	}
+}
+
+func Test_GetTime(t *testing.T) {
+	tim1 := time.Date(2001, 1, 1, 1, 1, 1, 0, time.UTC)
+	tim2 := time.Date(2002, 2, 2, 2, 2, 2, 0, time.UTC)
+	tree := func() error {
+		return &Error{
+			meta: map[string]any{"A": tim1},
+			err: &Error{
+				meta: map[string]any{"A": tim2, "B": "3"},
+			},
+		}
+	}
+
+	tt := []struct {
+		testN string
+
+		err   error
+		key   string
+		value time.Time
+		exist bool
+	}{
+		{"nil error", nil, "key", time.Time{}, false},
+		{"not existing key", tree(), "X", time.Time{}, false},
+		{"returns the first found key", tree(), "A", tim1, true},
+		{"key found but type mismatch", tree(), "B", time.Time{}, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			value, exist := GetTime(tc.err, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exist, exist)
+			assert.Equal(t, tc.value, value)
+		})
+	}
+}
+
+func Test_GetDuration(t *testing.T) {
+	tree := func() error {
+		return &Error{
+			meta: map[string]any{"A": time.Second},
+			err: &Error{
+				meta: map[string]any{"A": time.Hour, "B": "3"},
+			},
+		}
+	}
+
+	tt := []struct {
+		testN string
+
+		err   error
+		key   string
+		value time.Duration
+		exist bool
+	}{
+		{"nil error", nil, "key", 0, false},
+		{"not existing key", tree(), "X", 0, false},
+		{"returns the first found key", tree(), "A", time.Second, true},
+		{"key found but type mismatch", tree(), "B", 0, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			value, exist := GetDuration(tc.err, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exist, exist)
+			assert.Equal(t, tc.value, value)
+		})
+	}
+}
+
+func Test_getKey(t *testing.T) {
+	tt := []struct {
+		testN string
+
+		err   error
+		key   string
+		value string
+		exist bool
+	}{
+		{"nil error", nil, "A", "", false},
+		{"std error", errors.New("a"), "A", "", false},
+		{"no key simple", New("a", "eca"), "A", "", false},
+		{"key fund but type mismatch", TstTreeMeta(), "A", "", false},
+		{"returns the first found key", TstTreeMeta(), "D", "d", true},
+		{"leaf node key", TstTreeMeta(), "G", "g", true},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			value, exist := getKey[string](tc.err, tc.key)
+
+			// --- Then ---
+			assert.Equal(t, tc.exist, exist)
+			assert.Equal(t, tc.value, value)
 		})
 	}
 }
@@ -356,6 +661,20 @@ func Test_walk(t *testing.T) {
 
 		// --- Then ---
 		assert.Equal(t, "acbde", have)
+	})
+
+	t.Run("tree configuration 5", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeCase5()
+
+		var have string
+		cb := func(err error) bool { have += GetCode(err); return true }
+
+		// --- When ---
+		walk(e, cb)
+
+		// --- Then ---
+		assert.Equal(t, "abdegh", have)
 	})
 
 	t.Run("stop after the first one", func(t *testing.T) {
@@ -431,6 +750,34 @@ func Test_walkRev(t *testing.T) {
 
 		// --- Then ---
 		assert.Equal(t, "gifdhecba", have)
+	})
+
+	t.Run("tree configuration 4", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeCase4()
+
+		var have string
+		cb := func(err error) bool { have += GetCode(err); return true }
+
+		// --- When ---
+		walkReverse(e, cb)
+
+		// --- Then ---
+		assert.Equal(t, "edbca", have)
+	})
+
+	t.Run("tree configuration 5", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeCase5()
+
+		var have string
+		cb := func(err error) bool { have += GetCode(err); return true }
+
+		// --- When ---
+		walkReverse(e, cb)
+
+		// --- Then ---
+		assert.Equal(t, "hgedba", have)
 	})
 
 	t.Run("stop after the first one", func(t *testing.T) {

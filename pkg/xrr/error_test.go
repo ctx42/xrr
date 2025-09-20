@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/ctx42/testing/pkg/assert"
 )
@@ -25,15 +26,103 @@ func Test_WithCode(t *testing.T) {
 }
 
 func Test_WithMeta(t *testing.T) {
-	// --- Given ---
-	m := map[string]any{"A": 1, "B": 2}
-	e := &Error{}
+	t.Run("set", func(t *testing.T) {
+		// --- Given ---
+		m := map[string]any{
+			"bool":     true,
+			"string":   "abc",
+			"int":      2,
+			"int64":    int64(2),
+			"float64":  4.2,
+			"time":     time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC),
+			"duration": time.Second,
+		}
+		e := &Error{}
 
-	// --- When ---
-	WithMeta(m)(e)
+		// --- When ---
+		WithMeta(m)(e)
 
-	// --- Then ---
-	assert.Same(t, m, e.meta)
+		// --- Then ---
+		want := map[string]any{
+			"bool":     true,
+			"string":   "abc",
+			"int":      2,
+			"int64":    int64(2),
+			"float64":  4.2,
+			"time":     time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC),
+			"duration": time.Second,
+		}
+		assert.Equal(t, want, e.meta)
+	})
+
+	t.Run("not supported types are removed", func(t *testing.T) {
+		// --- Given ---
+		m := map[string]any{"A": 1, "B": struct{}{}}
+		e := &Error{}
+
+		// --- When ---
+		WithMeta(m)(e)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": 1}, e.meta)
+	})
+
+	t.Run("multiple calls work like merge", func(t *testing.T) {
+		// --- Given ---
+		m0 := map[string]any{"A": 1, "B": 2}
+		m1 := map[string]any{"B": 3}
+		e := &Error{}
+
+		// --- When ---
+		WithMeta(m0)(e)
+		WithMeta(m1)(e)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": 1, "B": 3}, e.meta)
+	})
+}
+
+func Test_WithMetaFrom(t *testing.T) {
+	t.Run("set", func(t *testing.T) {
+		// --- Given ---
+		m := TMetaAll(map[string]any{
+			"bool":     true,
+			"string":   "abc",
+			"int":      2,
+			"int64":    int64(2),
+			"float64":  4.2,
+			"time":     time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC),
+			"duration": time.Second,
+		})
+		e := &Error{}
+
+		// --- When ---
+		WithMetaFrom(m)(e)
+
+		// --- Then ---
+		want := map[string]any{
+			"bool":     true,
+			"string":   "abc",
+			"int":      2,
+			"int64":    int64(2),
+			"float64":  4.2,
+			"time":     time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC),
+			"duration": time.Second,
+		}
+		assert.Equal(t, want, e.meta)
+	})
+
+	t.Run("not supported types are removed", func(t *testing.T) {
+		// --- Given ---
+		m := TMetaAll(map[string]any{"A": 1, "B": struct{}{}})
+		e := &Error{}
+
+		// --- When ---
+		WithMeta(m)(e)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": 1}, e.meta)
+	})
 }
 
 func Test_New(t *testing.T) {

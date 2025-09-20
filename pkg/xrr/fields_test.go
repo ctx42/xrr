@@ -463,6 +463,51 @@ func Test_Fields_Error(t *testing.T) {
 	})
 }
 
+func Test_Fields_Unwrap(t *testing.T) {
+	t.Run("not nested", func(t *testing.T) {
+		// --- Given ---
+		fs := Fields{
+			"f0": errors.New("em0"),
+			"f1": errors.New("em1"),
+			"f2": errors.New("em2"),
+			"f3": nil,
+		}
+
+		// --- When ---
+		have := fs.Unwrap()
+
+		// --- Then ---
+		assert.Len(t, 3, have)
+		assert.ErrorEqual(t, "f0: em0", have[0])
+		assert.ErrorEqual(t, "f1: em1", have[1])
+		assert.ErrorEqual(t, "f2: em2", have[2])
+	})
+
+	t.Run("nested", func(t *testing.T) {
+		// --- Given ---
+		fs := Fields{
+			"f0": errors.New("em0"),
+			"f1": Fields{
+				"s0": errors.New("em10"),
+				"s1": errors.New("em11"),
+				"s2": nil,
+			},
+			"f2": errors.New("em2"),
+			"f3": nil,
+		}
+
+		// --- When ---
+		have := fs.Unwrap()
+
+		// --- Then ---
+		assert.Len(t, 4, have)
+		assert.ErrorEqual(t, "f0: em0", have[0])
+		assert.ErrorEqual(t, "f1.s0: em10", have[1])
+		assert.ErrorEqual(t, "f1.s1: em11", have[2])
+		assert.ErrorEqual(t, "f2: em2", have[3])
+	})
+}
+
 func Test_Fields_Is(t *testing.T) {
 	t.Run("true not nested fields", func(t *testing.T) {
 		// --- Given ---

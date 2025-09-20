@@ -154,6 +154,19 @@ func (fs Fields) Error() string {
 	return formatFields(fs.ErrorFields(), false)
 }
 
+func (fs Fields) Unwrap() []error {
+	flat := fs.Flatten()
+	fields, ers := sortFields(flat)
+	var j int
+	for i, err := range ers {
+		if err != nil {
+			ers[j] = Wrapf("%s: %w", fields[i], err)
+			j++
+		}
+	}
+	return ers[:j]
+}
+
 // Is implements the interface used by [errors.Is].
 func (fs Fields) Is(other error) bool {
 	if other == nil {

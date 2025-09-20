@@ -23,7 +23,12 @@ type TErrMarshalJSON struct{ err error }
 func (tm *TErrMarshalJSON) Error() string                { return "test error" }
 func (tm *TErrMarshalJSON) MarshalJSON() ([]byte, error) { return nil, tm.err }
 
-// TstMetaTree returns test error tree.
+// TMetaAll represents a struct implementing [Metadater] interface.
+type TMetaAll map[string]any
+
+func (T TMetaAll) MetaAll() map[string]any { return T }
+
+// TstMetaTree returns a test error tree.
 //
 // Shape (metadata):
 //
@@ -52,7 +57,7 @@ func TstMetaTree() error {
 	return a7b0
 }
 
-// TstTreeCase1 returns test error tree - case 1.
+// TstTreeCase1 returns a test error tree - case 1.
 //
 // Shape:
 //
@@ -88,7 +93,7 @@ func TstTreeCase1() error {
 	}
 }
 
-// TstTreeCase2 returns test error tree - case 2.
+// TstTreeCase2 returns a test error tree - case 2.
 //
 // Shape:
 //
@@ -134,7 +139,7 @@ func TstTreeCase2() error {
 	}
 }
 
-// TstTreeCase3 returns test error tree - case 3.
+// TstTreeCase3 returns a test error tree - case 3.
 //
 // Shape:
 //
@@ -180,7 +185,7 @@ func TstTreeCase3() error {
 	}
 }
 
-// TstTreeCase4 returns test error tree - case 4.
+// TstTreeCase4 returns a test error tree - case 4.
 //
 // Shape:
 //
@@ -204,4 +209,66 @@ func TstTreeCase4() error {
 			),
 		},
 	)
+}
+
+// TstTreeCase5 returns a test error tree - case 5.
+//
+// Shape:
+//
+//	a─────d────(f)
+//	│     │     │
+//	│     │   ┌─┴─┐
+//	│     │   │   │
+//	b     e   g   h
+func TstTreeCase5() error {
+	return Fields{
+		"f": errors.Join(
+			&Error{msg: "msg g", code: "g"},
+			&Error{msg: "msg h", code: "h"},
+		),
+		"a": &Error{
+			msg:  "msg a",
+			code: "a",
+			err:  &Error{msg: "msg b", code: "b"},
+		},
+		"d": &Error{
+			msg:  "msg d",
+			code: "d",
+			err:  &Error{msg: "msg e", code: "e"},
+		},
+	}
+}
+
+// TstTreeMeta returns a test error tree with metadata keys. Where the "D"
+// metadata key is duplicated in the tree.
+//
+// Shape:
+//
+//	     A7,Bb
+//	       │
+//	  ┌──A6,Cc───┐
+//	  │          │
+//	A4,Dd    ┌─A5,Ee─┐
+//	  │      │       │
+//	A3,Ff  A2,Gg   A1,Dh
+func TstTreeMeta() error {
+	return &Error{
+		err: &Error{
+			err: errors.Join(
+				&Error{
+					err:  &Error{msg: "ma3", code: "a3", meta: map[string]any{"A": 3, "F": "f"}},
+					meta: map[string]any{"A": 4, "D": "d"},
+				},
+				&Error{
+					err: errors.Join(
+						&Error{msg: "ma2", code: "a2", meta: map[string]any{"A": 2, "G": "g"}},
+						&Error{msg: "ma1", code: "a1", meta: map[string]any{"A": 1, "D": "h"}},
+					),
+					meta: map[string]any{"A": 5, "E": "e"},
+				},
+			),
+			meta: map[string]any{"A": 6, "C": "c"},
+		},
+		meta: map[string]any{"A": 7, "B": "b"},
+	}
 }

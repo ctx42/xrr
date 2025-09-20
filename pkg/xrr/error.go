@@ -22,11 +22,31 @@ func WithCode(code string) func(*Error) {
 	return func(e *Error) { e.code = code }
 }
 
-// WithMeta is an option for [New] and [Wrap] setting the metadata.
-// The provided map must not be modified or reused by the caller after passing
-// it to this function.
+// WithMeta is an option for [New] and [Wrap] setting the metadata. The
+// provided map must not be modified or reused by the caller after passing it
+// to this function. The types that are not supported by the [Error] metadata
+// are deleted from the map.
 func WithMeta(meta map[string]any) func(*Error) {
-	return func(e *Error) { e.meta = meta }
+	for key, value := range meta {
+		if !isTypeSupported(value) {
+			delete(meta, key)
+		}
+	}
+	return func(e *Error) {
+		for key, value := range meta {
+			if e.meta == nil {
+				e.meta = make(map[string]any, len(meta))
+			}
+			e.meta[key] = value
+		}
+	}
+}
+
+// WithMetaFrom is an option for [New] and [Wrap] setting the metadata from a [
+// Metadater] instance. The types that are not supported by the [Error]
+// metadata are not going to be added.
+func WithMetaFrom(src Metadater) func(*Error) {
+	return WithMeta(src.MetaAll())
 }
 
 // Error represents an error with an error code and structured metadata.

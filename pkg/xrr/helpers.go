@@ -6,6 +6,8 @@ package xrr
 import (
 	"errors"
 	"reflect"
+	"sort"
+	"time"
 )
 
 // Split splits joined errors into a slice of. It will return the slice with a
@@ -20,6 +22,39 @@ func Split(err error) []error {
 		return joinErr.Unwrap()
 	}
 	return []error{err}
+}
+
+// Join joins a slice of errors into a single error. It will return nil if the
+// slice is empty. It will return the single error if the slice contains only
+// one error. Otherwise, it will use [errors.Join] to join the errors.
+func Join(ers ...error) error {
+	ers = join(ers...)
+	switch len(ers) {
+	case 0:
+		return nil
+	case 1:
+		return ers[0]
+	default:
+		return errors.Join(ers...)
+	}
+}
+func join(ers ...error) []error {
+	if len(ers) == 0 {
+		return nil
+	}
+	var j int
+	for i := 0; i < len(ers); i++ {
+		if err := ers[i]; err != nil {
+			ers[j] = err
+			j++
+			continue
+		}
+	}
+	ers = ers[:j]
+	if len(ers) == 0 {
+		return nil
+	}
+	return ers
 }
 
 // IsJoined returns true if the provided error is not nil and implements
@@ -54,4 +89,31 @@ func prefix(pref, key string) string {
 		return pref + "." + key
 	}
 	return key
+}
+
+// isTypeSupported returns true if the type of v is the supported metadata type.
+func isTypeSupported(v any) bool {
+	switch v.(type) {
+	case bool, string, int, int64, float64, time.Time, time.Duration:
+		return true
+	default:
+		return false
+	}
+}
+
+// sortFields converts a map of errors to two slices: one for field names and
+// one for errors. The returned slices maintain corresponding indexes, ensuring
+// that each field name aligns with its associated error. Both slices are
+// always of equal length, and the field names are sorted in ascending order.
+func sortFields(ers map[string]error) ([]string, []error) {
+	var errs []error
+	var fields []string
+	for field := range ers {
+		fields = append(fields, field)
+	}
+	sort.Strings(fields)
+	for _, field := range fields {
+		errs = append(errs, ers[field])
+	}
+	return fields, errs
 }

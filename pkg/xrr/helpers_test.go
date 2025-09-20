@@ -6,6 +6,7 @@ package xrr
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/ctx42/testing/pkg/assert"
 )
@@ -60,6 +61,149 @@ func Test_Split(t *testing.T) {
 
 		// --- Then ---
 		assert.Nil(t, have)
+	})
+}
+
+func Test_Join(t *testing.T) {
+	t.Run("all nil", func(t *testing.T) {
+		// --- Given ---
+		ers := []error{nil, nil, nil}
+
+		// --- When ---
+		have := Join(ers...)
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
+
+	t.Run("one error", func(t *testing.T) {
+		// --- Given ---
+		e1 := errors.New("m1")
+
+		// --- When ---
+		have := Join(e1)
+
+		// --- Then ---
+		assert.Same(t, e1, have)
+	})
+
+	t.Run("no gaps", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("m0")
+		e1 := errors.New("m1")
+		e2 := errors.New("m2")
+		ers := []error{e0, e1, e2}
+
+		// --- When ---
+		have := Join(ers...)
+
+		// --- Then ---
+		assert.ErrorEqual(t, "m0\nm1\nm2", have)
+	})
+}
+
+func Test_join(t *testing.T) {
+	t.Run("empty slice", func(t *testing.T) {
+		// --- Given ---
+		var ers []error
+
+		// --- When ---
+		have := join(ers...)
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
+
+	t.Run("all nil", func(t *testing.T) {
+		// --- Given ---
+		ers := []error{nil, nil, nil}
+
+		// --- When ---
+		have := join(ers...)
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
+
+	t.Run("no gaps", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("m0")
+		e1 := errors.New("m1")
+		e2 := errors.New("m2")
+		ers := []error{e0, e1, e2}
+
+		// --- When ---
+		have := join(ers...)
+
+		// --- Then ---
+		assert.Len(t, 3, have)
+		assert.Same(t, e0, have[0])
+		assert.Same(t, e1, have[1])
+		assert.Same(t, e2, have[2])
+	})
+
+	t.Run("gap at the start", func(t *testing.T) {
+		// --- Given ---
+		e1 := errors.New("m0")
+		e2 := errors.New("m2")
+		ers := []error{nil, e1, e2}
+
+		// --- When ---
+		have := join(ers...)
+
+		// --- Then ---
+		assert.Len(t, 2, have)
+		assert.Same(t, e1, have[0])
+		assert.Same(t, e2, have[1])
+	})
+
+	t.Run("gap in the middle", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("m0")
+		e2 := errors.New("m2")
+		ers := []error{e0, nil, e2}
+
+		// --- When ---
+		have := join(ers...)
+
+		// --- Then ---
+		assert.Len(t, 2, have)
+		assert.Same(t, e0, have[0])
+		assert.Same(t, e2, have[1])
+	})
+
+	t.Run("gap at the end", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("m0")
+		e1 := errors.New("m2")
+		ers := []error{e0, e1, nil}
+
+		// --- When ---
+		have := join(ers...)
+
+		// --- Then ---
+		assert.Len(t, 2, have)
+		assert.Same(t, e0, have[0])
+		assert.Same(t, e1, have[1])
+	})
+
+	t.Run("gaps", func(t *testing.T) {
+		// --- Given ---
+		e0 := errors.New("m0")
+		e1 := errors.New("m1")
+		e2 := errors.New("m2")
+		e3 := errors.New("m3")
+		ers := []error{nil, e0, nil, nil, e1, nil, e2, nil, nil, e3}
+
+		// --- When ---
+		have := join(ers...)
+
+		// --- Then ---
+		assert.Len(t, 4, have)
+		assert.Same(t, e0, have[0])
+		assert.Same(t, e1, have[1])
+		assert.Same(t, e2, have[2])
+		assert.Same(t, e3, have[3])
 	})
 }
 
@@ -158,7 +302,7 @@ func Test_isNil_tabular(t *testing.T) {
 	}
 }
 
-func Test_prefix(t *testing.T) {
+func Test_prefix_tabular(t *testing.T) {
 	tt := []struct {
 		testN string
 
@@ -181,4 +325,58 @@ func Test_prefix(t *testing.T) {
 			assert.Equal(t, tc.exp, have)
 		})
 	}
+}
+
+func Test_isTypeSupported_tabular(t *testing.T) {
+	tt := []struct {
+		testN string
+
+		typ  any
+		want bool
+	}{
+		{"bool", true, true},
+		{"string", "abc", true},
+		{"int", 42, true},
+		{"int64", int64(42), true},
+		{"float64", 4.2, true},
+		{"time", time.Now(), true},
+		{"duration", time.Second, true},
+		{"not supported", struct{}{}, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			have := isTypeSupported(tc.typ)
+
+			// --- Then ---
+			assert.Equal(t, tc.want, have)
+		})
+	}
+}
+
+func Test_sortFields(t *testing.T) {
+	// --- Given ---
+	fs := Fields{
+		"f0": errors.New("em0"),
+		"f1": nil,
+		"f2": errors.New("em2"),
+		"f3": nil,
+		"f4": errors.New("em4"),
+		"f5": nil,
+	}
+
+	// --- When ---
+	hFields, hErs := sortFields(fs)
+
+	// --- Then ---
+	assert.Len(t, 6, hFields)
+	assert.Equal(t, []string{"f0", "f1", "f2", "f3", "f4", "f5"}, hFields)
+
+	assert.ErrorEqual(t, "em0", hErs[0])
+	assert.Nil(t, hErs[1])
+	assert.ErrorEqual(t, "em2", hErs[2])
+	assert.Nil(t, hErs[3])
+	assert.ErrorEqual(t, "em4", hErs[4])
+	assert.Nil(t, hErs[5])
 }
