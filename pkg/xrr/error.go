@@ -151,12 +151,16 @@ func (e *Error) Unwrap() error {
 }
 
 func (e *Error) MarshalJSON() ([]byte, error) {
+	code := e.code
+	if code == "" {
+		code = ECGeneric
+	}
 	m := map[string]any{
 		"error": e.Error(),
-		"code":  e.code,
+		"code":  code,
 	}
-	if len(e.meta) > 0 {
-		m["meta"] = e.meta
+	if meta := GetMeta(e); len(meta) > 0 {
+		m["meta"] = meta
 	}
 	return json.Marshal(m)
 }

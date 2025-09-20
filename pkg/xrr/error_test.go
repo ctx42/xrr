@@ -405,6 +405,31 @@ func Test_Error_MarshalJSON(t *testing.T) {
 		want := `{"error":"msg", "code":"ECode", "meta": {"key": "val"}}`
 		assert.JSON(t, want, string(data))
 	})
+
+	t.Run("tree", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeMeta()
+
+		// --- When ---
+		data, err := json.Marshal(e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		want := `{
+		  "code":"ECGeneric",
+		  "error":"ma3\nma2\nma1",
+		  "meta":{
+		    "A":7,
+		    "B":"b",
+		    "C":"c",
+		    "D":"d",
+		    "E":"e",
+		    "F":"f",
+		    "G":"g"
+		  }
+		}`
+		assert.JSON(t, want, string(data))
+	})
 }
 
 func Test_Error_UnmarshalJSON(t *testing.T) {
