@@ -8,7 +8,11 @@ import (
 	"reflect"
 	"sort"
 	"time"
+	"unsafe"
 )
+
+// joined is an interface for an error that was created by [errors.Join].
+type joined interface{ Unwrap() []error }
 
 // Split splits joined errors into a slice of. It will return the slice with a
 // single error if the provided error does not implement the `Unwrap []error`
@@ -17,7 +21,7 @@ func Split(err error) []error {
 	if err == nil {
 		return nil
 	}
-	var joinErr interface{ Unwrap() []error }
+	var joinErr joined
 	if errors.As(err, &joinErr) {
 		return joinErr.Unwrap()
 	}
@@ -61,7 +65,7 @@ func join(ers ...error) []error {
 // `Unwrap() []error` interface. Returns false if the error is nil.
 func IsJoined(err error) bool {
 	var joinErr interface{ Unwrap() []error }
-	return errors.As(err, &joinErr)
+	return errors.As(err, &joinErr) // TODO(rz): this should be type assertion.
 }
 
 // DefaultCode returns the first non-empty code from the slice of codes.
@@ -116,4 +120,26 @@ func sortFields(ers map[string]error) ([]string, []error) {
 		errs = append(errs, ers[field])
 	}
 	return fields, errs
+}
+
+// errorMessage formats the error message for the given error. If the error
+// implements the `Unwrap() []error` interface it concatenates the messages of
+// all unwrapped errors with "; " as the separator. For single errors or
+// unwrapped errors with one element, it returns the error's message directly.
+// For non-joined errors, it returns the error's message as is.
+func errorMessage(err error) string {
+	if jes, ok := err.(joined); ok {
+		es := jes.Unwrap()
+		if len(es) == 1 {
+			return es[0].Error()
+		}
+		b := []byte(es[0].Error())
+		for _, err := range es[1:] {
+			b = append(b, ';', ' ')
+			b = append(b, err.Error()...)
+		}
+		// At this point, b has at least two bytes '\n' and ' '.
+		return unsafe.String(&b[0], len(b))
+	}
+	return err.Error()
 }

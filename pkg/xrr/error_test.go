@@ -336,7 +336,7 @@ func Test_Error_Error(t *testing.T) {
 		have := e.Error()
 
 		// --- Then ---
-		assert.Equal(t, "msg e\nmsg f\nmsg g", have)
+		assert.Equal(t, "msg e; msg f; msg g", have)
 	})
 
 	t.Run("case 2", func(t *testing.T) {
@@ -347,7 +347,7 @@ func Test_Error_Error(t *testing.T) {
 		have := e.Error()
 
 		// --- Then ---
-		assert.Equal(t, "msg h\nmsg f\nmsg i", have)
+		assert.Equal(t, "msg h; msg f; msg i", have)
 	})
 
 	t.Run("case 3", func(t *testing.T) {
@@ -358,7 +358,7 @@ func Test_Error_Error(t *testing.T) {
 		have := e.Error()
 
 		// --- Then ---
-		assert.Equal(t, "msg h\nmsg f\nmsg g", have)
+		assert.Equal(t, "msg h; msg f; msg g", have)
 	})
 
 	t.Run("case 4", func(t *testing.T) {
@@ -369,7 +369,7 @@ func Test_Error_Error(t *testing.T) {
 		have := e.Error()
 
 		// --- Then ---
-		assert.Equal(t, "msg c\nmsg d\nmsg e", have)
+		assert.Equal(t, "msg c\nmsg d; msg e", have)
 	})
 
 	t.Run("case 5", func(t *testing.T) {
@@ -380,7 +380,7 @@ func Test_Error_Error(t *testing.T) {
 		have := e.Error()
 
 		// --- Then ---
-		assert.Equal(t, "a: msg b; d: msg e; f: msg g\nmsg h", have)
+		assert.Equal(t, "a: msg b; d: msg e; f: msg g; msg h", have)
 	})
 }
 
@@ -472,7 +472,7 @@ func Test_Error_MarshalJSON(t *testing.T) {
 		assert.NoError(t, err)
 		want := `{
 		  "code":"ECGeneric",
-		  "error":"ma3\nma2\nma1",
+		  "error":"ma3; ma2; ma1",
 		  "meta":{
 		    "A":7,
 		    "B":"b",

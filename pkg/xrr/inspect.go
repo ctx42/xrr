@@ -175,7 +175,7 @@ func walk(err error, cb func(err error) bool) bool {
 		}
 		return true
 
-	case interface{ Unwrap() []error }:
+	case joined:
 		for _, je := range x.Unwrap() {
 			if !walk(je, cb) {
 				return false
@@ -208,7 +208,7 @@ func walkReverse(err error, cb func(err error) bool) bool {
 		}
 		return true
 
-	case interface{ Unwrap() []error }:
+	case joined:
 		ers := x.Unwrap()
 		for i := len(ers) - 1; i >= 0; i-- {
 			if !walkReverse(ers[i], cb) {

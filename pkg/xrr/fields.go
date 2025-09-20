@@ -384,7 +384,7 @@ func formatFields(fs map[string]error, codes bool) string {
 				&s,
 				"%v: %v",
 				key,
-				err.Error(),
+				errorMessage(err),
 			)
 		}
 	}

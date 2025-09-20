@@ -131,7 +131,7 @@ func Wrapf(format string, args ...any) error {
 
 func (e *Error) Error() string {
 	if e.msg == "" && e.err != nil {
-		return e.err.Error()
+		return errorMessage(e.err)
 	}
 	return e.msg
 }
