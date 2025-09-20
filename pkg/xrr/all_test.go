@@ -69,19 +69,15 @@ func TstMetaTree() error {
 //	e   f   g
 func TstTreeCase1() error {
 	return &Error{
-		msg:  "msg b",
 		code: "a",
 		err: &Error{
-			msg:  "msg b",
 			code: "b",
 			err: errors.Join(
 				&Error{
-					msg:  "msg c",
 					code: "c",
 					err:  &Error{msg: "msg e", code: "e"},
 				},
 				&Error{
-					msg:  "msg d",
 					code: "d",
 					err: errors.Join(
 						&Error{msg: "msg f", code: "f"},
@@ -107,28 +103,22 @@ func TstTreeCase1() error {
 //	h       i
 func TstTreeCase2() error {
 	return &Error{
-		msg:  "msg a",
 		code: "a",
 		err: &Error{
-			msg:  "msg b",
 			code: "b",
 			err: errors.Join(
 				&Error{
-					msg:  "msg c",
 					code: "c",
 					err: &Error{
-						msg:  "msg e",
 						code: "e",
 						err:  &Error{msg: "msg h", code: "h"},
 					},
 				},
 				&Error{
-					msg:  "msg d",
 					code: "d",
 					err: errors.Join(
 						&Error{msg: "msg f", code: "f"},
 						&Error{
-							msg:  "msg g",
 							code: "g",
 							err:  &Error{msg: "msg i", code: "i"},
 						},
@@ -153,27 +143,21 @@ func TstTreeCase2() error {
 //	h   i
 func TstTreeCase3() error {
 	return &Error{
-		msg:  "msg a",
 		code: "a",
 		err: &Error{
-			msg:  "msg b",
 			code: "b",
 			err: errors.Join(
 				&Error{
-					msg:  "msg c",
 					code: "c",
 					err: &Error{
-						msg:  "msg e",
 						code: "e",
 						err:  &Error{msg: "msg h", code: "h"},
 					},
 				},
 				&Error{
-					msg:  "msg d",
 					code: "d",
 					err: errors.Join(
 						&Error{
-							msg:  "msg f",
 							code: "f",
 							err:  &Error{msg: "msg f", code: "i"},
 						},
@@ -196,12 +180,10 @@ func TstTreeCase3() error {
 func TstTreeCase4() error {
 	return errors.Join(
 		&Error{
-			msg:  "msg a",
 			code: "a",
 			err:  &Error{msg: "msg c", code: "c"},
 		},
 		&Error{
-			msg:  "msg b",
 			code: "b",
 			err: errors.Join(
 				&Error{msg: "msg d", code: "d"},
@@ -227,12 +209,10 @@ func TstTreeCase5() error {
 			&Error{msg: "msg h", code: "h"},
 		),
 		"a": &Error{
-			msg:  "msg a",
 			code: "a",
 			err:  &Error{msg: "msg b", code: "b"},
 		},
 		"d": &Error{
-			msg:  "msg d",
 			code: "d",
 			err:  &Error{msg: "msg e", code: "e"},
 		},
