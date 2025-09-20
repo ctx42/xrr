@@ -327,6 +327,61 @@ func Test_Error_Error(t *testing.T) {
 		// --- Then ---
 		assert.Equal(t, "msg", have)
 	})
+
+	t.Run("case 1", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeCase1()
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "msg e\nmsg f\nmsg g", have)
+	})
+
+	t.Run("case 2", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeCase2()
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "msg h\nmsg f\nmsg i", have)
+	})
+
+	t.Run("case 3", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeCase3()
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "msg h\nmsg f\nmsg g", have)
+	})
+
+	t.Run("case 4", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeCase4()
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "msg c\nmsg d\nmsg e", have)
+	})
+
+	t.Run("case 5", func(t *testing.T) {
+		// --- Given ---
+		e := TstTreeCase5()
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "a: msg b; d: msg e; f: msg g\nmsg h", have)
+	})
 }
 
 func Test_Error_ErrorCode(t *testing.T) {
