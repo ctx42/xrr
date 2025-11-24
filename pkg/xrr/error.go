@@ -181,19 +181,19 @@ func (e *Error) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	msgI, _ := m["error"]
+	msgI := m["error"]
 	msg, _ := msgI.(string)
 	if msg == "" {
 		return ErrInvJSONError
 	}
 
-	codeI, _ := m["code"]
+	codeI := m["code"]
 	code, _ := codeI.(string)
 	if code == "" {
 		code = ECGeneric
 	}
 
-	metaI, _ := m["meta"]
+	metaI := m["meta"]
 	var meta map[string]any
 	if metaI != nil {
 		meta, _ = metaI.(map[string]any)

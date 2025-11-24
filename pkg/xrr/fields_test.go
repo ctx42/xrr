@@ -513,12 +513,12 @@ func Test_Fields_Is(t *testing.T) {
 		// --- Given ---
 		fs := Fields{
 			"f0": errors.New("em0"),
-			"f1": TstErrStd,
+			"f1": ErrTstStd,
 			"f2": New("em2", "ECode2"),
 		}
 
 		// --- When ---
-		have := fs.Is(TstErrStd)
+		have := fs.Is(ErrTstStd)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -531,14 +531,14 @@ func Test_Fields_Is(t *testing.T) {
 				"s0": New("em00", "ECode00"),
 				"s1": New("em01", "ECode01"),
 				"s2": Fields{
-					"s0": TstErrStd,
+					"s0": ErrTstStd,
 				},
 			},
 			"f2": New("em2", "ECode2"),
 		}
 
 		// --- When ---
-		have := fs.Is(TstErrStd)
+		have := fs.Is(ErrTstStd)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -549,7 +549,7 @@ func Test_Fields_Is(t *testing.T) {
 		fs := Fields{"f0": nil}
 
 		// --- When ---
-		have := fs.Is(TstErrStd)
+		have := fs.Is(ErrTstStd)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -809,8 +809,7 @@ func Test_Fields_Filter(t *testing.T) {
 
 	t.Run("nil instance", func(t *testing.T) {
 		// --- Given ---
-		var fs Fields
-		fs = nil
+		var fs Fields = nil
 
 		// --- When ---
 		err := fs.Filter()

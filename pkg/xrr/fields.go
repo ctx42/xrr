@@ -71,7 +71,7 @@ func FieldNames(err error) []string {
 		return nil
 	}
 	var names []string
-	for name, _ := range fs {
+	for name := range fs {
 		names = append(names, name)
 	}
 	sort.Strings(names)

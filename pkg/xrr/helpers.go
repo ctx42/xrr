@@ -138,7 +138,7 @@ func errorMessage(err error) string {
 			b = append(b, err.Error()...)
 		}
 		// At this point, b has at least two bytes '\n' and ' '.
-		return unsafe.String(&b[0], len(b))
+		return unsafe.String(&b[0], len(b)) // nolint: gosec
 	}
 	return err.Error()
 }

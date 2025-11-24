@@ -7,8 +7,8 @@ import (
 	"errors"
 )
 
-// TstErrStd is an error used in tests.
-var TstErrStd = errors.New("std tst msg")
+// ErrTstStd is an error used in tests.
+var ErrTstStd = errors.New("std tst msg")
 
 // TErrorFields represents an error implementing [Fielder] interface.
 type TErrorFields map[string]error
