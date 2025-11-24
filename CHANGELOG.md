@@ -1,3 +1,6 @@
+## v0.5.1 (Mon, 24 Nov 2025 09:28:17 UTC)
+- chore: Update dependencies.
+
 ## v0.5.0 (Sat, 20 Sep 2025 09:30:06 UTC)
 - feat: Only the supported types are used for `xrr.Error` metadata when using `xrr.WithMeta`.
 - fix: Error code was set to empty string instead od `xrr.ECGeneric`.
