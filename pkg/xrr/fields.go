@@ -25,8 +25,8 @@ func FieldError(field string, err error) error {
 	return Fields{field: err}
 }
 
-// AddField sets new error on provided [Fields] instance. If err is nil, the
-// call is no-op. If ers is nil and err is not, the new instance of [Fields]
+// AddField sets a new error on the provided [Fields] instance. If err is nil,
+// the call is no-op. If ers is nil and err is not, the new instance of [Fields]
 // is created and the passed error is added to it with a given field name.
 func AddField(ers *Fields, field string, err error) {
 	if err == nil {
@@ -47,9 +47,9 @@ func GetFields(err error) map[string]error {
 	return nil
 }
 
-// GetFieldError returns error for given field name. It expects the error to
-// be an instance of [Fields]. Returns nil when err is nil, not an instance of
-// [Fields] or when there is no error for the given field name.
+// GetFieldError returns an error for the given field name. It expects the
+// error to be an instance of [Fields]. Returns nil when err is nil, not an
+// instance of [Fields] or when there is no error for the given field name.
 func GetFieldError(err error, field string) error {
 	if fs := GetFields(err); fs != nil {
 		return get(fs, field)

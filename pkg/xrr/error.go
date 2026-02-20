@@ -13,8 +13,10 @@ import (
 
 // Compile time checks.
 var (
-	_ Coder     = (*Error)(nil)
-	_ Metadater = (*Error)(nil)
+	_ Coder            = (*Error)(nil)
+	_ Metadater        = (*Error)(nil)
+	_ json.Marshaler   = (*Error)(nil)
+	_ json.Unmarshaler = (*Error)(nil)
 )
 
 // WithCode is an option for [New] and [Wrap] setting the error code.
