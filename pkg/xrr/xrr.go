@@ -47,7 +47,7 @@ var (
 	fieldError = NewFieldErrorFor[EDGeneric]()
 )
 
-// Error represents error type in [EDGeneric] domain.
+// Error represents an error type in [EDGeneric] domain.
 // type Error = GenericError[EDGeneric]
 
 // New creates a new [GenericError[EDGeneric]] error instance with the given

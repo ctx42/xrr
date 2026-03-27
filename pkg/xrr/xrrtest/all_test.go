@@ -6,7 +6,7 @@ import (
 	"github.com/ctx42/xrr/pkg/xrr"
 )
 
-// TstError returns a test error with meta data.
+// TstError returns a test error with metadata.
 func TstError() error {
 	tim := time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC)
 
