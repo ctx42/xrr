@@ -4,6 +4,7 @@
 package xrr
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"sort"
@@ -14,9 +15,9 @@ import (
 // joined is an interface for an error that was created by [errors.Join].
 type joined interface{ Unwrap() []error }
 
-// Split splits joined errors into a slice of. It will return the slice with a
-// single error if the provided error does not implement the `Unwrap []error`
-// interface. It will return nil if the error is nil.
+// Split splits joined errors into a slice of errors. It will return the slice
+// with a single error if the provided error does not implement the
+// `Unwrap []error` interface. It will return nil if the error is nil.
 func Split(err error) []error {
 	if err == nil {
 		return nil
@@ -41,6 +42,7 @@ func Join(ers ...error) error {
 		return errors.Join(ers...)
 	}
 }
+
 func join(ers ...error) []error {
 	if len(ers) == 0 {
 		return nil
@@ -75,6 +77,12 @@ func DefaultCode(otherwise string, codes ...string) string {
 		}
 	}
 	return otherwise
+}
+
+// IsDomain returns true if err is a [GenericError] of domain T.
+func IsDomain[T Domain](err error) bool {
+	_, ok := err.(*GenericError[T])
+	return ok
 }
 
 // isNil returns true if v is nil or v is nil interface.
@@ -137,8 +145,39 @@ func errorMessage(err error) string {
 			b = append(b, ';', ' ')
 			b = append(b, err.Error()...)
 		}
-		// At this point, b has at least two bytes '\n' and ' '.
+		// At this point, b has at least two bytes ';' and ' '.
 		return unsafe.String(&b[0], len(b)) // nolint: gosec
 	}
 	return err.Error()
+}
+
+// marshalError marshals error to JSON with check if the resulting JSON message
+// is an empty object "{}", which means error did not have a [json.Marshaler]
+// interface implemented, in which case the provided error is wrapped in the
+// [GenericError] instance and marshaled again.
+func marshalError(e error) ([]byte, error) {
+	data, err := json.Marshal(e)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) == 2 {
+		return json.Marshal(errorAsMap(e))
+	}
+	return data, nil
+}
+
+// errorAsMap returns a map representation of the error. Returns the nil map
+// when the given error is nil.
+func errorAsMap(err error) map[string]any {
+	if err == nil {
+		return nil
+	}
+	m := map[string]any{
+		"error": err.Error(),
+		"code":  GetCode(err),
+	}
+	if meta := GetMeta(err); len(meta) > 0 {
+		m["meta"] = meta
+	}
+	return m
 }

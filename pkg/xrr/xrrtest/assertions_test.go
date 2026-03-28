@@ -24,7 +24,7 @@ func Test_AssertError(t *testing.T) {
 		want := xrr.New("msg", "ECode")
 
 		// --- When ---
-		have, success := AssertError(tspy, want)
+		have, success := AssertError[xrr.EDGeneric](tspy, want)
 
 		// --- Then ---
 		assert.True(t, success)
@@ -37,7 +37,7 @@ func Test_AssertError(t *testing.T) {
 		tspy.ExpectError()
 		wMsg := "" +
 			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.Error\n" +
+			"  target: *xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDGeneric]\n" +
 			"   error: *errors.errorString"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
@@ -45,7 +45,7 @@ func Test_AssertError(t *testing.T) {
 		err := errors.New("some error")
 
 		// --- When ---
-		have, success := AssertError(tspy, err)
+		have, success := AssertError[xrr.EDGeneric](tspy, err)
 
 		// --- Then ---
 		assert.False(t, success)
@@ -61,7 +61,7 @@ func Test_AssertError(t *testing.T) {
 		tspy.Close()
 
 		// --- When ---
-		have, success := AssertError(tspy, nil)
+		have, success := AssertError[string](tspy, nil)
 
 		// --- Then ---
 		assert.False(t, success)
@@ -912,12 +912,12 @@ func Test_AssertTime(t *testing.T) {
 }
 
 func Test_AssertFields(t *testing.T) {
-	t.Run("success - error is instance of xrr.Fields", func(t *testing.T) {
+	t.Run("success - error is an instance of xrr.Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.Fields{"a": errors.New("msg")}
+		err := xrr.FieldError("a", errors.New("msg"))
 
 		// --- When ---
 		have, success := AssertFields(tspy, err)
@@ -927,13 +927,13 @@ func Test_AssertFields(t *testing.T) {
 		assert.Same(t, err, have)
 	})
 
-	t.Run("error - error not an instance of xrr.Fields", func(t *testing.T) {
+	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected xrr.Fields instance:\n" +
-			"  target: xrr.Fields\n" +
+			"[xrr] expected xrr.Fielder instance:\n" +
+			"  target: xrr.Fielder\n" +
 			"   error: *errors.errorString"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
@@ -971,7 +971,7 @@ func Test_AssertFieldsEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": xrr.New("m1", "EC1"),
 		}
@@ -1010,7 +1010,7 @@ func Test_AssertFieldsEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("other"),
 			"f1": xrr.New("m1", "EC1"),
 		}
@@ -1030,7 +1030,7 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": errors.New("m1"),
 		}
@@ -1062,7 +1062,7 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected xrr.Fields length:\n" +
+			"[xrr] expected xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDGeneric] length:\n" +
 			"    want: 3\n" +
 			"    have: 2\n" +
 			"  fields:\n" +
@@ -1073,7 +1073,7 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": errors.New("m1"),
 		}
@@ -1085,13 +1085,13 @@ func Test_AssertFieldCnt(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - error not an instance of xrr.Fields", func(t *testing.T) {
+	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected xrr.Fields instance:\n" +
-			"  target: xrr.Fields\n" +
+			"[xrr] expected xrr.Fielder instance:\n" +
+			"  target: xrr.Fielder\n" +
 			"   error: *errors.errorString"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
@@ -1114,7 +1114,7 @@ func Test_AssertHasField(t *testing.T) {
 
 		f0 := errors.New("m0")
 		f1 := errors.New("m1")
-		err := xrr.Fields{"f0": f0, "f1": f1}
+		err := xrr.GenericFields[xrr.EDGeneric]{"f0": f0, "f1": f1}
 
 		// --- When ---
 		have, success := AssertHasField(tspy, "f0", err)
@@ -1130,7 +1130,7 @@ func Test_AssertHasField(t *testing.T) {
 		tspy.Close()
 
 		f0 := errors.New("m0")
-		err := xrr.Fields{"f0": f0, "f1": nil}
+		err := xrr.GenericFields[xrr.EDGeneric]{"f0": f0, "f1": nil}
 
 		// --- When ---
 		have, success := AssertHasField(tspy, "f1", err)
@@ -1154,7 +1154,7 @@ func Test_AssertHasField(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.Fields{"f0": errors.New("m0")}
+		err := xrr.GenericFields[xrr.EDGeneric]{"f0": errors.New("m0")}
 
 		// --- When ---
 		have, success := AssertHasField(tspy, "f1", err)
@@ -1164,13 +1164,13 @@ func Test_AssertHasField(t *testing.T) {
 		assert.False(t, success)
 	})
 
-	t.Run("error - error not an instance of xrr.Fields", func(t *testing.T) {
+	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected xrr.Fields instance:\n" +
-			"  target: xrr.Fields\n" +
+			"[xrr] expected xrr.Fielder instance:\n" +
+			"  target: xrr.Fielder\n" +
 			"   error: *errors.errorString"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
@@ -1192,7 +1192,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": xrr.New("m1", "ECF1"),
 		}
@@ -1234,7 +1234,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": xrr.New("m1", "ECF1"),
 		}
@@ -1262,7 +1262,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": xrr.New("m1", "ECF1"),
 		}
@@ -1274,13 +1274,13 @@ func Test_AssertFieldEqual(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - error not an instance of xrr.Fields", func(t *testing.T) {
+	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected xrr.Fields instance:\n" +
-			"  target: xrr.Fields\n" +
+			"[xrr] expected xrr.Fielder instance:\n" +
+			"  target: xrr.Fielder\n" +
 			"   error: *errors.errorString"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
@@ -1301,7 +1301,7 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": xrr.New("m1", "ECF1"),
 		}
@@ -1330,7 +1330,7 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": xrr.New("m1", "ECF1"),
 		}
@@ -1356,7 +1356,7 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": errors.New("m0"),
 		}
 
@@ -1366,13 +1366,13 @@ func Test_AssertFieldCode(t *testing.T) {
 		// --- Then ---
 		assert.False(t, have)
 	})
-	t.Run("error - error not an instance of xrr.Fields", func(t *testing.T) {
+	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected xrr.Fields instance:\n" +
-			"  target: xrr.Fields\n" +
+			"[xrr] expected xrr.Fielder instance:\n" +
+			"  target: xrr.Fielder\n" +
 			"   error: *errors.errorString"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
@@ -1394,7 +1394,7 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f1": want,
 		}
 
@@ -1436,7 +1436,7 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f0": want,
 		}
 
@@ -1453,8 +1453,8 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.ExpectError()
 		wMsg := "" +
 			"[xrr] expected error to have a target in its tree:\n" +
-			"    want: (*xrr.Error) m1\n" +
-			"    have: (*xrr.Error) m1\n" +
+			"    want: (*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDGeneric]) m1\n" +
+			"    have: (*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDGeneric]) m1\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
 			"            \"f1\": \"m1\",\n" +
@@ -1463,7 +1463,7 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.Fields{
+		err := xrr.GenericFields[xrr.EDGeneric]{
 			"f1": xrr.New("m1", "ECF1"),
 		}
 

@@ -14,7 +14,7 @@ import (
 
 func Test_IsCode_tabular(t *testing.T) {
 	var err0 error
-	var err1 *Error
+	var err1 *GenericError[EDGeneric]
 
 	tt := []struct {
 		testN string
@@ -68,7 +68,7 @@ func Test_IsCode_tabular(t *testing.T) {
 
 func Test_GetCode_tabular(t *testing.T) {
 	var err0 error
-	var err1 *Error
+	var err1 *GenericError[EDGeneric]
 
 	tt := []struct {
 		testN string
@@ -93,7 +93,7 @@ func Test_GetCode_tabular(t *testing.T) {
 		},
 		{
 			"error wrapped with xrr.Wrap",
-			Wrap(New("msg a", "a"), Meta().Int("A", 1).Option()),
+			Wrap[EDGeneric](New("msg a", "a"), Meta().Int("A", 1).Option()),
 			"a",
 		},
 	}
@@ -152,13 +152,13 @@ func Test_GetCodes_tabular(t *testing.T) {
 		},
 		{
 			"does not return repeated codes",
-			&Error{
+			&GenericError[EDGeneric]{
 				code: "a",
-				err: &Error{
+				err: &GenericError[EDGeneric]{
 					code: "b",
-					err: &Error{
+					err: &GenericError[EDGeneric]{
 						code: "a",
-						err: &Error{
+						err: &GenericError[EDGeneric]{
 							code: "c",
 						},
 					},
@@ -168,9 +168,9 @@ func Test_GetCodes_tabular(t *testing.T) {
 		},
 		{
 			"errors without error code",
-			&Error{
+			&GenericError[EDGeneric]{
 				code: "a",
-				err: &Error{
+				err: &GenericError[EDGeneric]{
 					code: "b",
 					err:  errors.New("msg x"),
 				},
@@ -179,11 +179,11 @@ func Test_GetCodes_tabular(t *testing.T) {
 		},
 		{
 			"nil errors are ignored",
-			&Error{
+			&GenericError[EDGeneric]{
 				code: "a",
-				err: &Error{
+				err: &GenericError[EDGeneric]{
 					code: "b",
-					err: &Fields{
+					err: GenericFields[EDGeneric]{
 						"x": nil,
 						"y": New("msg y", "y"),
 						"z": nil,
@@ -272,17 +272,17 @@ func Test_GetMeta_tabular(t *testing.T) {
 		//
 		{
 			"tree",
-			&Error{
-				err: &Error{
+			&GenericError[EDGeneric]{
+				err: &GenericError[EDGeneric]{
 					err: errors.Join(
-						&Error{
-							err:  &Error{meta: map[string]any{"A": 3, "F": 3}},
+						&GenericError[EDGeneric]{
+							err:  &GenericError[EDGeneric]{meta: map[string]any{"A": 3, "F": 3}},
 							meta: map[string]any{"A": 4, "D": 2},
 						},
-						&Error{
+						&GenericError[EDGeneric]{
 							err: errors.Join(
-								&Error{meta: map[string]any{"A": 2, "G": 3}},
-								&Error{meta: map[string]any{"A": 1, "H": 3}},
+								&GenericError[EDGeneric]{meta: map[string]any{"A": 2, "G": 3}},
+								&GenericError[EDGeneric]{meta: map[string]any{"A": 1, "H": 3}},
 							),
 							meta: map[string]any{"A": 5, "E": 2},
 						},
@@ -304,7 +304,7 @@ func Test_GetMeta_tabular(t *testing.T) {
 		},
 		{
 			"fields",
-			&Fields{
+			GenericFields[EDGeneric]{
 				"a": New("msg a", "a", Meta().Int("A", 1).Int("B", 1).Option()),
 				"b": New("msg b", "b", Meta().Int("A", 1).Int("B", 2).Option()),
 			},
@@ -325,9 +325,9 @@ func Test_GetMeta_tabular(t *testing.T) {
 
 func Test_GetBool(t *testing.T) {
 	tree := func() error {
-		return &Error{
+		return &GenericError[EDGeneric]{
 			meta: map[string]any{"A": true},
-			err: &Error{
+			err: &GenericError[EDGeneric]{
 				meta: map[string]any{"A": false, "B": 3},
 			},
 		}
@@ -361,9 +361,9 @@ func Test_GetBool(t *testing.T) {
 
 func Test_GetStr(t *testing.T) {
 	tree := func() error {
-		return &Error{
+		return &GenericError[EDGeneric]{
 			meta: map[string]any{"A": "1"},
-			err: &Error{
+			err: &GenericError[EDGeneric]{
 				meta: map[string]any{"A": "2", "B": 3},
 			},
 		}
@@ -397,9 +397,9 @@ func Test_GetStr(t *testing.T) {
 
 func Test_GetInt(t *testing.T) {
 	tree := func() error {
-		return &Error{
+		return &GenericError[EDGeneric]{
 			meta: map[string]any{"A": 1},
-			err: &Error{
+			err: &GenericError[EDGeneric]{
 				meta: map[string]any{"A": 2, "B": "3"},
 			},
 		}
@@ -433,9 +433,9 @@ func Test_GetInt(t *testing.T) {
 
 func Test_GetInt64(t *testing.T) {
 	tree := func() error {
-		return &Error{
+		return &GenericError[EDGeneric]{
 			meta: map[string]any{"A": int64(1)},
-			err: &Error{
+			err: &GenericError[EDGeneric]{
 				meta: map[string]any{"A": int64(2), "B": "3"},
 			},
 		}
@@ -469,9 +469,9 @@ func Test_GetInt64(t *testing.T) {
 
 func Test_GetFloat64(t *testing.T) {
 	tree := func() error {
-		return &Error{
+		return &GenericError[EDGeneric]{
 			meta: map[string]any{"A": float64(1)},
-			err: &Error{
+			err: &GenericError[EDGeneric]{
 				meta: map[string]any{"A": float64(2), "B": "3"},
 			},
 		}
@@ -507,9 +507,9 @@ func Test_GetTime(t *testing.T) {
 	tim1 := time.Date(2001, 1, 1, 1, 1, 1, 0, time.UTC)
 	tim2 := time.Date(2002, 2, 2, 2, 2, 2, 0, time.UTC)
 	tree := func() error {
-		return &Error{
+		return &GenericError[EDGeneric]{
 			meta: map[string]any{"A": tim1},
-			err: &Error{
+			err: &GenericError[EDGeneric]{
 				meta: map[string]any{"A": tim2, "B": "3"},
 			},
 		}
@@ -543,9 +543,9 @@ func Test_GetTime(t *testing.T) {
 
 func Test_GetDuration(t *testing.T) {
 	tree := func() error {
-		return &Error{
+		return &GenericError[EDGeneric]{
 			meta: map[string]any{"A": time.Second},
-			err: &Error{
+			err: &GenericError[EDGeneric]{
 				meta: map[string]any{"A": time.Hour, "B": "3"},
 			},
 		}

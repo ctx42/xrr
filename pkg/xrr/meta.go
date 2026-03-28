@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// metaType is a type of metadata value.
-type metaType interface {
+// MetaType lists supported metadata types.
+type MetaType interface {
 	bool | string | int | int64 | float64 | time.Time | time.Duration
 }
 
@@ -20,8 +20,8 @@ type Metadata struct {
 // Meta returns a new instance of [Metadata].
 func Meta() Metadata { return Metadata{} }
 
-// Bool adds the key with val as a boolean to the metadata collection. Key will be
-// overridden with the new value if it already exists.
+// Bool adds the key with val as a boolean to the metadata collection. Key will
+// be overridden with the new value if it already exists.
 func (m Metadata) Bool(key string, value bool) Metadata {
 	return m.set(key, value)
 }
@@ -84,9 +84,8 @@ func (m Metadata) MetaSetFrom(meta Metadater) Metadata {
 	return m
 }
 
-// Option returns a function that sets the metadata on the [Error] instance.
-// TODO(rz): test not overriding existing metadata map.
-func (m Metadata) Option() func(*Error) { return WithMeta(m.m) }
+// Option returns a [WithMeta] [Option].
+func (m Metadata) Option() Option { return WithMeta(m.m) }
 
 // set sets instance metadata key/value if the metadata map is nil, it will
 // allocate it.

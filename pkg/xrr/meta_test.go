@@ -226,9 +226,9 @@ func Test_Metadata_Option(t *testing.T) {
 	have := m.Option()
 
 	// --- Then ---
-	e := &Error{}
-	have(e)
-	assert.Equal(t, map[string]any{"A": 1, "B": 2}, e.meta)
+	opts := &Options{}
+	have(opts)
+	assert.Equal(t, map[string]any{"A": 1, "B": 2}, opts.meta)
 }
 
 func Test_Metadata_set(t *testing.T) {

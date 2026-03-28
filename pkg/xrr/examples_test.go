@@ -46,8 +46,8 @@ func ExampleNew_with_metadata() {
 	// }
 }
 
-func ExampleFields() {
-	err := xrr.Fields{
+func ExampleGenericFields() {
+	err := xrr.GenericFields[xrr.EDGeneric]{
 		"username": errors.New("username not found"),
 		"email": xrr.New(
 			"invalid email",
@@ -128,7 +128,7 @@ func ExampleEnclose_joined_errors() {
 }
 
 func ExampleEnclose_fields_error() {
-	cause := xrr.Fields{
+	cause := xrr.GenericFields[xrr.EDGeneric]{
 		"a": xrr.New("cause A", "EC_A"),
 		"b": xrr.New("cause B", "EC_B"),
 	}

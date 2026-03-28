@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac <rzajac@gmail.com>
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac <rzajac@gmail.com>
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -7,8 +7,8 @@ import (
 	"errors"
 )
 
-// ErrTstStd is an error used in tests.
-var ErrTstStd = errors.New("std tst msg")
+// ErrTst is an error used in tests.
+var ErrTst = errors.New("std tst msg")
 
 // TErrorFields represents an error implementing [Fielder] interface.
 type TErrorFields map[string]error
@@ -41,18 +41,18 @@ func (T TMetaAll) MetaAll() map[string]any { return T }
 //	A3,F3  A2,G3   A1,H3
 func TstMetaTree() error {
 	a3f3 := New("A3,F3", "A3", Meta().Int("A", 3).Int("F", 3).Option())
-	a4d2 := Wrap(a3f3, Meta().Int("A", 4).Int("D", 2).Option())
+	a4d2 := Wrap[EDGeneric](a3f3, Meta().Int("A", 4).Int("D", 2).Option())
 
 	a1h3 := New("A1,H3", "A1", Meta().Int("A", 1).Int("H", 3).Option())
 	a2g3 := New("A2,H3", "A2", Meta().Int("A", 2).Int("G", 3).Option())
 
 	a5e2 := errors.Join(a1h3, a2g3)
-	a5e2 = Wrap(a5e2, Meta().Int("A", 5).Int("E", 2).Option())
+	a5e2 = Wrap[EDGeneric](a5e2, Meta().Int("A", 5).Int("E", 2).Option())
 
 	a6c1 := errors.Join(a4d2, a5e2)
-	a6c1 = Wrap(a6c1, Meta().Int("A", 6).Int("C", 1).Option())
+	a6c1 = Wrap[EDGeneric](a6c1, Meta().Int("A", 6).Int("C", 1).Option())
 
-	a7b0 := Wrap(a6c1, Meta().Int("A", 7).Int("B", 0).Option())
+	a7b0 := Wrap[EDGeneric](a6c1, Meta().Int("A", 7).Int("B", 0).Option())
 
 	return a7b0
 }
@@ -68,20 +68,20 @@ func TstMetaTree() error {
 //	│   │   │
 //	e   f   g
 func TstTreeCase1() error {
-	return &Error{
+	return &GenericError[EDGeneric]{
 		code: "a",
-		err: &Error{
+		err: &GenericError[EDGeneric]{
 			code: "b",
 			err: errors.Join(
-				&Error{
+				&GenericError[EDGeneric]{
 					code: "c",
-					err:  &Error{msg: "msg e", code: "e"},
+					err:  &GenericError[EDGeneric]{msg: "msg e", code: "e"},
 				},
-				&Error{
+				&GenericError[EDGeneric]{
 					code: "d",
 					err: errors.Join(
-						&Error{msg: "msg f", code: "f"},
-						&Error{msg: "msg g", code: "g"},
+						&GenericError[EDGeneric]{msg: "msg f", code: "f"},
+						&GenericError[EDGeneric]{msg: "msg g", code: "g"},
 					),
 				},
 			),
@@ -102,25 +102,25 @@ func TstTreeCase1() error {
 //	│       │
 //	h       i
 func TstTreeCase2() error {
-	return &Error{
+	return &GenericError[EDGeneric]{
 		code: "a",
-		err: &Error{
+		err: &GenericError[EDGeneric]{
 			code: "b",
 			err: errors.Join(
-				&Error{
+				&GenericError[EDGeneric]{
 					code: "c",
-					err: &Error{
+					err: &GenericError[EDGeneric]{
 						code: "e",
-						err:  &Error{msg: "msg h", code: "h"},
+						err:  &GenericError[EDGeneric]{msg: "msg h", code: "h"},
 					},
 				},
-				&Error{
+				&GenericError[EDGeneric]{
 					code: "d",
 					err: errors.Join(
-						&Error{msg: "msg f", code: "f"},
-						&Error{
+						&GenericError[EDGeneric]{msg: "msg f", code: "f"},
+						&GenericError[EDGeneric]{
 							code: "g",
-							err:  &Error{msg: "msg i", code: "i"},
+							err:  &GenericError[EDGeneric]{msg: "msg i", code: "i"},
 						},
 					),
 				},
@@ -142,26 +142,26 @@ func TstTreeCase2() error {
 //	│   │
 //	h   i
 func TstTreeCase3() error {
-	return &Error{
+	return &GenericError[EDGeneric]{
 		code: "a",
-		err: &Error{
+		err: &GenericError[EDGeneric]{
 			code: "b",
 			err: errors.Join(
-				&Error{
+				&GenericError[EDGeneric]{
 					code: "c",
-					err: &Error{
+					err: &GenericError[EDGeneric]{
 						code: "e",
-						err:  &Error{msg: "msg h", code: "h"},
+						err:  &GenericError[EDGeneric]{msg: "msg h", code: "h"},
 					},
 				},
-				&Error{
+				&GenericError[EDGeneric]{
 					code: "d",
 					err: errors.Join(
-						&Error{
+						&GenericError[EDGeneric]{
 							code: "f",
-							err:  &Error{msg: "msg f", code: "i"},
+							err:  &GenericError[EDGeneric]{msg: "msg f", code: "i"},
 						},
-						&Error{msg: "msg g", code: "g"},
+						&GenericError[EDGeneric]{msg: "msg g", code: "g"},
 					),
 				},
 			),
@@ -179,15 +179,15 @@ func TstTreeCase3() error {
 //	c   d   e
 func TstTreeCase4() error {
 	return errors.Join(
-		&Error{
+		&GenericError[EDGeneric]{
 			code: "a",
-			err:  &Error{msg: "msg c", code: "c"},
+			err:  &GenericError[EDGeneric]{msg: "msg c", code: "c"},
 		},
-		&Error{
+		&GenericError[EDGeneric]{
 			code: "b",
 			err: errors.Join(
-				&Error{msg: "msg d", code: "d"},
-				&Error{msg: "msg e", code: "e"},
+				&GenericError[EDGeneric]{msg: "msg d", code: "d"},
+				&GenericError[EDGeneric]{msg: "msg e", code: "e"},
 			),
 		},
 	)
@@ -203,18 +203,18 @@ func TstTreeCase4() error {
 //	│     │   │   │
 //	b     e   g   h
 func TstTreeCase5() error {
-	return Fields{
+	return GenericFields[EDGeneric]{
 		"f": errors.Join(
-			&Error{msg: "msg g", code: "g"},
-			&Error{msg: "msg h", code: "h"},
+			&GenericError[EDGeneric]{msg: "msg g", code: "g"},
+			&GenericError[EDGeneric]{msg: "msg h", code: "h"},
 		),
-		"a": &Error{
+		"a": &GenericError[EDGeneric]{
 			code: "a",
-			err:  &Error{msg: "msg b", code: "b"},
+			err:  &GenericError[EDGeneric]{msg: "msg b", code: "b"},
 		},
-		"d": &Error{
+		"d": &GenericError[EDGeneric]{
 			code: "d",
-			err:  &Error{msg: "msg e", code: "e"},
+			err:  &GenericError[EDGeneric]{msg: "msg e", code: "e"},
 		},
 	}
 }
@@ -232,17 +232,17 @@ func TstTreeCase5() error {
 //	  │      │       │
 //	A3,Ff  A2,Gg   A1,Dh
 func TstTreeMeta() error {
-	return &Error{
-		err: &Error{
+	return &GenericError[EDGeneric]{
+		err: &GenericError[EDGeneric]{
 			err: errors.Join(
-				&Error{
-					err:  &Error{msg: "ma3", code: "a3", meta: map[string]any{"A": 3, "F": "f"}},
+				&GenericError[EDGeneric]{
+					err:  &GenericError[EDGeneric]{msg: "ma3", code: "a3", meta: map[string]any{"A": 3, "F": "f"}},
 					meta: map[string]any{"A": 4, "D": "d"},
 				},
-				&Error{
+				&GenericError[EDGeneric]{
 					err: errors.Join(
-						&Error{msg: "ma2", code: "a2", meta: map[string]any{"A": 2, "G": "g"}},
-						&Error{msg: "ma1", code: "a1", meta: map[string]any{"A": 1, "D": "h"}},
+						&GenericError[EDGeneric]{msg: "ma2", code: "a2", meta: map[string]any{"A": 2, "G": "g"}},
+						&GenericError[EDGeneric]{msg: "ma1", code: "a1", meta: map[string]any{"A": 1, "D": "h"}},
 					),
 					meta: map[string]any{"A": 5, "E": "e"},
 				},

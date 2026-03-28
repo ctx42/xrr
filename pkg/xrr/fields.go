@@ -11,31 +11,19 @@ import (
 	"strings"
 )
 
-// Fields represents a collection of errors that are indexed by field names.
-//
-// The field (name) indexed errors are mostly useful for validation errors.
-type Fields map[string]error
+// GenericFields represents a generic type for creating domain-specific
+// field-indexed errors.
+type GenericFields[T Domain] map[string]error
 
-// FieldError return a new instance of [Fields] with the given error. Returns
-// nil when the error is nil.
-func FieldError(field string, err error) error {
-	if err == nil {
-		return nil
+// NewFieldErrorFor returns a factory function for creating domain-specific
+// field errors.
+func NewFieldErrorFor[T Domain]() func(field string, err error) error {
+	return func(field string, err error) error {
+		if err == nil {
+			return nil
+		}
+		return GenericFields[T]{field: err}
 	}
-	return Fields{field: err}
-}
-
-// AddField sets a new error on the provided [Fields] instance. If err is nil,
-// the call is no-op. If ers is nil and err is not, the new instance of [Fields]
-// is created and the passed error is added to it with a given field name.
-func AddField(ers *Fields, field string, err error) {
-	if err == nil {
-		return
-	}
-	if *ers == nil {
-		*ers = Fields{}
-	}
-	(*ers)[field] = err
 }
 
 // GetFields returns field errors if the error implements the [Fielder]
@@ -78,46 +66,42 @@ func FieldNames(err error) []string {
 	return names
 }
 
-// FieldRename if the error an instance of [Fields], it renames the given field
-// name from "from" to "to". If err is not a [Fields] instance, it is no-op.
-func FieldRename(err error, from, to string) {
-	var fe Fields
-	if from != to && errors.As(err, &fe) {
-		if e, ok := fe[from]; ok {
-			fe[to] = e
-			delete(fe, from)
-		}
-	}
-}
-
 // MergeFields merges multiple instances of [Fields]. Expects all errors to be
-// instances [Fields]. But will handle other error types as well by creating
-// fake indexed fields for them. The nil instances os [Fields] are ignored, but
+// instances of [Fields]. But will handle other error types as well by creating
+// fake indexed fields for them. The nil instances of [Fields] are ignored, but
 // nil field errors are kept. The field errors with the same name are
 // overwritten by errors that are later in the list.
-func MergeFields(ers ...error) error {
-	if err := mergeFields(ers...); err != nil {
-		return err
+func MergeFields[T Domain](ers ...error) error {
+	if fe := mergeFields(ers...); fe != nil {
+		return GenericFields[T](fe)
 	}
 	return nil
 }
-func mergeFields(ers ...error) Fields {
+
+// mergeFields merges multiple field error maps into a single map. Non-[Fielder]
+// errors are assigned synthetic keys of the form "__field__N".
+func mergeFields(ers ...error) map[string]error {
 	if len(ers) == 0 {
 		return nil
 	}
+
 	var i int
 	var k string
 	var e error
-	var first, fe Fields
+	var ok bool
+	var fe Fielder
+	var first map[string]error
 
 	// Find first non-nil error.
 	for i, e = range ers {
 		if e == nil {
 			continue
 		}
-		if !errors.As(e, &first) {
+		if fe, ok = e.(Fielder); ok {
+			first = fe.ErrorFields()
+		} else {
 			key := fmt.Sprintf("__field__%d", i)
-			first = Fields{key: e}
+			first = map[string]error{key: e}
 		}
 		break
 	}
@@ -131,36 +115,36 @@ func mergeFields(ers ...error) Fields {
 		if err == nil {
 			continue
 		}
-		if !errors.As(err, &fe) {
+		if fe, ok = err.(Fielder); ok {
+			for k, e = range fe.ErrorFields() {
+				// Don't overwrite existing non-nil field with nil errors.
+				if existing := first[k]; existing != nil && e == nil {
+					continue
+				}
+				first[k] = e
+			}
+		} else {
 			key := fmt.Sprintf("__field__%d", i+j)
 			first[key] = err
-		}
-		for k, e = range fe {
-			// Don't overwrite existing non-nil field errors with nil errors.
-			if existing := first[k]; existing != nil && e == nil {
-				continue
-			}
-			first[k] = e
 		}
 	}
 
 	return first
 }
 
-func (fs Fields) ErrorFields() map[string]error { return fs }
+func (fs GenericFields[T]) ErrorFields() map[string]error { return fs }
 
-// Error returns string representation of field errors.
-func (fs Fields) Error() string {
+func (fs GenericFields[T]) Error() string {
 	return formatFields(fs.ErrorFields(), false)
 }
 
-func (fs Fields) Unwrap() []error {
+func (fs GenericFields[T]) Unwrap() []error {
 	flat := fs.Flatten()
 	fields, ers := sortFields(flat)
 	var j int
 	for i, err := range ers {
 		if err != nil {
-			ers[j] = Wrapf("%s: %w", fields[i], err)
+			ers[j] = fmt.Errorf("%s: %w", fields[i], err)
 			j++
 		}
 	}
@@ -168,7 +152,7 @@ func (fs Fields) Unwrap() []error {
 }
 
 // Is implements the interface used by [errors.Is].
-func (fs Fields) Is(other error) bool {
+func (fs GenericFields[T]) Is(other error) bool {
 	if other == nil {
 		return false
 	}
@@ -180,7 +164,7 @@ func (fs Fields) Is(other error) bool {
 	return false
 }
 
-func (fs Fields) Format(state fmt.State, verb rune) {
+func (fs GenericFields[T]) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 's', 'q':
 		msg := fs.Error()
@@ -209,7 +193,7 @@ func (fs Fields) Format(state fmt.State, verb rune) {
 //	  "a": errors.New("a"),
 //	  "a.b": errors.New("b"),
 //	}
-func (fs Fields) Flatten() Fields {
+func (fs GenericFields[T]) Flatten() GenericFields[T] {
 	visitor := make(map[string]error, len(fs))
 	flatten(visitor, "", fs)
 	return visitor
@@ -217,28 +201,27 @@ func (fs Fields) Flatten() Fields {
 
 // Filter removes all keys with nil values from Fields and returns it as an
 // error. If the length of Fields becomes 0, it will return nil.
-func (fs Fields) Filter() error {
+func (fs GenericFields[T]) Filter() error {
 	if fs == nil {
 		return nil
 	}
-	if ret := filterMap(fs); ret != nil {
-		return Fields(ret)
+	if ret := filterMap[T](fs); ret != nil {
+		return ret
 	}
 	return nil
 }
 
 // filterMap removes all keys with nil values and returns it. If the length of
 // the filtered map is zero, it will return nil.
-func filterMap(fs map[string]error) map[string]error {
+func filterMap[T Domain](fs map[string]error) GenericFields[T] {
 	for key, value := range fs {
 		if value == nil {
 			delete(fs, key)
 			continue
 		}
-		var fields Fields
-		if errors.As(value, &fields) {
-			if filtered := filterMap(fields); filtered != nil {
-				fs[key] = Fields(filtered)
+		if fls, ok := value.(Fielder); ok {
+			if filtered := filterMap[T](fls.ErrorFields()); filtered != nil {
+				fs[key] = filtered
 			} else {
 				delete(fs, key)
 			}
@@ -251,13 +234,13 @@ func filterMap(fs map[string]error) map[string]error {
 }
 
 // Merge adds all non nil errors from errs overriding already existing keys.
-func (fs Fields) Merge(errs map[string]error) Fields {
+func (fs GenericFields[T]) Merge(errs map[string]error) GenericFields[T] {
 	if fs == nil && len(errs) == 0 {
 		return nil
 	}
 	if fs == nil {
 		//goland:noinspection GoAssignmentToReceiver
-		fs = Fields{}
+		fs = GenericFields[T]{}
 	}
 	for key, err := range errs {
 		if fs[key] == nil {
@@ -268,7 +251,7 @@ func (fs Fields) Merge(errs map[string]error) Fields {
 }
 
 // Get returns an error for the given field, nil if the field does not exist.
-func (fs Fields) Get(field string) error {
+func (fs GenericFields[T]) Get(field string) error {
 	return get(fs, field)
 }
 
@@ -282,10 +265,9 @@ func get(ers map[string]error, field string) error {
 		if !strings.HasPrefix(sub, key) {
 			continue
 		}
-		var fs Fields
-		if errors.As(err, &fs) {
+		if fls, ok := err.(Fielder); ok {
 			sub = sub[len(key)+1:]
-			if err := get(fs, sub); err != nil {
+			if err = get(fls.ErrorFields(), sub); err != nil {
 				return err
 			}
 		}
@@ -293,11 +275,11 @@ func get(ers map[string]error, field string) error {
 	return nil
 }
 
-func (fs Fields) MarshalJSON() ([]byte, error) {
+func (fs GenericFields[T]) MarshalJSON() ([]byte, error) {
 	visitor := make(map[string]error, len(fs))
 	flatten(visitor, "", fs)
 	ret := make(map[string]json.RawMessage, len(visitor))
-	for k, v := range filterMap(visitor) {
+	for k, v := range filterMap[T](visitor) {
 		if e, ok := v.(json.Marshaler); ok { // nolint: errorlint
 			data, err := e.MarshalJSON()
 			if err != nil {
@@ -306,13 +288,13 @@ func (fs Fields) MarshalJSON() ([]byte, error) {
 			ret[k] = data
 			continue
 		}
-		data, err := json.Marshal(Wrap(v))
+		m := errorAsMap(v)
+		data, err := json.Marshal(m)
 		if err != nil {
 			return nil, err
 		}
 		ret[k] = data
 	}
-
 	return json.Marshal(ret)
 }
 
@@ -326,19 +308,18 @@ func (fs Fields) MarshalJSON() ([]byte, error) {
 //	  "a": errors.New("a"),
 //	  "a.b": errors.New("b"),
 //	}
-func Flatten(err ...error) error {
+func Flatten[T Domain](err ...error) error {
 	visitor := make(map[string]error)
 	fls := mergeFields(err...)
 	flatten(visitor, "", fls)
-	return Fields(visitor)
+	return GenericFields[T](visitor)
 }
 
 // flatten flattens nested map of errors.
 func flatten(visitor map[string]error, pref string, fields map[string]error) {
 	for field, err := range fields {
-		var fs Fields
-		if errors.As(err, &fs) {
-			flatten(visitor, prefix(pref, field), fs.ErrorFields())
+		if fls, ok := err.(Fielder); ok {
+			flatten(visitor, prefix(pref, field), fls.ErrorFields())
 			continue
 		}
 		visitor[prefix(pref, field)] = err

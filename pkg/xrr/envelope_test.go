@@ -216,7 +216,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 
 	t.Run("xrr fields error with lead", func(t *testing.T) {
 		// --- Given ---
-		cause := Fields{
+		cause := GenericFields[EDGeneric]{
 			"f0": errors.New("f0"),
 			"f1": New("f1", "ECF1", Meta().Int("A", 0).Option()),
 		}
@@ -232,7 +232,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 			"error":"lead",
 			"code":"ECL",
 			"fields":{
-				"f0":{"error":"f0","code":"ECGeneric"},
+				"f0":{},
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			}
 		}`
@@ -241,7 +241,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 
 	t.Run("xrr fields error without lead", func(t *testing.T) {
 		// --- Given ---
-		cause := Fields{
+		cause := GenericFields[EDGeneric]{
 			"f0": errors.New("f0"),
 			"f1": New("f1", "ECF1", Meta().Int("A", 0).Option()),
 		}
@@ -256,7 +256,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 			"error":"fields error",
 			"code":"ECFields",
 			"fields":{
-				"f0":{"error":"f0","code":"ECGeneric"},
+				"f0":{},
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			}
 		}`
@@ -352,7 +352,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 func Test_encloseFieldsError(t *testing.T) {
 	t.Run("lead without metadata", func(t *testing.T) {
 		// --- Given ---
-		cause := Fields{
+		cause := GenericFields[EDGeneric]{
 			"f0": errors.New("f0"),
 			"f1": New("f1", "ECF1", Meta().Int("A", 0).Option()),
 		}
@@ -368,7 +368,7 @@ func Test_encloseFieldsError(t *testing.T) {
 			"error":"lead",
 			"code":"ECL",
 			"fields":{
-				"f0":{"error":"f0","code":"ECGeneric"},
+				"f0":{},
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			}
 		}`
@@ -377,7 +377,7 @@ func Test_encloseFieldsError(t *testing.T) {
 
 	t.Run("lead with metadata", func(t *testing.T) {
 		// --- Given ---
-		cause := Fields{
+		cause := GenericFields[EDGeneric]{
 			"f0": errors.New("f0"),
 			"f1": New("f1", "ECF1", Meta().Int("A", 0).Option()),
 		}
@@ -393,7 +393,7 @@ func Test_encloseFieldsError(t *testing.T) {
 			"error":"lead",
 			"code":"ECL",
 			"fields":{
-				"f0":{"error":"f0","code":"ECGeneric"},
+				"f0":{},
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			},
 			"meta":{"B": 1}
@@ -459,45 +459,5 @@ func Test_encloseMultiError(t *testing.T) {
 		assert.NoError(t, err)
 		want := `{"error":"lead", "code":"ECL", "meta":{"A": 0}}`
 		assert.JSON(t, want, string(have))
-	})
-}
-
-func Test_marshalError(t *testing.T) {
-	t.Run("std error", func(t *testing.T) {
-		// --- Given ---
-		e := errors.New("e")
-
-		// --- When ---
-		have, err := marshalError(e)
-
-		// --- Then ---
-		assert.NoError(t, err)
-		assert.JSON(t, `{"error": "e", "code": "ECGeneric"}`, string(have))
-	})
-
-	t.Run("xrr error", func(t *testing.T) {
-		// --- Given ---
-		e := New("msg a", "a")
-
-		// --- When ---
-		data, err := marshalError(e)
-
-		// --- Then ---
-		assert.NoError(t, err)
-		assert.JSON(t, `{"error": "msg a", "code": "a"}`, string(data))
-	})
-
-	t.Run("marshal error", func(t *testing.T) {
-		// --- Given ---
-		e := &TErrMarshalJSON{errors.New("e")}
-
-		// --- When ---
-		have, err := marshalError(e)
-
-		// --- Then ---
-		wMsg := "json: " +
-			"error calling MarshalJSON for type *xrr.TErrMarshalJSON: e"
-		assert.ErrorEqual(t, wMsg, err)
-		assert.Nil(t, have)
 	})
 }

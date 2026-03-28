@@ -14,6 +14,32 @@ import (
 	"github.com/ctx42/testing/pkg/must"
 )
 
+func Test_FieldErrorFor(t *testing.T) {
+	t.Run("create error", func(t *testing.T) {
+		// --- Given ---
+		have := NewFieldErrorFor[EDGeneric]()
+
+		// --- When ---
+		err := have("field", ErrTst)
+
+		// --- Then ---
+		fe, _ := assert.SameType(t, GenericFields[EDGeneric]{}, err)
+		e, _ := assert.HasKey(t, "field", fe.ErrorFields())
+		assert.Same(t, ErrTst, e)
+	})
+
+	t.Run("nil error returns nil", func(t *testing.T) {
+		// --- Given ---
+		have := NewFieldErrorFor[EDGeneric]()
+
+		// --- When ---
+		err := have("field", nil)
+
+		// --- Then ---
+		assert.Nil(t, err)
+	})
+}
+
 func Test_FieldError(t *testing.T) {
 	t.Run("not nil error", func(t *testing.T) {
 		// --- Given ---
@@ -33,46 +59,6 @@ func Test_FieldError(t *testing.T) {
 
 		// --- Then ---
 		assert.Nil(t, have)
-	})
-}
-
-func Test_AddField(t *testing.T) {
-	t.Run("nil err", func(t *testing.T) {
-		// --- Given ---
-		fs := Fields{}
-
-		// --- When ---
-		AddField(&fs, "name", nil)
-
-		// --- Then ---
-		assert.Len(t, 0, fs)
-	})
-
-	t.Run("nil ers", func(t *testing.T) {
-		// --- Given ---
-		var fs Fields
-
-		// --- When ---
-		AddField(&fs, "name0", errors.New("msg0"))
-
-		// --- Then ---
-		assert.Len(t, 1, fs)
-		assert.ErrorEqual(t, "msg0", fs["name0"])
-	})
-
-	t.Run("add to ers", func(t *testing.T) {
-		// --- Given ---
-		fs := Fields{
-			"name0": errors.New("msg0"),
-		}
-
-		// --- When ---
-		AddField(&fs, "name1", errors.New("msg1"))
-
-		// --- Then ---
-		assert.Len(t, 2, fs)
-		assert.ErrorEqual(t, "msg0", fs["name0"])
-		assert.ErrorEqual(t, "msg1", fs["name1"])
 	})
 }
 
@@ -113,7 +99,7 @@ func Test_GetFieldError(t *testing.T) {
 
 	t.Run("field does not exist", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{"f0": errors.New("em0")}
+		fs := GenericFields[EDGeneric]{"f0": errors.New("em0")}
 
 		// --- When ---
 		have := GetFieldError(fs, "f1")
@@ -125,7 +111,7 @@ func Test_GetFieldError(t *testing.T) {
 	t.Run("field exist", func(t *testing.T) {
 		// --- Given ---
 		err := errors.New("em0")
-		fs := Fields{"f0": err}
+		fs := GenericFields[EDGeneric]{"f0": err}
 
 		// --- When ---
 		have := GetFieldError(fs, "f0")
@@ -157,7 +143,7 @@ func Test_FieldErrorIs(t *testing.T) {
 
 	t.Run("field does not exist", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{"f0": errors.New("em0")}
+		fs := GenericFields[EDGeneric]{"f0": errors.New("em0")}
 
 		// --- When ---
 		have := FieldErrorIs(fs, "f1", io.EOF)
@@ -168,7 +154,7 @@ func Test_FieldErrorIs(t *testing.T) {
 
 	t.Run("field exist", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{"f0": io.EOF}
+		fs := GenericFields[EDGeneric]{"f0": io.EOF}
 
 		// --- When ---
 		have := FieldErrorIs(fs, "f0", io.EOF)
@@ -181,7 +167,7 @@ func Test_FieldErrorIs(t *testing.T) {
 func Test_FieldNames(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
 			"f1": errors.New("em1"),
 		}
@@ -195,7 +181,7 @@ func Test_FieldNames(t *testing.T) {
 
 	t.Run("empty", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{}
+		fs := GenericFields[EDGeneric]{}
 
 		// --- When ---
 		have := FieldNames(fs)
@@ -213,59 +199,20 @@ func Test_FieldNames(t *testing.T) {
 	})
 }
 
-func Test_FieldRename(t *testing.T) {
-	t.Run("existing field", func(t *testing.T) {
-		// --- Given ---
-		fs := Fields{"f0": errors.New("em0")}
-
-		// --- When ---
-		FieldRename(fs, "f0", "name")
-
-		// --- Then ---
-		assert.Len(t, 1, fs)
-		assert.ErrorEqual(t, "em0", fs["name"])
-	})
-
-	t.Run("from equal to", func(t *testing.T) {
-		// --- Given ---
-		fs := Fields{"f0": errors.New("em0")}
-
-		// --- When ---
-		FieldRename(fs, "f0", "f0")
-
-		// --- Then ---
-		assert.Len(t, 1, fs)
-		assert.ErrorEqual(t, "em0", fs["f0"])
-	})
-
-	t.Run("not existing field", func(t *testing.T) {
-		// --- Given ---
-		fs := Fields{"f0": errors.New("em0")}
-
-		// --- When ---
-		FieldRename(fs, "other", "name")
-
-		// --- Then ---
-		assert.Len(t, 1, fs)
-		assert.ErrorEqual(t, "em0", fs["f0"])
-	})
-
-	t.Run("nil error", func(t *testing.T) {
-		FieldRename(nil, "other", "name")
-	})
-}
-
 func Test_MergeFields(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
 		// --- Given ---
-		fs0 := Fields{"f0": errors.New("m0")}
-		fs1 := Fields{"f1": errors.New("m1"), "f2": errors.New("m2")}
+		fs0 := GenericFields[EDGeneric]{"f0": errors.New("m0")}
+		fs1 := GenericFields[EDGeneric]{
+			"f1": errors.New("m1"),
+			"f2": errors.New("m2"),
+		}
 
 		// --- When ---
-		have := MergeFields(fs0, fs1)
+		have := MergeFields[EDGeneric](fs0, fs1)
 
 		// --- Then ---
-		want := Fields{
+		want := GenericFields[EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": errors.New("m1"),
 			"f2": errors.New("m2"),
@@ -275,14 +222,17 @@ func Test_MergeFields(t *testing.T) {
 
 	t.Run("later keys overwrite previous ones", func(t *testing.T) {
 		// --- Given ---
-		fs0 := Fields{"f0": errors.New("m0")}
-		fs1 := Fields{"f1": errors.New("m1"), "f0": errors.New("m2")}
+		fs0 := GenericFields[EDGeneric]{"f0": errors.New("m0")}
+		fs1 := GenericFields[EDGeneric]{
+			"f1": errors.New("m1"),
+			"f0": errors.New("m2"),
+		}
 
 		// --- When ---
-		have := MergeFields(fs0, fs1)
+		have := MergeFields[EDGeneric](fs0, fs1)
 
 		// --- Then ---
-		want := Fields{
+		want := GenericFields[EDGeneric]{
 			"f0": errors.New("m2"),
 			"f1": errors.New("m1"),
 		}
@@ -291,14 +241,14 @@ func Test_MergeFields(t *testing.T) {
 
 	t.Run("dop not override errors with later nil errors", func(t *testing.T) {
 		// --- Given ---
-		fs0 := Fields{"f0": errors.New("m0")}
-		fs1 := Fields{"f1": errors.New("m1"), "f0": nil}
+		fs0 := GenericFields[EDGeneric]{"f0": errors.New("m0")}
+		fs1 := GenericFields[EDGeneric]{"f1": errors.New("m1"), "f0": nil}
 
 		// --- When ---
-		have := MergeFields(fs0, fs1)
+		have := MergeFields[EDGeneric](fs0, fs1)
 
 		// --- Then ---
-		want := Fields{
+		want := GenericFields[EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": errors.New("m1"),
 		}
@@ -307,14 +257,18 @@ func Test_MergeFields(t *testing.T) {
 
 	t.Run("nil errors are not skipped", func(t *testing.T) {
 		// --- Given ---
-		fs0 := Fields{"f0": errors.New("m0"), "f1": nil}
-		fs1 := Fields{"f2": errors.New("m2"), "f3": errors.New("m3"), "f4": nil}
+		fs0 := GenericFields[EDGeneric]{"f0": errors.New("m0"), "f1": nil}
+		fs1 := GenericFields[EDGeneric]{
+			"f2": errors.New("m2"),
+			"f3": errors.New("m3"),
+			"f4": nil,
+		}
 
 		// --- When ---
-		have := MergeFields(fs0, fs1)
+		have := MergeFields[EDGeneric](fs0, fs1)
 
 		// --- Then ---
-		want := Fields{
+		want := GenericFields[EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": nil,
 			"f2": errors.New("m2"),
@@ -326,14 +280,18 @@ func Test_MergeFields(t *testing.T) {
 
 	t.Run("nil fields are skipped", func(t *testing.T) {
 		// --- Given ---
-		fs0 := Fields{"f0": errors.New("m0"), "f1": nil}
-		fs1 := Fields{"f2": errors.New("m2"), "f3": errors.New("m3"), "f4": nil}
+		fs0 := GenericFields[EDGeneric]{"f0": errors.New("m0"), "f1": nil}
+		fs1 := GenericFields[EDGeneric]{
+			"f2": errors.New("m2"),
+			"f3": errors.New("m3"),
+			"f4": nil,
+		}
 
 		// --- When ---
-		have := MergeFields(fs0, nil, fs1, nil)
+		have := MergeFields[EDGeneric](fs0, nil, fs1, nil)
 
 		// --- Then ---
-		want := Fields{
+		want := GenericFields[EDGeneric]{
 			"f0": errors.New("m0"),
 			"f1": nil,
 			"f2": errors.New("m2"),
@@ -345,7 +303,7 @@ func Test_MergeFields(t *testing.T) {
 
 	t.Run("call with an empty slice returns nil", func(t *testing.T) {
 		// --- When ---
-		have := MergeFields()
+		have := MergeFields[EDGeneric]()
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -353,7 +311,7 @@ func Test_MergeFields(t *testing.T) {
 
 	t.Run("call with nil", func(t *testing.T) {
 		// --- When ---
-		have := MergeFields(nil)
+		have := MergeFields[EDGeneric](nil)
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -361,7 +319,7 @@ func Test_MergeFields(t *testing.T) {
 
 	t.Run("call with multiple nils", func(t *testing.T) {
 		// --- When ---
-		have := MergeFields(nil, nil, nil)
+		have := MergeFields[EDGeneric](nil, nil, nil)
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -369,14 +327,20 @@ func Test_MergeFields(t *testing.T) {
 
 	t.Run("not Field instances get fake indexed field names", func(t *testing.T) {
 		// --- Given ---
-		fs0 := Fields{"f0": errors.New("m0"), "f1": nil}
-		fs1 := Fields{"f2": errors.New("m2"), "f3": errors.New("m3"), "f4": nil}
+		e0 := errors.New("abc")
+		fs0 := GenericFields[EDGeneric]{"f0": errors.New("m0"), "f1": nil}
+		fs1 := GenericFields[EDGeneric]{
+			"f2": errors.New("m2"),
+			"f3": errors.New("m3"),
+			"f4": nil,
+		}
+		e3 := errors.New("def")
 
 		// --- When ---
-		have := MergeFields(errors.New("abc"), fs0, fs1, errors.New("def"))
+		have := MergeFields[EDGeneric](e0, fs0, fs1, e3)
 
 		// --- Then ---
-		want := Fields{
+		want := GenericFields[EDGeneric]{
 			"__field__0": errors.New("abc"),
 			"__field__3": errors.New("def"),
 			"f0":         errors.New("m0"),
@@ -389,7 +353,7 @@ func Test_MergeFields(t *testing.T) {
 	})
 }
 
-func Test_Fields_ErrorFields(t *testing.T) {
+func Test_GenericFields_ErrorFields(t *testing.T) {
 	// --- Given ---
 	m := map[string]error{
 		"f0": errors.New("em0"),
@@ -398,16 +362,16 @@ func Test_Fields_ErrorFields(t *testing.T) {
 	}
 
 	// --- When ---
-	have := Fields(m).ErrorFields()
+	have := GenericFields[EDGeneric](m).ErrorFields()
 
 	// --- Then ---
 	assert.Equal(t, m, have)
 }
 
-func Test_Fields_Error(t *testing.T) {
+func Test_GenericFields_Error(t *testing.T) {
 	t.Run("not nested", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
 			"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
 			"f2": New("em2", "ECode2"),
@@ -426,11 +390,11 @@ func Test_Fields_Error(t *testing.T) {
 
 	t.Run("nested", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": New("em00", "ECode00"),
 				"s1": New("em01", "ECode01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
@@ -453,7 +417,7 @@ func Test_Fields_Error(t *testing.T) {
 
 	t.Run("nil error", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{"f0": nil}
+		fs := GenericFields[EDGeneric]{"f0": nil}
 
 		// --- When ---
 		have := fs.Error()
@@ -463,10 +427,10 @@ func Test_Fields_Error(t *testing.T) {
 	})
 }
 
-func Test_Fields_Unwrap(t *testing.T) {
+func Test_GenericFields_Unwrap(t *testing.T) {
 	t.Run("not nested", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
 			"f1": errors.New("em1"),
 			"f2": errors.New("em2"),
@@ -485,9 +449,9 @@ func Test_Fields_Unwrap(t *testing.T) {
 
 	t.Run("nested", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
-			"f1": Fields{
+			"f1": GenericFields[EDGeneric]{
 				"s0": errors.New("em10"),
 				"s1": errors.New("em11"),
 				"s2": nil,
@@ -508,17 +472,17 @@ func Test_Fields_Unwrap(t *testing.T) {
 	})
 }
 
-func Test_Fields_Is(t *testing.T) {
+func Test_GenericFields_Is(t *testing.T) {
 	t.Run("true not nested fields", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
-			"f1": ErrTstStd,
+			"f1": ErrTst,
 			"f2": New("em2", "ECode2"),
 		}
 
 		// --- When ---
-		have := fs.Is(ErrTstStd)
+		have := fs.Is(ErrTst)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -526,19 +490,19 @@ func Test_Fields_Is(t *testing.T) {
 
 	t.Run("works on all levels", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": New("em00", "ECode00"),
 				"s1": New("em01", "ECode01"),
-				"s2": Fields{
-					"s0": ErrTstStd,
+				"s2": GenericFields[EDGeneric]{
+					"s0": ErrTst,
 				},
 			},
 			"f2": New("em2", "ECode2"),
 		}
 
 		// --- When ---
-		have := fs.Is(ErrTstStd)
+		have := fs.Is(ErrTst)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -546,10 +510,10 @@ func Test_Fields_Is(t *testing.T) {
 
 	t.Run("nil field error", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{"f0": nil}
+		fs := GenericFields[EDGeneric]{"f0": nil}
 
 		// --- When ---
-		have := fs.Is(ErrTstStd)
+		have := fs.Is(ErrTst)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -557,7 +521,7 @@ func Test_Fields_Is(t *testing.T) {
 
 	t.Run("nil other error", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{"f0": errors.New("em0")}
+		fs := GenericFields[EDGeneric]{"f0": errors.New("em0")}
 
 		// --- When ---
 		have := fs.Is(nil)
@@ -567,10 +531,10 @@ func Test_Fields_Is(t *testing.T) {
 	})
 }
 
-func Test_Fields_Format(t *testing.T) {
+func Test_GenericFields_Format(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{}
+		fs := GenericFields[EDGeneric]{}
 
 		// --- When ---
 		have := fmt.Sprintf("%s", fs)
@@ -581,7 +545,7 @@ func Test_Fields_Format(t *testing.T) {
 
 	t.Run("not nested s", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
 			"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
 			"f2": New("em2", "ECode2"),
@@ -597,7 +561,7 @@ func Test_Fields_Format(t *testing.T) {
 
 	t.Run("not nested q", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
 			"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
 			"f2": New("em2", "ECode2"),
@@ -613,7 +577,7 @@ func Test_Fields_Format(t *testing.T) {
 
 	t.Run("not nested v", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
 			"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
 			"f2": New("em2", "ECode2"),
@@ -629,7 +593,7 @@ func Test_Fields_Format(t *testing.T) {
 
 	t.Run("not nested plus v", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": errors.New("em0"),
 			"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
 			"f2": New("em2", "ECode2"),
@@ -645,11 +609,11 @@ func Test_Fields_Format(t *testing.T) {
 
 	t.Run("nested s", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": New("em00", "ECode00"),
 				"s1": New("em01", "ECode01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
@@ -672,11 +636,11 @@ func Test_Fields_Format(t *testing.T) {
 
 	t.Run("nested q", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": New("em00", "ECode00"),
 				"s1": New("em01", "ECode01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
@@ -694,11 +658,11 @@ func Test_Fields_Format(t *testing.T) {
 
 	t.Run("nested v", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": New("em00", "ECode00"),
 				"s1": New("em01", "ECode01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
@@ -716,11 +680,11 @@ func Test_Fields_Format(t *testing.T) {
 
 	t.Run("nested plus v", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": New("em00", "ECode00"),
 				"s1": New("em01", "ECode01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
@@ -742,14 +706,14 @@ func Test_Fields_Format(t *testing.T) {
 	})
 }
 
-func Test_Fields_Flatten(t *testing.T) {
+func Test_GenericFields_Flatten(t *testing.T) {
 	t.Run("flatten single", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": errors.New("em00"),
 				"s1": errors.New("em01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
@@ -761,24 +725,24 @@ func Test_Fields_Flatten(t *testing.T) {
 		err := fs.Flatten()
 
 		// --- Then ---
-		want := map[string]error{
+		want := GenericFields[EDGeneric]{
 			"f0.s0":    errors.New("em00"),
 			"f0.s1":    errors.New("em01"),
 			"f0.s2.s0": errors.New("em020"),
 			"f1":       New("em1", "ECode1"),
 			"f2":       New("em2", "ECode2"),
 		}
-		assert.Equal(t, Fields(want), err)
+		assert.Equal(t, want, err)
 	})
 }
 
-func Test_Fields_Filter(t *testing.T) {
+func Test_GenericFields_Filter(t *testing.T) {
 	t.Run("filter", func(t *testing.T) {
 		// --- Given ---
 		key0 := errors.New("error")
 		key2 := New("em2", "ECode")
 
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"key0": key0,
 			"key1": nil,
 			"key2": key2,
@@ -788,7 +752,7 @@ func Test_Fields_Filter(t *testing.T) {
 		err := fs.Filter()
 
 		// --- Then ---
-		var fields Fields
+		var fields GenericFields[EDGeneric]
 		assert.ErrorAs(t, &fields, err)
 		assert.Len(t, 2, fields)
 		assert.Same(t, fields["key0"], key0)
@@ -797,7 +761,7 @@ func Test_Fields_Filter(t *testing.T) {
 
 	t.Run("empty", func(t *testing.T) {
 		// --- Given ---
-		var fs Fields
+		var fs GenericFields[EDGeneric]
 
 		// --- When ---
 		err := fs.Filter()
@@ -809,7 +773,7 @@ func Test_Fields_Filter(t *testing.T) {
 
 	t.Run("nil instance", func(t *testing.T) {
 		// --- Given ---
-		var fs Fields = nil
+		var fs GenericFields[EDGeneric] = nil
 
 		// --- When ---
 		err := fs.Filter()
@@ -821,7 +785,7 @@ func Test_Fields_Filter(t *testing.T) {
 
 	t.Run("all fields nil", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": nil,
 			"f1": nil,
 			"f2": nil,
@@ -837,11 +801,11 @@ func Test_Fields_Filter(t *testing.T) {
 
 	t.Run("nested", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": New("em00", "ECode00"),
 				"s1": nil,
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": nil,
 				},
 			},
@@ -853,14 +817,15 @@ func Test_Fields_Filter(t *testing.T) {
 		err := fs.Filter()
 
 		// --- Then ---
-		var fe Fields
+		var fe GenericFields[EDGeneric]
 		assert.ErrorAs(t, &fe, err)
 		assert.Len(t, 2, fe)
 		_, _ = assert.HasKey(t, "f0", fe)
 		_, _ = assert.HasKey(t, "f1", fe)
 
 		assert.Len(t, 1, fe["f0"])
-		_, _ = assert.HasKey(t, "s0", fe["f0"].(Fields)) // nolint: errcheck, errorlint
+		f0, _ := assert.SameType(t, GenericFields[EDGeneric]{}, fe["f0"])
+		_, _ = assert.HasKey(t, "s0", f0)
 
 		have := must.Value(json.Marshal(err))
 		want := `{
@@ -871,7 +836,7 @@ func Test_Fields_Filter(t *testing.T) {
 	})
 }
 
-func Test_Fields_Merge(t *testing.T) {
+func Test_GenericFields_Merge(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
 		// --- Given ---
 		f0 := map[string]error{
@@ -883,7 +848,7 @@ func Test_Fields_Merge(t *testing.T) {
 		}
 
 		// --- When ---
-		_ = Fields(f0).Merge(f1)
+		_ = GenericFields[EDGeneric](f0).Merge(f1)
 
 		// --- Then ---
 		assert.Len(t, 2, f0)
@@ -902,7 +867,7 @@ func Test_Fields_Merge(t *testing.T) {
 		}
 
 		// --- When ---
-		_ = Fields(f0).Merge(f1)
+		_ = GenericFields[EDGeneric](f0).Merge(f1)
 
 		// --- Then ---
 		assert.Len(t, 1, f0)
@@ -920,7 +885,7 @@ func Test_Fields_Merge(t *testing.T) {
 		}
 
 		// --- When ---
-		_ = Fields(f0).Merge(f1)
+		_ = GenericFields[EDGeneric](f0).Merge(f1)
 
 		// --- Then ---
 		assert.Len(t, 1, f0)
@@ -934,7 +899,7 @@ func Test_Fields_Merge(t *testing.T) {
 		}
 
 		// --- When ---
-		have := Fields(nil).Merge(f1)
+		have := GenericFields[EDGeneric](nil).Merge(f1)
 
 		// --- Then ---
 		assert.Len(t, 1, have)
@@ -943,7 +908,7 @@ func Test_Fields_Merge(t *testing.T) {
 
 	t.Run("nil fields and errs", func(t *testing.T) {
 		// --- When ---
-		have := Fields(nil).Merge(nil)
+		have := GenericFields[EDGeneric](nil).Merge(nil)
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -952,11 +917,11 @@ func Test_Fields_Merge(t *testing.T) {
 
 func Fuzz_Fields_Get(f *testing.F) {
 	// --- Given ---
-	fs := Fields{
-		"f0": Fields{
+	fs := GenericFields[EDGeneric]{
+		"f0": GenericFields[EDGeneric]{
 			"s0": New("f0.s0", "ECode00"),
 			"s1": New("f0.s1", "ECode01"),
-			"s2": Fields{
+			"s2": GenericFields[EDGeneric]{
 				"s0":            errors.New("f0.s2.s0"),
 				"s1":            errors.New("f0.s2.s1"),
 				"tag.name.mane": errors.New("f0.s2.tag.name.name"),
@@ -986,13 +951,13 @@ func Fuzz_Fields_Get(f *testing.F) {
 	})
 }
 
-func Test_Fields_Get(t *testing.T) {
+func Test_GenericFields_Get(t *testing.T) {
 	// --- Given ---
-	fs := Fields{
-		"f0": Fields{
+	fs := GenericFields[EDGeneric]{
+		"f0": GenericFields[EDGeneric]{
 			"s0": New("f0.s0", "ECode00"),
 			"s1": New("f0.s1", "ECode01"),
-			"s2": Fields{
+			"s2": GenericFields[EDGeneric]{
 				"s0":            errors.New("f0.s2.s0"),
 				"s1":            errors.New("f0.s2.s1"),
 				"tag.name.mane": errors.New("f0.s2.tag.name.name"),
@@ -1097,14 +1062,14 @@ func Test_Fields_Get(t *testing.T) {
 	})
 }
 
-func Test_Fields_MarshalJSON(t *testing.T) {
+func Test_GenericFields_MarshalJSON(t *testing.T) {
 	t.Run("with many levels", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": New("em00", "ECode00"),
 				"s1": New("em01", "ECode01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
@@ -1129,7 +1094,7 @@ func Test_Fields_MarshalJSON(t *testing.T) {
 
 	t.Run("field marshaller error", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
+		fs := GenericFields[EDGeneric]{
 			"f0": &TErrMarshalJSON{errors.New("abc")},
 		}
 
@@ -1145,11 +1110,11 @@ func Test_Fields_MarshalJSON(t *testing.T) {
 func Test_Flatten(t *testing.T) {
 	t.Run("flatten single", func(t *testing.T) {
 		// --- Given ---
-		fs := Fields{
-			"f0": Fields{
+		fs := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": errors.New("em00"),
 				"s1": errors.New("em01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
@@ -1158,48 +1123,48 @@ func Test_Flatten(t *testing.T) {
 		}
 
 		// --- When ---
-		err := Flatten(fs)
+		err := Flatten[EDGeneric](fs)
 
 		// --- Then ---
-		want := map[string]error{
+		want := GenericFields[EDGeneric]{
 			"f0.s0":    errors.New("em00"),
 			"f0.s1":    errors.New("em01"),
 			"f0.s2.s0": errors.New("em020"),
 			"f1":       New("em1", "ECode1"),
 			"f2":       New("em2", "ECode2"),
 		}
-		assert.Equal(t, Fields(want), err.(Fields)) // nolint: errorlint
+		assert.Equal(t, want, err)
 	})
 
 	t.Run("flatten multiple", func(t *testing.T) {
 		// --- Given ---
-		fs0 := Fields{
-			"f0": Fields{
+		fs0 := GenericFields[EDGeneric]{
+			"f0": GenericFields[EDGeneric]{
 				"s0": errors.New("em00"),
 				"s1": errors.New("em01"),
-				"s2": Fields{
+				"s2": GenericFields[EDGeneric]{
 					"s0": errors.New("em020"),
 				},
 			},
 			"f1": New("em1", "ECode1"),
 		}
 
-		fs1 := Fields{
+		fs1 := GenericFields[EDGeneric]{
 			"f1": New("other", "ECOther"),
 			"f2": New("em2", "ECode2"),
 		}
 
 		// --- When ---
-		err := Flatten(fs0, fs1)
+		err := Flatten[EDGeneric](fs0, fs1)
 
 		// --- Then ---
-		want := map[string]error{
+		want := GenericFields[EDGeneric]{
 			"f0.s0":    errors.New("em00"),
 			"f0.s1":    errors.New("em01"),
 			"f0.s2.s0": errors.New("em020"),
 			"f1":       New("other", "ECOther"),
 			"f2":       New("em2", "ECode2"),
 		}
-		assert.Equal(t, Fields(want), err)
+		assert.Equal(t, want, err)
 	})
 }

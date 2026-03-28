@@ -305,6 +305,61 @@ func Test_DefaultCode(t *testing.T) {
 	})
 }
 
+func Test_IsDomain(t *testing.T) {
+	t.Run("error from matching domain returns true", func(t *testing.T) {
+		// --- Given ---
+		err := New("msg", "ECode")
+
+		// --- When ---
+		have := IsDomain[EDGeneric](err)
+
+		// --- Then ---
+		assert.Equal(t, true, have)
+	})
+
+	t.Run("error from different domain returns false", func(t *testing.T) {
+		// --- Given ---
+		err := New("msg", "ECode")
+
+		// --- When ---
+		have := IsDomain[string](err)
+
+		// --- Then ---
+		assert.Equal(t, false, have)
+	})
+
+	t.Run("nil returns false", func(t *testing.T) {
+		// --- When ---
+		have := IsDomain[EDGeneric](nil)
+
+		// --- Then ---
+		assert.Equal(t, false, have)
+	})
+
+	t.Run("std error returns false", func(t *testing.T) {
+		// --- Given ---
+		err := errors.New("msg")
+
+		// --- When ---
+		have := IsDomain[EDGeneric](err)
+
+		// --- Then ---
+		assert.Equal(t, false, have)
+	})
+
+	t.Run("wrapped domain error returns false", func(t *testing.T) {
+		// --- Given ---
+		inner := New("msg", "ECode")
+		wrapped := errors.Join(inner)
+
+		// --- When ---
+		have := IsDomain[EDGeneric](wrapped)
+
+		// --- Then ---
+		assert.Equal(t, false, have)
+	})
+}
+
 func Test_isNil_tabular(t *testing.T) {
 	var err error
 
@@ -384,7 +439,7 @@ func Test_isTypeSupported_tabular(t *testing.T) {
 
 func Test_sortFields(t *testing.T) {
 	// --- Given ---
-	fs := Fields{
+	fs := map[string]error{
 		"f0": errors.New("em0"),
 		"f1": nil,
 		"f2": errors.New("em2"),
@@ -406,4 +461,83 @@ func Test_sortFields(t *testing.T) {
 	assert.Nil(t, hErs[3])
 	assert.ErrorEqual(t, "em4", hErs[4])
 	assert.Nil(t, hErs[5])
+}
+
+func Test_marshalError(t *testing.T) {
+	t.Run("std error", func(t *testing.T) {
+		// --- Given ---
+		e := errors.New("e")
+
+		// --- When ---
+		have, err := marshalError(e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.JSON(t, `{"error": "e", "code": "ECGeneric"}`, string(have))
+	})
+
+	t.Run("xrr error", func(t *testing.T) {
+		// --- Given ---
+		e := New("msg a", "a")
+
+		// --- When ---
+		data, err := marshalError(e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.JSON(t, `{"error": "msg a", "code": "a"}`, string(data))
+	})
+
+	t.Run("marshal error", func(t *testing.T) {
+		// --- Given ---
+		e := &TErrMarshalJSON{errors.New("e")}
+
+		// --- When ---
+		have, err := marshalError(e)
+
+		// --- Then ---
+		wMsg := "json: " +
+			"error calling MarshalJSON for type *xrr.TErrMarshalJSON: e"
+		assert.ErrorEqual(t, wMsg, err)
+		assert.Nil(t, have)
+	})
+}
+
+func Test_errorAsMap(t *testing.T) {
+	t.Run("nil error", func(t *testing.T) {
+		// --- When ---
+		have := errorAsMap(nil)
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
+
+	t.Run("standard error", func(t *testing.T) {
+		// --- Given ---
+		e := errors.New("m0")
+
+		// --- When ---
+		have := errorAsMap(e)
+
+		// --- Then ---
+		want := map[string]any{"code": "ECGeneric", "error": "m0"}
+		assert.Equal(t, want, have)
+	})
+
+	t.Run("error with meta", func(t *testing.T) {
+		// --- Given ---
+		m := map[string]any{"f0": "v0"}
+		e := Wrap[EDGeneric](errors.New("m0"), WithMeta(m))
+
+		// --- When ---
+		have := errorAsMap(e)
+
+		// --- Then ---
+		want := map[string]any{
+			"code":  "ECGeneric",
+			"error": "m0",
+			"meta":  map[string]any{"f0": "v0"},
+		}
+		assert.Equal(t, want, have)
+	})
 }

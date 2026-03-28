@@ -15,21 +15,22 @@ import (
 	"github.com/ctx42/xrr/pkg/xrr"
 )
 
-// AssertError asserts that the provided error is non-nil and is an instance of
-// [xrr.Error]. If the error is an instance of [xrr.Error], it returns true and
-// the [xrr.Error] instance. If the error is nil or not an instance of
-// [xrr.Error], it marks the test as failed, logs an error message, and returns
-// false and nil.
+// AssertError asserts err is non-nil and is an instance of
+// [xrr.GenericError[T]]. Returns the [xrr.GenericError[T]] instance and true
+// on success. If err is nil or not an instance of [xrr.GenericError[T]], it
+// marks the test as failed, writes an error message to the test log, and
+// returns nil and false.
 //
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Error]
-// without unwrapping.
-func AssertError(t tester.T, err error) (*xrr.Error, bool) {
+// Unlike [errors.As], it directly checks if the error is of the type
+// [xrr.GenericError[T]] without unwrapping.
+func AssertError[T xrr.Domain](t tester.T, err error) (*xrr.GenericError[T], bool) {
 	t.Helper()
 	if e := check.NotNil(err); e != nil {
 		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return nil, false // nolint: nilerr
 	}
-	var xe *xrr.Error
+	// Target variable for the type assertion into *xrr.GenericError[T].
+	var xe *xrr.GenericError[T]
 	if e := check.Type(&xe, err); e != nil {
 		msg := notice.From(e).
 			SetHeader("[xrr] expected *xrr.Error instance").
@@ -41,10 +42,11 @@ func AssertError(t tester.T, err error) (*xrr.Error, bool) {
 	return xe, true
 }
 
-// AssertEqual asserts that the provided error is non-nil and is an instance of
-// [xrr.Error], then asserts the error has the wanted error message and error
-// code. Returns true if it is, otherwise marks the test as failed, writes an
-// error message to the test log, and returns false.
+// AssertEqual asserts err is non-nil and its %+v formatted representation
+// equals "want". For [xrr.GenericError], %+v includes the error message
+// followed by the error code in parentheses. Returns true on success,
+// otherwise marks the test as failed, writes an error message to the test log,
+// and returns false.
 func AssertEqual(t tester.T, want string, err error) bool {
 	t.Helper()
 	if e := check.NotNil(err); e != nil {
@@ -85,7 +87,7 @@ func AssertCode(t tester.T, want string, err error) bool {
 
 // AssertKeyCnt asserts that the provided error is non-nil and error metadata,
 // retrieved using [xrr.GetMeta], has a given number of keys. Returns true if
-// it does otherwise, marks the test as failed, writes an error message to the
+// it does, otherwise marks the test as failed, writes an error message to the
 // test log, and returns false.
 func AssertKeyCnt(t tester.T, want int, err error) bool {
 	t.Helper()
@@ -103,7 +105,7 @@ func AssertKeyCnt(t tester.T, want int, err error) bool {
 
 // AssertNoKey asserts that the provided error is non-nil and error metadata,
 // retrieved using [xrr.GetMeta], does not contain the key with the given name.
-// Returns true if the key doesn't exist otherwise, marks the test as failed,
+// Returns true if the key doesn't exist, otherwise marks the test as failed,
 // writes an error message to the test log, and returns false.
 func AssertNoKey(t tester.T, key string, err error) bool {
 	t.Helper()
@@ -121,7 +123,7 @@ func AssertNoKey(t tester.T, key string, err error) bool {
 
 // AssertStr asserts that the provided error is non-nil and error metadata,
 // retrieved using [xrr.GetMeta], has the key with the given value. Returns
-// true if it does otherwise, marks the test as failed, writes an error message
+// true if it does, otherwise marks the test as failed, writes an error message
 // to the test log, and returns false.
 func AssertStr(t tester.T, key, want string, err error) bool {
 	t.Helper()
@@ -169,7 +171,7 @@ func AssertInt(t tester.T, key string, want int, err error) bool {
 
 // AssertInt64 asserts that the provided error is non-nil and error metadata,
 // retrieved using [xrr.GetMeta], has the key with the given value. Returns
-// true if it has otherwise, marks the test as failed, writes an error message
+// true if it has, otherwise marks the test as failed, writes an error message
 // to the test log, and returns false.
 func AssertInt64(t tester.T, key string, want int64, err error) bool {
 	t.Helper()
@@ -193,7 +195,7 @@ func AssertInt64(t tester.T, key string, want int64, err error) bool {
 
 // AssertFloat64 asserts that the provided error is non-nil and error metadata,
 // retrieved using [xrr.GetMeta], has the key with the given value. Returns
-// true if it has otherwise, marks the test as failed, writes an error message
+// true if it has, otherwise marks the test as failed, writes an error message
 // to the test log, and returns false.
 func AssertFloat64(t tester.T, key string, want float64, err error) bool {
 	t.Helper()
@@ -217,7 +219,7 @@ func AssertFloat64(t tester.T, key string, want float64, err error) bool {
 
 // AssertBool asserts that the provided error is non-nil and error metadata,
 // retrieved using [xrr.GetMeta], has the key with the given value. Returns
-// true if it has otherwise, marks the test as failed, writes an error message
+// true if it has, otherwise marks the test as failed, writes an error message
 // to the test log, and returns false.
 func AssertBool(t tester.T, key string, want bool, err error) bool {
 	t.Helper()
@@ -263,24 +265,24 @@ func AssertTime(t tester.T, key string, want time.Time, err error) bool {
 	return true
 }
 
-// AssertFields asserts that the provided error is non-nil and is an instance
-// of [xrr.Fields]. If the error is an instance of [xrr.Fields], it returns
-// true and the [xrr.Fields] instance. If the error is nil or not an instance
-// of [xrr.Error], it marks the test as failed, logs an error message, and
-// returns false and nil.
+// AssertFields asserts err is non-nil and implements [xrr.Fielder]. Returns
+// the [xrr.Fielder] instance and true on success. If err is nil or does not
+// implement [xrr.Fielder], it marks the test as failed, writes an error
+// message to the test log, and returns nil and false.
 //
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
+// Unlike [errors.As], it directly checks if the error implements [xrr.Fielder]
 // without unwrapping.
-func AssertFields(t tester.T, err error) (xrr.Fields, bool) {
+func AssertFields(t tester.T, err error) (xrr.Fielder, bool) {
 	t.Helper()
 	if e := check.NotNil(err); e != nil {
 		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
 		return nil, false // nolint: nilerr
 	}
-	var xe xrr.Fields
+	// Target variable for the type assertion into xrr.Fielder.
+	var xe xrr.Fielder
 	if e := check.Type(&xe, err); e != nil {
 		msg := notice.From(e).
-			SetHeader("[xrr] expected xrr.Fields instance").
+			SetHeader("[xrr] expected xrr.Fielder instance").
 			Remove("src").
 			Append("error", "%T", err)
 		t.Error(msg)
@@ -289,12 +291,12 @@ func AssertFields(t tester.T, err error) (xrr.Fields, bool) {
 	return xe, true
 }
 
-// AssertFieldsEqual asserts that the provided error is non-nil and is an
-// instance of [xrr.Fields]. Then asserts the string error message equals to
-// the one provided. Returns true if it does, otherwise marks the test as
-// failed, writes an error message to the test log, and returns false.
+// AssertFieldsEqual asserts err is non-nil and implements [xrr.Fielder], then
+// asserts its %+v formatted representation equals "want". Returns true on
+// success, otherwise marks the test as failed, writes an error message to the
+// test log, and returns false.
 //
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
+// Unlike [errors.As], it directly checks if the error implements [xrr.Fielder]
 // without unwrapping.
 func AssertFieldsEqual(t tester.T, want string, err error) bool {
 	t.Helper()
@@ -311,13 +313,13 @@ func AssertFieldsEqual(t tester.T, want string, err error) bool {
 	return true
 }
 
-// AssertFieldCnt asserts that the provided error is non-nil and is an instance
-// of [xrr.Fields]. Then asserts it has the given number of fields. Returns
-// true if it has, otherwise marks the test as failed, writes an error message
-// to the test log, and returns false.
+// AssertFieldCnt asserts err is non-nil and implements [xrr.Fielder], then
+// asserts it has the given number of fields. Returns true on success,
+// otherwise marks the test as failed, writes an error message to the test
+// log, and returns false.
 //
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
-// without unwrapping.
+// Unlike [errors.As], it directly checks if the error implements
+// [xrr.Fielder] without unwrapping.
 func AssertFieldCnt(t tester.T, want int, err error) bool {
 	t.Helper()
 	xe, success := AssertFields(t, err)
@@ -332,20 +334,21 @@ func AssertFieldCnt(t tester.T, want int, err error) bool {
 	return true
 }
 
-// AssertHasField asserts error is an instance of [xrr.Fields] and has the
-// given field name. Returns the value of the error (might be nil) and true
-// if the field exists. Otherwise, marks the test as failed, writes an error
-// message to the test log, and returns false.
+// AssertHasField asserts error is an instance of [xrr.Fielder] and has the
+// given field name. Returns the field's error value (might be nil) and true
+// on success. Otherwise, marks the test as failed, writes an error message
+// to the test log, and returns nil and false.
 //
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
-// without unwrapping.
+// Unlike [errors.As], it directly checks if the error is of type
+// [xrr.Fielder] without unwrapping.
 func AssertHasField(t tester.T, field string, err error) (error, bool) {
 	t.Helper()
 	xe, success := AssertFields(t, err)
 	if !success {
 		return nil, false
 	}
-	ve, e := check.HasKey(field, xe)
+	// Verify the field exists and retrieve its error value.
+	ve, e := check.HasKey(field, xe.ErrorFields())
 	if e != nil {
 		msg := notice.From(e, "xrr").
 			Remove("map").
@@ -356,20 +359,21 @@ func AssertHasField(t tester.T, field string, err error) (error, bool) {
 	return ve, true
 }
 
-// AssertFieldEqual asserts error is an instance of [xrr.Fields] and has the
-// given field name and the error message equals to msg. Returns true if it
-// does, otherwise marks the test as failed, writes an error message to the
-// test log, and returns false.
+// AssertFieldEqual asserts error is an instance of [xrr.Fielder] and has the
+// given field name with an error message that equals "want". Returns true on
+// success, otherwise marks the test as failed, writes an error message to
+// the test log, and returns false.
 //
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
-// without unwrapping.
+// Unlike [errors.As], it directly checks if the error is of type
+// [xrr.Fielder] without unwrapping.
 func AssertFieldEqual(t tester.T, field, want string, err error) bool {
 	t.Helper()
 	xe, success := AssertFields(t, err)
 	if !success {
 		return false
 	}
-	ve, e := check.HasKey(field, xe)
+	// Verify the field exists and retrieve its error value.
+	ve, e := check.HasKey(field, xe.ErrorFields())
 	if e != nil {
 		msg := notice.From(e, "xrr").
 			Remove("map").
@@ -387,12 +391,12 @@ func AssertFieldEqual(t tester.T, field, want string, err error) bool {
 	return true
 }
 
-// AssertFieldCode asserts error is an instance of [xrr.Fields] and has the
+// AssertFieldCode asserts error is an instance of [xrr.Fielder] and has the
 // given field name with an error having the given error code. Returns true if
-// it does, otherwise marks the test as failed, writes an error message to the
-// test log, and returns false.
+// it does, otherwise marks the test as failed, writes an error message to
+// the test log, and returns false.
 //
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
+// Unlike [errors.As], it directly checks if the error is of type [xrr.Fielder]
 // without unwrapping.
 func AssertFieldCode(t tester.T, field, code string, err error) bool {
 	t.Helper()
@@ -401,7 +405,8 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 		return false
 	}
 
-	ve, e := check.HasKey(field, xe)
+	// Verify the field exists and retrieve its error value.
+	ve, e := check.HasKey(field, xe.ErrorFields())
 	if e != nil {
 		hHeader := "[xrr] expected field to exist"
 		msg := notice.From(e).
@@ -425,21 +430,22 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 	return true
 }
 
-// AssertFieldIs asserts error is an instance of [xrr.Fields] and has the
-// given field name with an error which has "want" error in its chain.
-// Assertion uses [errors.Is] to check the field error chain. Returns true if
-// it does, otherwise marks the test as failed, writes an error message to the
+// AssertFieldIs asserts err is an instance of [xrr.Fielder] and that the field
+// identified by field exists with an error that has "want" in its chain. The
+// assertion uses [errors.Is] to check the field error chain. Returns true on
+// success, otherwise marks the test as failed, writes an error message to the
 // test log, and returns false.
 //
-// Unlike [errors.As], it directly checks if the error is of type [xrr.Fields]
-// without unwrapping.
+// Unlike [errors.As], it directly checks if the error is of type
+// [xrr.Fielder] without unwrapping.
 func AssertFieldIs(t tester.T, field string, want, err error) bool {
 	t.Helper()
 	xe, success := AssertFields(t, err)
 	if !success {
 		return false
 	}
-	ve, e := check.HasKey(field, xe)
+	// Verify the field exists and retrieve its error value.
+	ve, e := check.HasKey(field, xe.ErrorFields())
 	if e != nil {
 		msg := notice.From(e, "xrr").
 			Remove("map").

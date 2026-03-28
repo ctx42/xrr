@@ -54,9 +54,9 @@ func GetCodes(err error) []string {
 
 // GetMeta recursively retrieves metadata from an error and its wrapped errors.
 //
-// The error chain (tree) is traversed using the breath-first search approach
+// The error chain (tree) is traversed using the breadth-first search approach
 // with errors closer to the top and more on the left override metadata from
-// the lover and more to the right parts of the tree.
+// the lower and more to the right parts of the tree.
 func GetMeta(err error) map[string]any {
 	var m map[string]any
 	cb := func(err error) bool {
@@ -125,10 +125,11 @@ func GetDuration(err error, key string) (time.Duration, bool) {
 	return getKey[time.Duration](err, key)
 }
 
-// getKey recursively walks the error chain (tree) and returns the first string
-// value associated with the provided key. Returns the key value and true if
-// the key was found. Otherwise, returns an empty string and false.
-func getKey[T metaType](err error, key string) (T, bool) {
+// getKey recursively walks the error chain (tree) and returns the first value
+// of type T associated with the provided key. Returns the key value and true
+// if the key was found with the correct type. Otherwise, returns a zero value
+// and false.
+func getKey[T MetaType](err error, key string) (T, bool) {
 	var value T
 	var found bool
 	cb := func(err error) bool {
