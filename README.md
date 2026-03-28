@@ -2,38 +2,51 @@
 [![GoDoc](https://img.shields.io/badge/api-Godoc-blue.svg)](https://pkg.go.dev/github.com/ctx42/xrr)
 ![Tests](https://github.com/ctx42/xrr/actions/workflows/go.yml/badge.svg?branch=master)
 
+# xrr
+
+Extend standard Go errors with optional string codes and structured metadata.
+Use codes for clear API responses and monitoring. Add metadata to enrich logs
+without extra boilerplate.
+
+Requires **Go 1.24+**.
+
+```bash
+go get github.com/ctx42/xrr
+```
+
 <!-- TOC -->
-* [Errors with Codes and Metadata](#errors-with-codes-and-metadata)
+* [xrr](#xrr)
+  * [Quick Start](#quick-start)
   * [Error Codes](#error-codes)
-  * [Bridge Errors and Logging](#bridge-errors-and-logging)
-* [Other Error Types](#other-error-types)
-  * [Fields](#fields)
+  * [Metadata and Logging](#metadata-and-logging)
+  * [Wrapping Errors](#wrapping-errors)
+  * [Inspecting Error Trees](#inspecting-error-trees)
+  * [Field Errors](#field-errors)
+  * [Domain-Specific Errors](#domain-specific-errors)
   * [Envelope](#envelope)
     * [Regular Error](#regular-error)
     * [Joined Errors](#joined-errors)
     * [Fields Error](#fields-error)
+  * [Error Collections](#error-collections)
+  * [Test Helpers](#test-helpers)
 <!-- TOC -->
 
-# Errors with Codes and Metadata
+## Quick Start
 
-Extend standard Go errors with optional string codes and structured metadata.
-Use codes for clear API responses and monitoring. Add metadata to enrich logs
-without an extra boilerplate.
+```go
+import "github.com/ctx42/xrr/pkg/xrr"
 
-**Codes**: String identifiers (e.g., `EC_USER_NOT_FOUND`) for APIs, monitoring, 
-and consistency.
+// Create an error with a code.
+err := xrr.New("user not found", "EC_USER_NOT_FOUND")
 
-**Metadata**: Structured key-value data that sticks with errors, perfect for
-rich logging in Zerolog, Zap, or beyond.
+// Add structured metadata.
+meta := xrr.Meta().Str("user_id", "u-123")
+err = xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
 
-Keep Go's simplicity. Use only what you need.
-
-Go's error handling is one of its most beloved features. It encourages
-developers to handle failures directly without the overhead of exceptions or
-complex mechanisms. This library is merely an extension of that philosophy,
-building on the standard `error` interface. It doesn't replace or complicate 
-the basics; instead, it adds optional enhancements for scenarios where more
-structure is needed, particularly in larger applications or services.
+// Inspect the error.
+fmt.Println(xrr.GetCode(err))            // EC_USER_NOT_FOUND
+fmt.Println(xrr.GetStr(err, "user_id"))  // u-123 true
+```
 
 ## Error Codes
 
@@ -60,13 +73,19 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // }
 ```
 
-## Bridge Errors and Logging
+Use `IsCode` to check whether any error in a chain carries a specific code:
 
-In most server applications — be it web services, APIs, or backend systems —
-errors aren't just handled; they're logged for diagnostics, auditing, and
-post-mortem analysis. Traditional Go errors are flat strings, which work fine
-for simple logging but lose context in structured loggers (e.g., Zerolog). This
-is where structured metadata bridges the worlds of error handling and logging:
+```go
+if xrr.IsCode(err, "EC_USER_NOT_FOUND") {
+    // handle not found
+}
+```
+
+## Metadata and Logging
+
+In most server applications, errors aren't just handled — they're logged for
+diagnostics, auditing, and post-mortem analysis. Structured metadata bridges
+the worlds of error handling and logging:
 
 ```go
 meta := xrr.Meta().Str("action", "context")
@@ -85,26 +104,57 @@ fmt.Printf("%s\n", buf.String())
 // {"level":"info","action":"context","error_code":"EC_USER_NOT_FOUND","error":"user not found"}
 ```
 
-# Other Error Types
-
-This module includes a handful of commonly used error types, built for fast
-adoption in everyday cases like validation failures. They stick closely to Go's 
-error conventions, so they feel like a natural fit without extra ceremony.
-
-## Fields
-
-A common requirement, for example, in validation errors, is to associate an 
-error with a specific field. The `Fields` type handles this, and it is just a 
-map of errors underneath.
+The `Metadata` builder supports typed values — `bool`, `string`, `int`, `int64`,
+`float64`, `time.Time`, `time.Duration`:
 
 ```go
-type Fields map[string]error
+meta := xrr.Meta().
+    Str("user_id", "u-123").
+    Int("attempt", 3).
+    Bool("retryable", true)
 ```
 
-This makes it straightforward to return detailed responses in APIs or 
-process / handle field-specific errors.
+## Wrapping Errors
 
-Example:
+Use `Wrap` to add a code or metadata to an existing error. It preserves the
+original error in the chain and retains its code unless overridden:
+
+```go
+err := fmt.Errorf("connection refused")
+wrapped := xrr.Wrap[xrr.EDGeneric](err, xrr.WithCode("EC_CONN"))
+
+fmt.Println(errors.Is(wrapped, err)) // true
+fmt.Println(xrr.GetCode(wrapped))    // EC_CONN
+```
+
+## Inspecting Error Trees
+
+The `Get*` functions walk the full error tree (chains, joined errors, and
+field errors) using BFS. For metadata, errors closer to the root override
+deeper ones.
+
+```go
+// Retrieve the first error code in the chain.
+code := xrr.GetCode(err)
+
+// Collect all unique codes.
+codes := xrr.GetCodes(err)
+
+// Retrieve merged metadata from the entire tree.
+meta := xrr.GetMeta(err)
+
+// Retrieve typed metadata values.
+userID, ok := xrr.GetStr(err, "user_id")
+count, ok  := xrr.GetInt(err, "attempt")
+flag, ok   := xrr.GetBool(err, "retryable")
+ts, ok     := xrr.GetTime(err, "created_at")
+dur, ok    := xrr.GetDuration(err, "elapsed")
+```
+
+## Field Errors
+
+A common requirement in validation is to associate errors with specific
+fields. `Fields` is a `map[string]error` underneath:
 
 ```go
 err := xrr.Fields{
@@ -133,10 +183,46 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // }
 ```
 
+Inspect field errors programmatically:
+
+```go
+names := xrr.FieldNames(err)                 // sorted field names
+fe := xrr.GetFieldError(err, "email")        // get a specific field
+ok := xrr.FieldErrorIs(err, "email", target) // check field error chain
+```
+
+Merge and flatten nested field errors:
+
+```go
+merged := xrr.MergeFields[xrr.EDGeneric](fieldsA, fieldsB)
+flat := xrr.Flatten[xrr.EDGeneric](nested) // dot-notation keys
+```
+
+## Domain-Specific Errors
+
+Use Go generics to create error types scoped to your domain. This gives you
+compile-time separation between error types from different parts of your
+system:
+
+```go
+type EDPayment string
+
+var (
+    NewPaymentError = xrr.NewErrorFor[EDPayment]()
+    PaymentFieldErr = xrr.NewFieldErrorFor[EDPayment]()
+)
+
+err := NewPaymentError("charge failed", "EC_CHARGE_FAILED")
+```
+
+Domain-specific errors carry the same functionality as the default `xrr.New`
+— codes, metadata, JSON marshaling, and error tree traversal — but their
+Go types are distinct, enabling type-based routing or assertions.
+
 ## Envelope
 
-The `Envelope` provides facilities to create JSON envelope for errors of 
-different kinds.
+The `Envelope` provides facilities to create a JSON envelope for errors of
+different kinds — useful for API responses.
 
 ### Regular Error
 
@@ -146,15 +232,15 @@ lead := xrr.New("lead", "EC_LEAD")
 
 err := xrr.Enclose(cause, lead)
 
-fmt.Printf("is lead error: %v\n", errors.Is(err, cause))
-fmt.Printf("id db error: %v\n", errors.Is(err, lead))
+fmt.Printf("is cause: %v\n", errors.Is(err, cause))
+fmt.Printf("is lead: %v\n", errors.Is(err, lead))
 fmt.Printf("unwrap: %v\n", errors.Unwrap(err))
 fmt.Printf("message: %v\n", err.Error())
 fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 
 // Output:
-// is lead error: true
-// id db error: true
+// is cause: true
+// is lead: true
 // unwrap: cause
 // message: cause
 // {
@@ -224,4 +310,47 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 //     }
 //   }
 // }
+```
+
+## Error Collections
+
+`Errors` is a simple `[]error` slice for accumulating errors:
+
+```go
+errs := xrr.NewErrors()
+errs.Add(fmt.Errorf("first"))
+errs.Add(fmt.Errorf("second"))
+fmt.Println(errs.First()) // first
+```
+
+`SyncErrors` is the thread-safe version, suitable for use across goroutines:
+
+```go
+errs := xrr.NewSyncErrors()
+errs.Add(fmt.Errorf("from goroutine"))
+collected := errs.Collect()
+```
+
+## Test Helpers
+
+The `xrrtest` subpackage provides assertion helpers built on
+[`github.com/ctx42/testing`](https://github.com/ctx42/testing):
+
+```go
+import "github.com/ctx42/xrr/pkg/xrr/xrrtest"
+
+// Assert error type and code.
+ge, ok := xrrtest.AssertError[xrr.EDGeneric](t, err)
+xrrtest.AssertCode(t, "EC_USER_NOT_FOUND", err)
+xrrtest.AssertEqual(t, "user not found (EC_USER_NOT_FOUND)", err)
+
+// Assert metadata.
+xrrtest.AssertStr(t, "user_id", "u-123", err)
+xrrtest.AssertInt(t, "attempt", 3, err)
+xrrtest.AssertBool(t, "retryable", true, err)
+
+// Assert field errors.
+xrrtest.AssertFieldCnt(t, 2, err)
+xrrtest.AssertFieldEqual(t, "email", "invalid email", err)
+xrrtest.AssertFieldCode(t, "email", "EC_INVALID_EMAIL", err)
 ```
