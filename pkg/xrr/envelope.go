@@ -58,8 +58,8 @@ import (
 //	  "error": "lead",
 //	  "code": "ECLead",
 //	  "errors": [
-//	    "{"code":"ECCause0","error":"cause 0"},
-//	    "{"code":"ECCause1","error":"cause 1"}
+//	    {"code":"ECCause0","error":"cause 0"},
+//	    {"code":"ECCause1","error":"cause 1"}
 //	  ]
 //	}
 //
@@ -69,7 +69,7 @@ import (
 //	  "error": "cause 0",
 //	  "code": "ECCause0",
 //	  "errors": [
-//	    "{"code":"ECCause1","error":"cause 1"}
+//	    {"code":"ECCause1","error":"cause 1"}
 //	  ]
 //	}
 type Envelope struct {
