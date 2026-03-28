@@ -211,29 +211,29 @@ func (fs GenericFields[T]) Filter() error {
 	return nil
 }
 
-// filterMap removes all keys with nil values and returns it. If the length of
-// the filtered map is zero, it will return nil.
+// filterMap returns a new map with nil values removed. Nested [Fielder] values
+// are filtered recursively. Returns nil if no entries survive filtering.
 func filterMap[T Domain](fs map[string]error) GenericFields[T] {
+	ret := make(map[string]error, len(fs))
 	for key, value := range fs {
 		if value == nil {
-			delete(fs, key)
 			continue
 		}
 		if fls, ok := value.(Fielder); ok {
 			if filtered := filterMap[T](fls.ErrorFields()); filtered != nil {
-				fs[key] = filtered
-			} else {
-				delete(fs, key)
+				ret[key] = filtered
 			}
+			continue
 		}
+		ret[key] = value
 	}
-	if len(fs) == 0 {
+	if len(ret) == 0 {
 		return nil
 	}
-	return fs
+	return ret
 }
 
-// Merge adds all non nil errors from errs overriding already existing keys.
+// Merge adds all non-nil errors from errs overriding already existing keys.
 func (fs GenericFields[T]) Merge(errs map[string]error) GenericFields[T] {
 	if fs == nil && len(errs) == 0 {
 		return nil

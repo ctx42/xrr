@@ -813,6 +813,21 @@ func Test_GenericFields_Filter(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
+	t.Run("does not mutate receiver", func(t *testing.T) {
+		// --- Given ---
+		fs := GenericFields[EDGeneric]{
+			"key0": errors.New("error"),
+			"key1": nil,
+		}
+
+		// --- When ---
+		_ = fs.Filter()
+
+		// --- Then ---
+		assert.Len(t, 2, fs)
+		_, _ = assert.HasKey(t, "key1", fs)
+	})
+
 	t.Run("nested", func(t *testing.T) {
 		// --- Given ---
 		fs := GenericFields[EDGeneric]{
