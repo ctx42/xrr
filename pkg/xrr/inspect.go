@@ -38,7 +38,7 @@ func GetCode(err error) string {
 // GetCodes recursively retrieves a unique list of error codes from an error
 // and its wrapped errors, ignoring empty error codes.
 func GetCodes(err error) []string {
-	set := make(map[string]struct{}, 10)
+	set := make(map[string]struct{})
 	var ret []string
 	cb := func(err error) bool {
 		code := GetCode(err)
