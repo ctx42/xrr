@@ -16,7 +16,7 @@ type SyncErrors struct {
 
 // NewSyncErrors returns a new instance of [SyncErrors].
 func NewSyncErrors() *SyncErrors {
-	return &SyncErrors{ers: make([]error, 0, 5)}
+	return &SyncErrors{ers: make([]error, 0)}
 }
 
 // Add adds an error to [SyncErrors] in a thread-safe way. The nil errors are
