@@ -12,7 +12,17 @@ type MetaType interface {
 	bool | string | int | int64 | float64 | time.Time | time.Duration
 }
 
-// Metadata represents metadata collection.
+// Metadata represents a metadata collection.
+//
+// Metadata is a value type, but all copies of a given instance share the
+// same underlying map once it has been allocated. Chaining calls on a
+// single value is safe, but storing an intermediate value and continuing
+// to chain from both the stored copy and the original will cause them to
+// share state: writes through either copy are visible to the other.
+//
+//	base := Meta().Str("a", "1")
+//	x := base.Str("b", "2") // Both x and base share the same underlying map.
+//	y := base.Str("b", "3") // Overwrites "b" in the shared underlying map.
 type Metadata struct {
 	m map[string]any
 }
