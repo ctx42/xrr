@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac <rzajac@gmail.com>
+// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 // Package xrr provides errors supporting error codes and metadata.
