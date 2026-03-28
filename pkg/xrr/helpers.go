@@ -85,10 +85,19 @@ func IsDomain[T Domain](err error) bool {
 	return ok
 }
 
-// isNil returns true if v is nil or v is nil interface.
+// isNil returns true if v is nil or v is a typed nil interface value.
 func isNil(v any) bool {
-	defer func() { _ = recover() }()
-	return v == nil || reflect.ValueOf(v).IsNil()
+	if v == nil {
+		return true
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Func,
+		reflect.Slice, reflect.Map, reflect.Chan:
+		return rv.IsNil()
+	default:
+		return false
+	}
 }
 
 // prefix adds prefix to the key if the prefix is not empty.
