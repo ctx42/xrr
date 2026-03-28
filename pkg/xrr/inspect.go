@@ -54,9 +54,9 @@ func GetCodes(err error) []string {
 
 // GetMeta recursively retrieves metadata from an error and its wrapped errors.
 //
-// The error chain (tree) is traversed using the breadth-first search approach
-// with errors closer to the top and more on the left override metadata from
-// the lower and more to the right parts of the tree.
+// The error chain (tree) is traversed in reverse depth-first order so that
+// errors closer to the root override metadata from deeper or right-hand
+// parts of the tree.
 func GetMeta(err error) map[string]any {
 	var m map[string]any
 	cb := func(err error) bool {
