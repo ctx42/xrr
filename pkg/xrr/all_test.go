@@ -16,7 +16,17 @@ type TErrorFields map[string]error
 func (f TErrorFields) Error() string                 { return "fields error" }
 func (f TErrorFields) ErrorFields() map[string]error { return f }
 
-// TErrMarshalJSON represents test error struct implementing [json.Marshaler]
+// TFielderCoder represents an error implementing both [Fielder] and [Coder].
+type TFielderCoder struct {
+	code   string
+	fields map[string]error
+}
+
+func (t TFielderCoder) Error() string                 { return "fielder coder" }
+func (t TFielderCoder) ErrorCode() string             { return t.code }
+func (t TFielderCoder) ErrorFields() map[string]error { return t.fields }
+
+// TErrMarshalJSON represents a test error struct implementing [json.Marshaler]
 // interface which returns 'err' error.
 type TErrMarshalJSON struct{ err error }
 

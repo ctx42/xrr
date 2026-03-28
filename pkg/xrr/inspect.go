@@ -157,15 +157,14 @@ func walk(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true
 	}
+	if !cb(err) {
+		return false
+	}
 	switch x := err.(type) { // nolint: errorlint
 	case interface{ Unwrap() error }:
-		if !cb(err) {
-			return false
-		}
 		if e := x.Unwrap(); e != nil {
 			return walk(e, cb)
 		}
-		return true
 
 	case Fielder:
 		_, ers := sortFields(x.ErrorFields())
@@ -174,7 +173,6 @@ func walk(err error, cb func(err error) bool) bool {
 				return false
 			}
 		}
-		return true
 
 	case joined:
 		for _, je := range x.Unwrap() {
@@ -182,9 +180,8 @@ func walk(err error, cb func(err error) bool) bool {
 				return false
 			}
 		}
-		return true
 	}
-	return cb(err)
+	return true
 }
 
 // walkReverse works like [walk] but in the reverse order.
@@ -207,7 +204,6 @@ func walkReverse(err error, cb func(err error) bool) bool {
 				return false
 			}
 		}
-		return true
 
 	case joined:
 		ers := x.Unwrap()
@@ -216,7 +212,6 @@ func walkReverse(err error, cb func(err error) bool) bool {
 				return false
 			}
 		}
-		return true
 	}
 	return cb(err)
 }

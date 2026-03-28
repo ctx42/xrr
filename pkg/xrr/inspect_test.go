@@ -42,6 +42,15 @@ func Test_IsCode_tabular(t *testing.T) {
 			false,
 		},
 		{
+			"fielder node itself has the searched code",
+			TFielderCoder{
+				code:   "ESpecial",
+				fields: map[string]error{"f": errors.New("child")},
+			},
+			"ESpecial",
+			true,
+		},
+		{
 			"wrapped error with searched code",
 			fmt.Errorf("comment: %w", New("msg a", "a")),
 			"a",
@@ -134,7 +143,7 @@ func Test_GetCodes_tabular(t *testing.T) {
 		{
 			"joined errors",
 			errors.Join(New("msg a", "a"), New("msg b", "b")),
-			[]string{"a", "b"},
+			[]string{ECGeneric, "a", "b"},
 		},
 		{
 			"joined and std wrapped errors",
@@ -143,12 +152,12 @@ func Test_GetCodes_tabular(t *testing.T) {
 				New("msg b", "b"),
 				fmt.Errorf("wrapped: %w", New("msg c", "c")),
 			),
-			[]string{"a", "b", ECGeneric, "c"},
+			[]string{ECGeneric, "a", "b", "c"},
 		},
 		{
 			"tree",
 			TstTreeCase1(),
-			[]string{"a", "b", "c", "e", "d", "f", "g"},
+			[]string{"a", "b", ECGeneric, "c", "e", "d", "f", "g"},
 		},
 		{
 			"does not return repeated codes",
@@ -190,7 +199,7 @@ func Test_GetCodes_tabular(t *testing.T) {
 					},
 				},
 			},
-			[]string{"a", "b", "y"},
+			[]string{"a", "b", ECGeneric, "y"},
 		},
 	}
 
@@ -618,7 +627,7 @@ func Test_walk(t *testing.T) {
 		walk(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "abcedfg", have)
+		assert.Equal(t, "abECGenericcedECGenericfg", have)
 	})
 
 	t.Run("tree configuration 2", func(t *testing.T) {
@@ -632,7 +641,7 @@ func Test_walk(t *testing.T) {
 		walk(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "abcehdfgi", have)
+		assert.Equal(t, "abECGenericcehdECGenericfgi", have)
 	})
 
 	t.Run("tree configuration 3", func(t *testing.T) {
@@ -646,7 +655,7 @@ func Test_walk(t *testing.T) {
 		walk(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "abcehdfig", have)
+		assert.Equal(t, "abECGenericcehdECGenericfig", have)
 	})
 
 	t.Run("tree configuration 4", func(t *testing.T) {
@@ -660,7 +669,7 @@ func Test_walk(t *testing.T) {
 		walk(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "acbde", have)
+		assert.Equal(t, "ECGenericacbECGenericde", have)
 	})
 
 	t.Run("tree configuration 5", func(t *testing.T) {
@@ -674,7 +683,7 @@ func Test_walk(t *testing.T) {
 		walk(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "abdegh", have)
+		assert.Equal(t, "ECGenericabdeECGenericgh", have)
 	})
 
 	t.Run("stop after the first one", func(t *testing.T) {
@@ -705,7 +714,7 @@ func Test_walk(t *testing.T) {
 		walk(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "abc", have)
+		assert.Equal(t, "abECGeneric", have)
 	})
 }
 
@@ -721,7 +730,7 @@ func Test_walkRev(t *testing.T) {
 		walkReverse(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "gfdecba", have)
+		assert.Equal(t, "gfECGenericdecECGenericba", have)
 	})
 
 	t.Run("tree configuration 2", func(t *testing.T) {
@@ -735,7 +744,7 @@ func Test_walkRev(t *testing.T) {
 		walkReverse(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "igfdhecba", have)
+		assert.Equal(t, "igfECGenericdhecECGenericba", have)
 	})
 
 	t.Run("tree configuration 3", func(t *testing.T) {
@@ -749,7 +758,7 @@ func Test_walkRev(t *testing.T) {
 		walkReverse(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "gifdhecba", have)
+		assert.Equal(t, "gifECGenericdhecECGenericba", have)
 	})
 
 	t.Run("tree configuration 4", func(t *testing.T) {
@@ -763,7 +772,7 @@ func Test_walkRev(t *testing.T) {
 		walkReverse(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "edbca", have)
+		assert.Equal(t, "edECGenericbcaECGeneric", have)
 	})
 
 	t.Run("tree configuration 5", func(t *testing.T) {
@@ -777,7 +786,7 @@ func Test_walkRev(t *testing.T) {
 		walkReverse(e, cb)
 
 		// --- Then ---
-		assert.Equal(t, "hgedba", have)
+		assert.Equal(t, "hgECGenericedbaECGeneric", have)
 	})
 
 	t.Run("stop after the first one", func(t *testing.T) {
