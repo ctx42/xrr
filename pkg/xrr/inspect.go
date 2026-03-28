@@ -157,22 +157,31 @@ func walk(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true
 	}
-	if !cb(err) {
-		return false
-	}
 	switch x := err.(type) { // nolint: errorlint
 	case interface{ Unwrap() error }:
+		if !cb(err) {
+			return false
+		}
 		if e := x.Unwrap(); e != nil {
 			return walk(e, cb)
 		}
+		return true
 
 	case Fielder:
+		// Only visit Fielder nodes that also implement Coder; plain
+		// field-map types (e.g., GenericFields) are transparent containers.
+		if _, ok := err.(Coder); ok {
+			if !cb(err) {
+				return false
+			}
+		}
 		_, ers := sortFields(x.ErrorFields())
 		for _, fe := range ers {
 			if !walk(fe, cb) {
 				return false
 			}
 		}
+		return true
 
 	case joined:
 		for _, je := range x.Unwrap() {
@@ -180,8 +189,9 @@ func walk(err error, cb func(err error) bool) bool {
 				return false
 			}
 		}
+		return true
 	}
-	return true
+	return cb(err)
 }
 
 // walkReverse works like [walk] but in the reverse order.
@@ -204,6 +214,12 @@ func walkReverse(err error, cb func(err error) bool) bool {
 				return false
 			}
 		}
+		// Only visit Fielder nodes that also implement Coder; plain
+		// field-map types (e.g. GenericFields) are transparent containers.
+		if _, ok := err.(Coder); ok {
+			return cb(err)
+		}
+		return true
 
 	case joined:
 		ers := x.Unwrap()
@@ -212,6 +228,7 @@ func walkReverse(err error, cb func(err error) bool) bool {
 				return false
 			}
 		}
+		return true
 	}
 	return cb(err)
 }
