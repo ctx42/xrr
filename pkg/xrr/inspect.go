@@ -42,6 +42,9 @@ func GetCodes(err error) []string {
 	var ret []string
 	cb := func(err error) bool {
 		code := GetCode(err)
+		if code == "" {
+			return true
+		}
 		if _, ok := set[code]; !ok {
 			set[code] = struct{}{}
 			ret = append(ret, code)

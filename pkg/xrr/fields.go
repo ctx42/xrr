@@ -233,7 +233,7 @@ func filterMap[T Domain](fs map[string]error) GenericFields[T] {
 	return ret
 }
 
-// Merge adds all non-nil errors from errs overriding already existing keys.
+// Merge adds errors from errs for keys that are not already set in fs.
 func (fs GenericFields[T]) Merge(errs map[string]error) GenericFields[T] {
 	if fs == nil && len(errs) == 0 {
 		return nil
