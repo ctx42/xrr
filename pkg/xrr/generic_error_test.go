@@ -226,6 +226,28 @@ func Test_GenericError_MarshalJSON(t *testing.T) {
 		}`
 		assert.JSON(t, want, string(data))
 	})
+
+	t.Run("metadata keys are alphabetically sorted", func(t *testing.T) {
+		// --- Given ---
+		meta := Meta().Str("zebra", "z").Str("apple", "a").Str("mango", "m")
+		e := New("msg", "ECode", meta.Option())
+
+		// --- When ---
+		data, err := json.Marshal(e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		want := `{
+			"code": "ECode",
+			"error": "msg",
+			"meta": {
+				"apple": "a",
+				"mango": "m",
+				"zebra": "z"
+			}
+		}`
+		assert.JSON(t, want, string(data))
+	})
 }
 
 func Test_GenericError_UnmarshalJSON(t *testing.T) {

@@ -32,7 +32,10 @@ func ExampleNew() {
 }
 
 func ExampleNew_with_metadata() {
-	meta := xrr.Meta().Str("action", "context")
+	meta := xrr.Meta().
+		Int("attempt", 3).
+		Bool("retryable", true).
+		Str("user_id", "u-123")
 	err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
@@ -41,7 +44,9 @@ func ExampleNew_with_metadata() {
 	//   "code": "EC_USER_NOT_FOUND",
 	//   "error": "user not found",
 	//   "meta": {
-	//     "action": "context"
+	//     "attempt": 3,
+	//     "retryable": true,
+	//     "user_id": "u-123"
 	//   }
 	// }
 }
