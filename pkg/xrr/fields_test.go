@@ -425,6 +425,20 @@ func Test_GenericFields_Error(t *testing.T) {
 		// --- Then ---
 		assert.Empty(t, have)
 	})
+
+	t.Run("the first sorted key is nil", func(t *testing.T) {
+		// --- Given ---
+		fs := GenericFields[EDGeneric]{
+			"a": nil,
+			"b": errors.New("em0"),
+		}
+
+		// --- When ---
+		have := fs.Error()
+
+		// --- Then ---
+		assert.Equal(t, "b: em0", have)
+	})
 }
 
 func Test_GenericFields_Unwrap(t *testing.T) {

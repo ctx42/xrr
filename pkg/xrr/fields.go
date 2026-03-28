@@ -344,12 +344,12 @@ func formatFields(fs map[string]error, codes bool) string {
 	sort.Strings(keys)
 
 	var s strings.Builder
-	for i, key := range keys {
+	for _, key := range keys {
 		err := visitor[key]
 		if err == nil {
 			continue
 		}
-		if i > 0 {
+		if s.Len() > 0 {
 			s.WriteString("; ")
 		}
 		if codes {
