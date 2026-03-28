@@ -76,12 +76,13 @@ func (m Metadata) Duration(key string, value time.Duration) Metadata {
 // will be copied.
 func (m Metadata) MetaSetAll(meta map[string]any) Metadata {
 	for key, value := range meta {
+		if !isTypeSupported(value) {
+			continue
+		}
 		if m.m == nil {
-			m.m = make(map[string]any)
+			m.m = make(map[string]any, len(meta))
 		}
-		if isTypeSupported(value) {
-			m.m[key] = value
-		}
+		m.m[key] = value
 	}
 	return m
 }
@@ -89,13 +90,15 @@ func (m Metadata) MetaSetAll(meta map[string]any) Metadata {
 // MetaSetFrom copies all metadata from the given [Metadater] instance. Only
 // the supported types will be copied.
 func (m Metadata) MetaSetFrom(meta Metadater) Metadata {
-	for key, value := range meta.MetaAll() {
+	all := meta.MetaAll()
+	for key, value := range all {
+		if !isTypeSupported(value) {
+			continue
+		}
 		if m.m == nil {
-			m.m = make(map[string]any)
+			m.m = make(map[string]any, len(all))
 		}
-		if isTypeSupported(value) {
-			m.m[key] = value
-		}
+		m.m[key] = value
 	}
 	return m
 }
