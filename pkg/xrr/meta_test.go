@@ -166,6 +166,30 @@ func Test_Metadata_Time(t *testing.T) {
 	})
 }
 
+func Test_Metadata_Duration(t *testing.T) {
+	t.Run("not existing", func(t *testing.T) {
+		// --- Given ---
+		m := Metadata{}
+
+		// --- When ---
+		have := m.Duration("A", time.Second)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": time.Second}, have.m)
+	})
+
+	t.Run("existing", func(t *testing.T) {
+		// --- Given ---
+		m := Metadata{m: map[string]any{"A": time.Second}}
+
+		// --- When ---
+		have := m.Duration("A", time.Minute)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"A": time.Minute}, have.m)
+	})
+}
+
 func Test_Metadata_MetaSetAll(t *testing.T) {
 	t.Run("not existing", func(t *testing.T) {
 		// --- Given ---

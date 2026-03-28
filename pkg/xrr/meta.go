@@ -66,6 +66,12 @@ func (m Metadata) Time(key string, value time.Time) Metadata {
 	return m.set(key, value)
 }
 
+// Duration adds the key with val as a duration to the metadata collection.
+// Key will be overridden with the new value if it already exists.
+func (m Metadata) Duration(key string, value time.Duration) Metadata {
+	return m.set(key, value)
+}
+
 // MetaSetAll copies all metadata from the given map. Only the supported types
 // will be copied.
 func (m Metadata) MetaSetAll(meta map[string]any) Metadata {
