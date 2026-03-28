@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -62,7 +62,7 @@ func FieldNames(err error) []string {
 	for name := range fs {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 	return names
 }
 
@@ -340,7 +340,7 @@ func formatFields(fs map[string]error, codes bool) string {
 		keys[i] = key
 		i++
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	var s strings.Builder
 	for _, key := range keys {

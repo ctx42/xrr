@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
-	"sort"
+	"slices"
 	"time"
 	"unsafe"
 )
@@ -122,7 +122,7 @@ func sortFields(ers map[string]error) ([]string, []error) {
 	for field := range ers {
 		fields = append(fields, field)
 	}
-	sort.Strings(fields)
+	slices.Sort(fields)
 	for _, field := range fields {
 		errs = append(errs, ers[field])
 	}
