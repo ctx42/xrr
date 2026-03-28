@@ -15,12 +15,10 @@ type Domain interface{ ~string }
 type EDGeneric string
 
 // Coder is the interface that wraps the ErrorCode method.
-//
-// ErrorCode returns error code.
-//
-// For nil errors it must return an empty string, but for non-nil errors
-// without assigned code, it should return [ECGeneric] error code.
 type Coder interface {
+	// ErrorCode returns the error code for the error. For errors without an
+	// explicit code, it should return [ECGeneric]. Callers should prefer
+	// [GetCode], which handles nil errors before invoking this method.
 	ErrorCode() string
 }
 
@@ -33,11 +31,11 @@ type Fielder interface {
 
 // Metadater is an interface providing access to error metadata.
 type Metadater interface {
-	// MetaAll returns a copy of the metadata from the [GenericError] instance.
+	// MetaAll returns a copy of the metadata held directly by this error.
 	//
-	// It does not include metadata from wrapped errors. To retrieve metadata,
-	// recursively, use the [GetMeta] function instead. Returns nil if no
-	// metadata is present.
+	// It does not include metadata from wrapped errors. To retrieve metadata
+	// recursively, use [GetMeta] instead. Returns nil if no metadata is
+	// present.
 	MetaAll() map[string]any
 }
 
