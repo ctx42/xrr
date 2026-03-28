@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/ctx42/testing/pkg/must"
 
@@ -19,23 +21,35 @@ func ExampleNew() {
 	fmt.Printf("%v\n", err)              // Print message.
 	fmt.Printf("%+v\n", err)             // Print message and error code.
 	fmt.Printf("%s\n", xrr.GetCode(err)) // Print error code.
-	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 
 	// Output:
 	// user not found
 	// user not found (EC_USER_NOT_FOUND)
 	// EC_USER_NOT_FOUND
+}
+
+func ExampleNew_with_metadata() {
+	meta := xrr.Meta().Int("attempt", 3).Str("user_id", "u-123")
+	err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
+
+	fmt.Println(xrr.GetMeta(err))
+	// Output:
+	// map[attempt:3 user_id:u-123]
+}
+
+func ExampleNew_marshal() {
+	err := xrr.New("user not found", "EC_USER_NOT_FOUND")
+
+	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+	// Output:
 	// {
 	//   "code": "EC_USER_NOT_FOUND",
 	//   "error": "user not found"
 	// }
 }
 
-func ExampleNew_with_metadata() {
-	meta := xrr.Meta().
-		Int("attempt", 3).
-		Bool("retryable", true).
-		Str("user_id", "u-123")
+func ExampleNew_marshal_with_metadata() {
+	meta := xrr.Meta().Int("attempt", 3).Str("user_id", "u-123")
 	err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
@@ -45,10 +59,42 @@ func ExampleNew_with_metadata() {
 	//   "error": "user not found",
 	//   "meta": {
 	//     "attempt": 3,
-	//     "retryable": true,
 	//     "user_id": "u-123"
 	//   }
 	// }
+}
+
+func ExampleNew_with_slog() {
+	meta := xrr.Meta().Int("attempt", 3).Str("user_id", "u-123")
+	err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
+
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey {
+				return slog.Attr{}
+			}
+			return a
+		},
+	})
+
+	slog.New(handler).Error(
+		err.Error(),
+		"code", xrr.GetCode(err),
+		"meta", xrr.GetMeta(err),
+	)
+	// Output:
+	// {"level":"ERROR","msg":"user not found","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"user_id":"u-123"}}
+}
+
+func ExampleWrap() {
+	err := fmt.Errorf("connection refused")
+	wrapped := xrr.Wrap[xrr.EDGeneric](err, xrr.WithCode("EC_CONN"))
+
+	fmt.Println(errors.Is(wrapped, err))
+	fmt.Println(xrr.GetCode(wrapped))
+	// Output:
+	// true
+	// EC_CONN
 }
 
 func ExampleGenericFields() {
@@ -89,7 +135,6 @@ func ExampleEnclose() {
 	fmt.Printf("unwrap: %v\n", errors.Unwrap(err))
 	fmt.Printf("message: %v\n", err.Error())
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
-
 	// Output:
 	// is lead error: true
 	// id db error: true
@@ -114,7 +159,6 @@ func ExampleEnclose_joined_errors() {
 	err := xrr.Enclose(cause, lead)
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
-
 	// Output:
 	// {
 	//   "code": "EC_LEAD",
@@ -142,7 +186,6 @@ func ExampleEnclose_fields_error() {
 	err := xrr.Enclose(cause, lead)
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
-
 	// Output:
 	// {
 	//   "code": "EC_LEAD",
