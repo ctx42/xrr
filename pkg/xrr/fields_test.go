@@ -1089,6 +1089,21 @@ func Test_GenericFields_Get(t *testing.T) {
 		want := "f0.s2.tag.name.name"
 		assert.Equal(t, want, have.Error())
 	})
+
+	t.Run("the key is not a dot-path prefix of a field", func(t *testing.T) {
+		// --- Given ---
+		fs2 := GenericFields[EDGeneric]{
+			"a": GenericFields[EDGeneric]{
+				"c": errors.New("nested"),
+			},
+		}
+
+		// --- When ---
+		have := fs2.Get("abc")
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
 }
 
 func Test_GenericFields_MarshalJSON(t *testing.T) {

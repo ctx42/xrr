@@ -257,17 +257,16 @@ func (fs GenericFields[T]) Get(field string) error {
 
 // get returns an error for the given field, nil if the field does not exist.
 func get(ers map[string]error, field string) error {
-	sub := field
 	for key, err := range ers {
-		if sub == key {
+		if field == key {
 			return err
 		}
-		if !strings.HasPrefix(sub, key) {
+		suffix, ok := strings.CutPrefix(field, key+".")
+		if !ok {
 			continue
 		}
 		if fls, ok := err.(Fielder); ok {
-			sub = sub[len(key)+1:]
-			if err = get(fls.ErrorFields(), sub); err != nil {
+			if err = get(fls.ErrorFields(), suffix); err != nil {
 				return err
 			}
 		}
