@@ -1,3 +1,30 @@
+## v0.6.0 (Mon, 30 Mar 2026 08:13:07 UTC)
+- chore: add CLAUDE.md to .gitignore.
+- chore(deps): update dependencies.
+- feat(options): add functional options pattern for error configuration.
+- refactor(xrr)!: replace Error and Fields with generic counterparts.
+- docs(readme): rewrite for domain-specific error coverage.
+- docs: fix article and word spacing in comments.
+- fix(fields): fix leading separator in formatFields with nil entries.
+- fix(fields): prevent Filter from mutating the receiver.
+- fix(fields): require dot separator in nested field path lookup.
+- docs(meta): document map-sharing behavior of Metadata.
+- fix(inspect): visit Fielder and joined nodes in walk.
+- style: replace sort.Strings with slices.Sort.
+- fix(inspect): visit Fielder+Coder nodes in walk, keep joined opaque.
+- refactor(helpers): replace panic/recover in isNil with Kind check.
+- style(inspect): remove arbitrary capacity hint in GetCodes.
+- chore: remove email from SPDX copyright headers.
+- feat(meta): add Duration method to Metadata.
+- docs(envelope): fix malformed JSON in doc comment examples.
+- perf(meta): allocate map once in MetaSetAll and MetaSetFrom.
+- docs(inspect): correct traversal description in GetMeta.
+- fix(fields): align Merge doc and GetCodes empty-code filter.
+- docs(xrr): clarify Coder and Metadater interface contracts.
+- style(sync_errors): remove arbitrary capacity hint in NewSyncErrors.
+- docs(readme): restructure and clarify sections for better organization.
+- docs(readme): overhaul prose, add runnable examples, wire gmdoceg markers.
+
 ## v0.5.2 (Fri, 20 Feb 2026 16:39:33 UTC)
 - chore: Update dependencies.
 
