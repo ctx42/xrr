@@ -6,6 +6,9 @@ import (
 	"github.com/ctx42/xrr/pkg/xrr"
 )
 
+// TstDomain is a test-only error domain distinct from [xrr.EDGeneric].
+type TstDomain string
+
 // TstError returns a test error with metadata.
 func TstError() error {
 	tim := time.Date(2000, 1, 2, 3, 4, 5, 0, time.UTC)

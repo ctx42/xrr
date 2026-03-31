@@ -1474,3 +1474,73 @@ func Test_AssertFieldIs(t *testing.T) {
 		assert.False(t, have)
 	})
 }
+
+func Test_IsDomain(t *testing.T) {
+	t.Run("success - error is from the expected domain", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.Close()
+
+		err := xrr.New("msg", "EC")
+
+		// --- When ---
+		have := IsDomain[xrr.EDGeneric](tspy, err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("error - nil error", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		tspy.ExpectLogEqual("[xrr] expected error not to be nil")
+		tspy.Close()
+
+		// --- When ---
+		have := IsDomain[xrr.EDGeneric](tspy, nil)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("error - not domain error", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		wMsg := "" +
+			"[xrr] expected error from domain:\n" +
+			"  want domain: xrr.EDGeneric\n" +
+			"   have error: *errors.errorString"
+		tspy.ExpectLogEqual(wMsg)
+		tspy.Close()
+
+		err := errors.New("some error")
+
+		// --- When ---
+		have := IsDomain[xrr.EDGeneric](tspy, err)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("error - error is from a different domain", func(t *testing.T) {
+		// --- Given ---
+		tspy := tester.New(t)
+		tspy.ExpectError()
+		wMsg := "" +
+			"[xrr] expected error from domain:\n" +
+			"  want domain: xrrtest.TstDomain\n" +
+			"   have error: *xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDGeneric]"
+		tspy.ExpectLogEqual(wMsg)
+		tspy.Close()
+
+		err := xrr.New("msg", "EC")
+
+		// --- When ---
+		have := IsDomain[TstDomain](tspy, err)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+}
