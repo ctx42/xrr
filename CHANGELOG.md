@@ -1,3 +1,6 @@
+## v0.8.0 (Tue, 31 Mar 2026 08:21:11 UTC)
+- refactor(xrrtest): rename IsDomain to AssertIsDomain.
+
 ## v0.7.0 (Tue, 31 Mar 2026 08:07:18 UTC)
 - test(xrrtest): add IsDomain assertion helper.
 
