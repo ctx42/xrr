@@ -1,3 +1,6 @@
+## v0.9.0 (Tue, 31 Mar 2026 08:27:09 UTC)
+- refactor(xrrtest): rename AssertIsDomain to AssertDomain.
+
 ## v0.8.0 (Tue, 31 Mar 2026 08:21:11 UTC)
 - refactor(xrrtest): rename IsDomain to AssertIsDomain.
 
