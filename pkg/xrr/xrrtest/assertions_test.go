@@ -1475,7 +1475,7 @@ func Test_AssertFieldIs(t *testing.T) {
 	})
 }
 
-func Test_IsDomain(t *testing.T) {
+func Test_AssertIsDomain(t *testing.T) {
 	t.Run("success - error is from the expected domain", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
@@ -1484,7 +1484,7 @@ func Test_IsDomain(t *testing.T) {
 		err := xrr.New("msg", "EC")
 
 		// --- When ---
-		have := IsDomain[xrr.EDGeneric](tspy, err)
+		have := AssertIsDomain[xrr.EDGeneric](tspy, err)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -1498,7 +1498,7 @@ func Test_IsDomain(t *testing.T) {
 		tspy.Close()
 
 		// --- When ---
-		have := IsDomain[xrr.EDGeneric](tspy, nil)
+		have := AssertIsDomain[xrr.EDGeneric](tspy, nil)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -1518,7 +1518,7 @@ func Test_IsDomain(t *testing.T) {
 		err := errors.New("some error")
 
 		// --- When ---
-		have := IsDomain[xrr.EDGeneric](tspy, err)
+		have := AssertIsDomain[xrr.EDGeneric](tspy, err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -1538,7 +1538,7 @@ func Test_IsDomain(t *testing.T) {
 		err := xrr.New("msg", "EC")
 
 		// --- When ---
-		have := IsDomain[TstDomain](tspy, err)
+		have := AssertIsDomain[TstDomain](tspy, err)
 
 		// --- Then ---
 		assert.False(t, have)

@@ -430,11 +430,11 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 	return true
 }
 
-// IsDomain asserts err is non-nil and is a [xrr.GenericError] of domain T.
+// AssertIsDomain asserts err is non-nil and is a [xrr.GenericError] of domain T.
 // Returns true on success. If err is nil or not from the given domain, it marks
 // the test as failed, writes an error message to the test log, and returns
 // false.
-func IsDomain[T xrr.Domain](t tester.T, err error) bool {
+func AssertIsDomain[T xrr.Domain](t tester.T, err error) bool {
 	t.Helper()
 	if e := check.NotNil(err); e != nil {
 		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
