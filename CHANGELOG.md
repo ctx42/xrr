@@ -1,3 +1,6 @@
+## v0.7.0 (Tue, 31 Mar 2026 08:07:18 UTC)
+- test(xrrtest): add IsDomain assertion helper.
+
 ## v0.6.0 (Mon, 30 Mar 2026 08:13:07 UTC)
 - chore: add CLAUDE.md to .gitignore.
 - chore(deps): update dependencies.
