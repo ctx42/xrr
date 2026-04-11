@@ -83,3 +83,16 @@ func Wrap[T Domain](err error, opts ...Option) error {
 		err:  err,
 	}
 }
+
+// SetCode assigns code to err by wrapping it with [Wrap]. Returns nil if err
+// is nil. Returns err unchanged if code is empty or err already carries the
+// given code.
+func SetCode[T Domain](err error, code string) error {
+	if code == "" {
+		return err
+	}
+	if have := GetCode(err); have == code {
+		return err
+	}
+	return Wrap[T](err, WithCode(code))
+}

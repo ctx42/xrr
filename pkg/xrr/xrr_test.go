@@ -121,3 +121,49 @@ func Test_Wrap(t *testing.T) {
 		assert.Equal(t, map[string]any{"A": 1, "B": 2}, x.meta)
 	})
 }
+
+func Test_SetCode(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		// --- Given ---
+		e := errors.New("error")
+
+		// --- When ---
+		err := SetCode[EDGeneric](e, "ECode")
+
+		// --- Then ---
+		var xe *GenericError[EDGeneric]
+		assert.Type(t, &xe, err)
+		assert.Same(t, e, xe.Unwrap())
+		assert.Equal(t, "ECode", xe.ErrorCode())
+	})
+
+	t.Run("nil error", func(t *testing.T) {
+		// --- When ---
+		err := SetCode[EDGeneric](nil, "ECode")
+
+		// --- Then ---
+		assert.NoError(t, err)
+	})
+
+	t.Run("it does not wrap when the code is the same", func(t *testing.T) {
+		// --- Given ---
+		e := New("error", "ECode")
+
+		// --- When ---
+		err := SetCode[EDGeneric](e, "ECode")
+
+		// --- Then ---
+		assert.Same(t, e, err)
+	})
+
+	t.Run("returns the same instance when code is empty", func(t *testing.T) {
+		// --- Given ---
+		e := errors.New("error")
+
+		// --- When ---
+		err := SetCode[EDGeneric](e, "")
+
+		// --- Then ---
+		assert.Same(t, e, err)
+	})
+}
