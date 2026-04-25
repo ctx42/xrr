@@ -36,22 +36,7 @@ func Test_Errors_Add(t *testing.T) {
 	assert.Same(t, err1, es[1])
 }
 
-func Test_Errors_Add_First(t *testing.T) {
-	// --- Given ---
-	err0 := New("msg0", "ECode0")
-	err1 := New("msg1", "ECode1")
-	ec := NewErrors()
-
-	// --- When ---
-	ec.Add(err0)
-	ec.Add(err1)
-
-	// --- Then ---
-	assert.Same(t, err0, ec.First())
-	assert.Len(t, 2, ec.Unwrap())
-}
-
-func Test_Errors_Errors(t *testing.T) {
+func Test_Errors_Unwrap(t *testing.T) {
 	// --- Given ---
 	err0 := New("msg0", "ECode0")
 	err1 := New("msg1", "ECode1")
@@ -84,4 +69,19 @@ func Test_Errors_Reset(t *testing.T) {
 	// --- Then ---
 	assert.Len(t, 0, ec.Unwrap())
 	assert.Equal(t, 0, len(ec))
+}
+
+func Test_Errors_First(t *testing.T) {
+	// --- Given ---
+	err0 := New("msg0", "ECode0")
+	err1 := New("msg1", "ECode1")
+	ec := NewErrors()
+
+	// --- When ---
+	ec.Add(err0)
+	ec.Add(err1)
+
+	// --- Then ---
+	assert.Same(t, err0, ec.First())
+	assert.Len(t, 2, ec.Unwrap())
 }

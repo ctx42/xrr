@@ -67,8 +67,8 @@ func Test_FieldsFactory(t *testing.T) {
 
 func Test_GetFields(t *testing.T) {
 	// --- Given ---
-	err := New("message", "code")
-	fls := TErrorFields(map[string]error{"key": err})
+	e := New("message", "code")
+	fls := TErrorFields(map[string]error{"key": e})
 
 	// --- When ---
 	m := GetFields(fls)
@@ -77,7 +77,7 @@ func Test_GetFields(t *testing.T) {
 	assert.NotNil(t, m)
 	assert.Len(t, 1, m)
 	_, _ = assert.HasKey(t, "key", m)
-	assert.Same(t, err, m["key"])
+	assert.Same(t, e, m["key"])
 }
 
 func Test_GetFieldError(t *testing.T) {
@@ -91,10 +91,10 @@ func Test_GetFieldError(t *testing.T) {
 
 	t.Run("not instance of Fields", func(t *testing.T) {
 		// --- Given ---
-		err := errors.New("em0")
+		e := errors.New("em0")
 
 		// --- When ---
-		have := GetFieldError(err, "f0")
+		have := GetFieldError(e, "f0")
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -143,10 +143,10 @@ func Test_FieldErrorIs(t *testing.T) {
 
 	t.Run("not instance of Fields", func(t *testing.T) {
 		// --- Given ---
-		err := errors.New("em0")
+		e := errors.New("em0")
 
 		// --- When ---
-		have := FieldErrorIs(err, "f0", io.EOF)
+		have := FieldErrorIs(e, "f0", io.EOF)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -886,7 +886,7 @@ func Test_GenericFields_Flatten(t *testing.T) {
 		}
 
 		// --- When ---
-		err := fs.Flatten()
+		have := fs.Flatten()
 
 		// --- Then ---
 		want := &GenericFields[EDGeneric]{
@@ -898,7 +898,7 @@ func Test_GenericFields_Flatten(t *testing.T) {
 				"f2":       New("em2", "ECode2"),
 			},
 		}
-		assert.Equal(t, want, err)
+		assert.Equal(t, want, have)
 	})
 }
 
@@ -1451,12 +1451,11 @@ func Test_GenericFields_UnmarshalJSON(t *testing.T) {
 				"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
 			},
 		}
-		data, err := fs.MarshalJSON()
-		assert.NoError(t, err)
+		data := must.Value(fs.MarshalJSON())
 
 		// --- When ---
 		var got GenericFields[EDGeneric]
-		err = json.Unmarshal(data, &got)
+		err := json.Unmarshal(data, &got)
 
 		// --- Then ---
 		assert.NoError(t, err)

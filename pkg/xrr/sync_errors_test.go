@@ -13,20 +13,11 @@ import (
 )
 
 func Test_NewSyncErrors(t *testing.T) {
-	// --- Given ---
-	err0 := errors.New("err0")
-	err1 := errors.New("err1")
-
-	col := NewSyncErrors()
-
 	// --- When ---
-	col.Add(err0)
-	col.Add(err1)
+	se := NewSyncErrors()
 
 	// --- Then ---
-	errs := col.Collect()
-	assert.Same(t, err0, errs[0])
-	assert.Same(t, err1, errs[1])
+	assert.Len(t, 0, se.Collect())
 }
 
 func Test_SyncErrors(t *testing.T) {

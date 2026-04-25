@@ -722,7 +722,7 @@ func Test_walk(t *testing.T) {
 	})
 }
 
-func Test_walkRev(t *testing.T) {
+func Test_walkReverse(t *testing.T) {
 	t.Run("tree configuration 1", func(t *testing.T) {
 		// --- Given ---
 		e := TstTreeCase1()

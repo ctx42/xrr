@@ -314,7 +314,7 @@ func Test_IsDomain(t *testing.T) {
 		have := IsDomain[EDGeneric](err)
 
 		// --- Then ---
-		assert.Equal(t, true, have)
+		assert.True(t, have)
 	})
 
 	t.Run("error from different domain returns false", func(t *testing.T) {
@@ -325,7 +325,7 @@ func Test_IsDomain(t *testing.T) {
 		have := IsDomain[string](err)
 
 		// --- Then ---
-		assert.Equal(t, false, have)
+		assert.False(t, have)
 	})
 
 	t.Run("nil returns false", func(t *testing.T) {
@@ -333,7 +333,7 @@ func Test_IsDomain(t *testing.T) {
 		have := IsDomain[EDGeneric](nil)
 
 		// --- Then ---
-		assert.Equal(t, false, have)
+		assert.False(t, have)
 	})
 
 	t.Run("std error returns false", func(t *testing.T) {
@@ -344,7 +344,7 @@ func Test_IsDomain(t *testing.T) {
 		have := IsDomain[EDGeneric](err)
 
 		// --- Then ---
-		assert.Equal(t, false, have)
+		assert.False(t, have)
 	})
 
 	t.Run("wrapped domain error returns false", func(t *testing.T) {
@@ -356,7 +356,7 @@ func Test_IsDomain(t *testing.T) {
 		have := IsDomain[EDGeneric](wrapped)
 
 		// --- Then ---
-		assert.Equal(t, false, have)
+		assert.False(t, have)
 	})
 }
 
@@ -390,7 +390,7 @@ func Test_prefix_tabular(t *testing.T) {
 
 		prefix string
 		key    string
-		exp    string
+		want   string
 	}{
 		{"1", "", "key", "key"},
 		{"2", "pref", "key", "pref.key"},
@@ -404,7 +404,7 @@ func Test_prefix_tabular(t *testing.T) {
 			have := prefix(tc.prefix, tc.key)
 
 			// --- Then ---
-			assert.Equal(t, tc.exp, have)
+			assert.Equal(t, tc.want, have)
 		})
 	}
 }

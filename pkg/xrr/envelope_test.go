@@ -99,10 +99,10 @@ func Test_Envelope_Error(t *testing.T) {
 	e := Envelope{cause: cause, lead: lead}
 
 	// --- When ---
-	err := e.Error()
+	have := e.Error()
 
 	// --- Then ---
-	assert.Equal(t, "cause", err)
+	assert.Equal(t, "cause", have)
 }
 
 func Test_Envelope_ErrorCode(t *testing.T) {

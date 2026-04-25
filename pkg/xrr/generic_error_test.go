@@ -139,10 +139,10 @@ func Test_GenericError_Error(t *testing.T) {
 
 func Test_GenericError_ErrorCode(t *testing.T) {
 	// --- Given ---
-	err := &GenericError[string]{code: "ECode"}
+	e := &GenericError[string]{code: "ECode"}
 
 	// --- When ---
-	have := err.ErrorCode()
+	have := e.ErrorCode()
 
 	// --- Then ---
 	assert.Equal(t, "ECode", have)
@@ -166,10 +166,10 @@ func Test_GenericError_MetaAll(t *testing.T) {
 func Test_GenericError_Unwrap(t *testing.T) {
 	t.Run("returns wrapped error", func(t *testing.T) {
 		// --- Given ---
-		err := New("msg", "ECode")
+		e := New("msg", "ECode")
 
 		// --- When ---
-		have := errors.Unwrap(err)
+		have := errors.Unwrap(e)
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -177,10 +177,10 @@ func Test_GenericError_Unwrap(t *testing.T) {
 
 	t.Run("returns nil for nil instance", func(t *testing.T) {
 		// --- Given ---
-		var err *GenericError[string]
+		var e *GenericError[string]
 
 		// --- When ---
-		have := err.Unwrap()
+		have := e.Unwrap()
 
 		// --- Then ---
 		assert.Nil(t, have)

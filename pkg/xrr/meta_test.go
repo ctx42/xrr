@@ -34,7 +34,7 @@ func Test_Metadata_Bool(t *testing.T) {
 		// --- Given ---
 		m := Metadata{m: map[string]any{"A": false}}
 
-		// --- Given ---
+		// --- When ---
 		have := m.Bool("A", true)
 
 		// --- Then ---
@@ -83,7 +83,7 @@ func Test_Metadata_Int(t *testing.T) {
 		// --- Given ---
 		m := Metadata{m: map[string]any{"A": 1}}
 
-		// --- Given ---
+		// --- When ---
 		have := m.Int("A", 2)
 
 		// --- Then ---
@@ -107,7 +107,7 @@ func Test_Metadata_Int64(t *testing.T) {
 		// --- Given ---
 		m := Metadata{m: map[string]any{"A": 1}}
 
-		// --- Given ---
+		// --- When ---
 		have := m.Int64("A", 2)
 
 		// --- Then ---
@@ -131,7 +131,7 @@ func Test_Metadata_Float64(t *testing.T) {
 		// --- Given ---
 		m := Metadata{m: map[string]any{"A": 1.0}}
 
-		// --- Given ---
+		// --- When ---
 		have := m.Float64("A", 2.0)
 
 		// --- Then ---
@@ -208,7 +208,7 @@ func Test_Metadata_MetaSetAll(t *testing.T) {
 		src := map[string]any{"A": 2}
 		m := Metadata{m: map[string]any{"A": 1.0}}
 
-		// --- Given ---
+		// --- When ---
 		have := m.MetaSetAll(src)
 
 		// --- Then ---
@@ -234,7 +234,7 @@ func Test_Metadata_MetaSetFrom(t *testing.T) {
 		src := TMetaAll(map[string]any{"A": 2})
 		m := Metadata{m: map[string]any{"A": 1.0}}
 
-		// --- Given ---
+		// --- When ---
 		have := m.MetaSetFrom(src)
 
 		// --- Then ---
