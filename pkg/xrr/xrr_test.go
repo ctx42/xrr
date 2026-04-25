@@ -50,6 +50,29 @@ func Test_New(t *testing.T) {
 	})
 }
 
+func Test_NewField(t *testing.T) {
+	t.Run("not nil error", func(t *testing.T) {
+		// --- Given ---
+		err := errors.New("msg")
+
+		// --- When ---
+		have := NewField("name", err)
+
+		// --- Then ---
+		e, _ := assert.SameType(t, &GenericFields[EDGeneric]{}, have)
+		assert.Equal(t, 1, e.Len())
+		assert.ErrorEqual(t, "name: msg", have)
+	})
+
+	t.Run("nil error", func(t *testing.T) {
+		// --- When ---
+		have := NewField("name", nil)
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
+}
+
 func Test_Wrap(t *testing.T) {
 	t.Run("wrapping nil returns nil", func(t *testing.T) {
 		// --- When ---

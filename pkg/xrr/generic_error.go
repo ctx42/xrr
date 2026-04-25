@@ -26,9 +26,9 @@ type GenericError[T Domain] struct {
 	err  error          // Wrapped error.
 }
 
-// NewErrorFor returns a factory function for creating domain-specific errors.
-func NewErrorFor[T Domain]() func(msg, code string, opts ...Option) error {
-	return func(msg, code string, opts ...Option) error {
+// ErrorFactory returns a factory function for creating domain-specific errors.
+func ErrorFactory[T Domain]() func(msg, code string, opts ...Option) *GenericError[T] {
+	return func(msg, code string, opts ...Option) *GenericError[T] {
 		ops := Options{code: code}.Set(opts...)
 		err := &GenericError[T]{
 			msg:  msg,
@@ -41,8 +41,12 @@ func NewErrorFor[T Domain]() func(msg, code string, opts ...Option) error {
 }
 
 func (e *GenericError[T]) Error() string {
-	if e.msg == "" && e.err != nil {
-		return errorMessage(e.err)
+	if e.err != nil {
+		em := errorMessage(e.err)
+		if e.msg != "" {
+			return e.msg + ": " + em
+		}
+		return em
 	}
 	return e.msg
 }

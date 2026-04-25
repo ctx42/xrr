@@ -917,7 +917,7 @@ func Test_AssertFields(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.FieldError("a", errors.New("msg"))
+		err := xrr.NewField("a", errors.New("msg"))
 
 		// --- When ---
 		have, success := AssertFields(tspy, err)
@@ -971,10 +971,12 @@ func Test_AssertFieldsEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-			"f1": xrr.New("m1", "EC1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+				"f1": xrr.New("m1", "EC1"),
+			},
+		)
 		want := "f0: m0 (ECGeneric); f1: m1 (EC1)"
 
 		// --- When ---
@@ -1010,10 +1012,12 @@ func Test_AssertFieldsEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("other"),
-			"f1": xrr.New("m1", "EC1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("other"),
+				"f1": xrr.New("m1", "EC1"),
+			},
+		)
 		want := "f0: m0 (ECGeneric); f1: m1 (EC1)"
 
 		// --- When ---
@@ -1030,10 +1034,12 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-			"f1": errors.New("m1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+				"f1": errors.New("m1"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldCnt(tspy, 2, err)
@@ -1062,7 +1068,7 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDGeneric] length:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDGeneric] length:\n" +
 			"    want: 3\n" +
 			"    have: 2\n" +
 			"  fields:\n" +
@@ -1073,10 +1079,12 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-			"f1": errors.New("m1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+				"f1": errors.New("m1"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldCnt(tspy, 3, err)
@@ -1114,7 +1122,9 @@ func Test_AssertHasField(t *testing.T) {
 
 		f0 := errors.New("m0")
 		f1 := errors.New("m1")
-		err := xrr.GenericFields[xrr.EDGeneric]{"f0": f0, "f1": f1}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{"f0": f0, "f1": f1},
+		)
 
 		// --- When ---
 		have, success := AssertHasField(tspy, "f0", err)
@@ -1130,7 +1140,9 @@ func Test_AssertHasField(t *testing.T) {
 		tspy.Close()
 
 		f0 := errors.New("m0")
-		err := xrr.GenericFields[xrr.EDGeneric]{"f0": f0, "f1": nil}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{"f0": f0, "f1": nil},
+		)
 
 		// --- When ---
 		have, success := AssertHasField(tspy, "f1", err)
@@ -1145,7 +1157,7 @@ func Test_AssertHasField(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected map to have a key:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDGeneric] length:\n" +
 			"     key: \"f1\"\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
@@ -1154,7 +1166,9 @@ func Test_AssertHasField(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{"f0": errors.New("m0")}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{"f0": errors.New("m0")},
+		)
 
 		// --- When ---
 		have, success := AssertHasField(tspy, "f1", err)
@@ -1187,15 +1201,17 @@ func Test_AssertHasField(t *testing.T) {
 }
 
 func Test_AssertFieldEqual(t *testing.T) {
-	t.Run("susses - field exists and with given message", func(t *testing.T) {
+	t.Run("susses - field exists and with a given message", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-			"f1": xrr.New("m1", "ECF1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+				"f1": xrr.New("m1", "ECF1"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldEqual(tspy, "f1", "m1", err)
@@ -1224,7 +1240,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected map to have a key:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDGeneric] length:\n" +
 			"     key: \"f2\"\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
@@ -1234,10 +1250,12 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-			"f1": xrr.New("m1", "ECF1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+				"f1": xrr.New("m1", "ECF1"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldEqual(tspy, "f2", "m2", err)
@@ -1262,10 +1280,12 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-			"f1": xrr.New("m1", "ECF1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+				"f1": xrr.New("m1", "ECF1"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldEqual(tspy, "f1", "other", err)
@@ -1301,10 +1321,12 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-			"f1": xrr.New("m1", "ECF1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+				"f1": xrr.New("m1", "ECF1"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldCode(tspy, "f1", "ECF1", err)
@@ -1330,10 +1352,12 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-			"f1": xrr.New("m1", "ECF1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+				"f1": xrr.New("m1", "ECF1"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldCode(tspy, "f1", "other", err)
@@ -1356,9 +1380,11 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": errors.New("m0"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": errors.New("m0"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldCode(tspy, "f2", "other", err)
@@ -1394,9 +1420,11 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f1": want,
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f1": want,
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldIs(tspy, "f1", want, err)
@@ -1426,7 +1454,7 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected map to have a key:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDGeneric] length:\n" +
 			"     key: \"other\"\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
@@ -1436,9 +1464,11 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f0": want,
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f0": want,
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldIs(tspy, "other", want, err)
@@ -1463,9 +1493,11 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.GenericFields[xrr.EDGeneric]{
-			"f1": xrr.New("m1", "ECF1"),
-		}
+		err := xrr.NewDomainFields[xrr.EDGeneric](
+			map[string]error{
+				"f1": xrr.New("m1", "ECF1"),
+			},
+		)
 
 		// --- When ---
 		have := AssertFieldIs(tspy, "f1", want, err)

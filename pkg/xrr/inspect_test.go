@@ -192,10 +192,12 @@ func Test_GetCodes_tabular(t *testing.T) {
 				code: "a",
 				err: &GenericError[EDGeneric]{
 					code: "b",
-					err: GenericFields[EDGeneric]{
-						"x": nil,
-						"y": New("msg y", "y"),
-						"z": nil,
+					err: &GenericFields[EDGeneric]{
+						fields: map[string]error{
+							"x": nil,
+							"y": New("msg y", "y"),
+							"z": nil,
+						},
 					},
 				},
 			},
@@ -313,9 +315,11 @@ func Test_GetMeta_tabular(t *testing.T) {
 		},
 		{
 			"fields",
-			GenericFields[EDGeneric]{
-				"a": New("msg a", "a", Meta().Int("A", 1).Int("B", 1).Option()),
-				"b": New("msg b", "b", Meta().Int("A", 1).Int("B", 2).Option()),
+			&GenericFields[EDGeneric]{
+				fields: map[string]error{
+					"a": New("msg a", "a", Meta().Int("A", 1).Int("B", 1).Option()),
+					"b": New("msg b", "b", Meta().Int("A", 1).Int("B", 2).Option()),
+				},
 			},
 			map[string]any{"A": 1, "B": 1},
 		},

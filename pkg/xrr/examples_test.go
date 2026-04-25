@@ -98,7 +98,7 @@ func ExampleWrap() {
 }
 
 func ExampleGenericFields() {
-	err := xrr.GenericFields[xrr.EDGeneric]{
+	fields := map[string]error{
 		"username": errors.New("username not found"),
 		"email": xrr.New(
 			"invalid email",
@@ -106,6 +106,7 @@ func ExampleGenericFields() {
 			xrr.Meta().Str("action", "context").Option(),
 		),
 	}
+	err := xrr.NewDomainFields[xrr.EDGeneric](fields)
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 	// Output:
@@ -177,10 +178,11 @@ func ExampleEnclose_joined_errors() {
 }
 
 func ExampleEnclose_fields_error() {
-	cause := xrr.GenericFields[xrr.EDGeneric]{
+	fields := map[string]error{
 		"a": xrr.New("cause A", "EC_A"),
 		"b": xrr.New("cause B", "EC_B"),
 	}
+	cause := xrr.NewDomainFields[xrr.EDGeneric](fields)
 	lead := xrr.New("lead", "EC_LEAD")
 
 	err := xrr.Enclose(cause, lead)

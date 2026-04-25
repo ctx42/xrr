@@ -51,3 +51,16 @@ func WithMeta(meta map[string]any) Option {
 func WithMetaFrom(src Metadater) Option {
 	return WithMeta(src.MetaAll())
 }
+
+// WithCause is an option for setting the wrapped cause error. The cause is
+// accessible via [errors.Unwrap] and participates in [errors.Is] /
+// [errors.As] chain traversal.
+func WithCause(cause error) Option {
+	// TODO(rz): Do we need it?
+	return func(ops *Options) {
+		if ops.code == "" {
+			ops.code = GetCode(cause)
+		}
+		ops.err = cause
+	}
+}

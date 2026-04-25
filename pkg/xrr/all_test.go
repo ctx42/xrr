@@ -213,7 +213,7 @@ func TstTreeCase4() error {
 //	│     │   │   │
 //	b     e   g   h
 func TstTreeCase5() error {
-	return GenericFields[EDGeneric]{
+	fields := map[string]error{
 		"f": errors.Join(
 			&GenericError[EDGeneric]{msg: "msg g", code: "g"},
 			&GenericError[EDGeneric]{msg: "msg h", code: "h"},
@@ -227,6 +227,7 @@ func TstTreeCase5() error {
 			err:  &GenericError[EDGeneric]{msg: "msg e", code: "e"},
 		},
 	}
+	return NewDomainFields[EDGeneric](fields)
 }
 
 // TstTreeMeta returns a test error tree with metadata keys. Where the "D"

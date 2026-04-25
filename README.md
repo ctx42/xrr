@@ -194,7 +194,7 @@ fields — most commonly used for validation:
 
 <!-- gmdoceg:pkg/xrr/ExampleGenericFields -->
 ```go
-err := xrr.GenericFields[xrr.EDGeneric]{
+fields := map[string]error{
 	"username": errors.New("username not found"),
 	"email": xrr.New(
 		"invalid email",
@@ -202,6 +202,7 @@ err := xrr.GenericFields[xrr.EDGeneric]{
 		xrr.Meta().Str("action", "context").Option(),
 	),
 }
+err := xrr.NewDomainFields[xrr.EDGeneric](fields)
 
 fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // Output:
@@ -246,15 +247,15 @@ filtered := fs.Filter()
 fieldErr := fs.Get("address.city")
 ```
 
-To wrap a single error under a field name, use `FieldError`:
+To wrap a single error under a field name, use `NewField`:
 
 ```go
-err := xrr.FieldError("email", xrr.New("invalid email", "EC_INVALID_EMAIL"))
+err := xrr.NewField("email", xrr.New("invalid email", "EC_INVALID_EMAIL"))
 ```
 
 # Domain-Specific Errors
 
-By default all `xrr` errors share the same Go type. Using generics you
+By default, all `xrr` errors share the same Go type. Using generics you
 can create a distinct error type per domain, so callers can identify
 which subsystem an error originated from:
 
@@ -262,8 +263,8 @@ which subsystem an error originated from:
 type EDPayment string
 
 var (
-    NewPaymentError = xrr.NewErrorFor[EDPayment]()
-    PaymentFieldErr = xrr.NewFieldErrorFor[EDPayment]()
+    NewPaymentError = xrr.ErrorFactory[EDPayment]()
+    PaymentFieldErr = xrr.FieldsFactory[EDPayment]()
 )
 
 err := NewPaymentError("charge failed", "EC_CHARGE_FAILED")
@@ -396,10 +397,11 @@ the `fields` key, keyed by field name:
 
 <!-- gmdoceg:pkg/xrr/ExampleEnclose_fields_error -->
 ```go
-cause := xrr.GenericFields[xrr.EDGeneric]{
+fields := map[string]error{
 	"a": xrr.New("cause A", "EC_A"),
 	"b": xrr.New("cause B", "EC_B"),
 }
+cause := xrr.NewDomainFields[xrr.EDGeneric](fields)
 lead := xrr.New("lead", "EC_LEAD")
 
 err := xrr.Enclose(cause, lead)

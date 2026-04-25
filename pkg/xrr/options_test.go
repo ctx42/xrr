@@ -110,6 +110,18 @@ func Test_WithMeta(t *testing.T) {
 	})
 }
 
+func Test_WithCause(t *testing.T) {
+	// --- Given ---
+	cause := New("cause", "ECCause")
+	ops := &Options{}
+
+	// --- When ---
+	WithCause(cause)(ops)
+
+	// --- Then ---
+	assert.Equal(t, cause, ops.err)
+}
+
 func Test_WithMetaFrom(t *testing.T) {
 	t.Run("set", func(t *testing.T) {
 		// --- Given ---

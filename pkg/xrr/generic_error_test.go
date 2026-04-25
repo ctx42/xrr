@@ -12,10 +12,10 @@ import (
 	"github.com/ctx42/testing/pkg/assert"
 )
 
-func Test_NewErrorFor(t *testing.T) {
+func Test_ErrorFactory(t *testing.T) {
 	t.Run("without options", func(t *testing.T) {
 		// --- Given ---
-		have := NewErrorFor[EDGeneric]()
+		have := ErrorFactory[EDGeneric]()
 
 		// --- When ---
 		err := have("msg", "ECode")
@@ -31,7 +31,7 @@ func Test_NewErrorFor(t *testing.T) {
 	t.Run("with options", func(t *testing.T) {
 		// --- Given ---
 		m := map[string]any{"A": 1, "B": func() {}}
-		have := NewErrorFor[EDGeneric]()
+		have := ErrorFactory[EDGeneric]()
 
 		// --- When ---
 		err := have("msg", "ECode", WithMeta(m))
@@ -122,6 +122,18 @@ func Test_GenericError_Error(t *testing.T) {
 
 		// --- Then ---
 		assert.Equal(t, "a: msg b; d: msg e; f: msg g; msg h", have)
+	})
+
+	t.Run("instance with wrapped error", func(t *testing.T) {
+		// --- Given ---
+		ne := ErrorFactory[string]()
+		e := ne("msg", "ECode", WithCause(errors.New("cause")))
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "msg: cause", have)
 	})
 }
 

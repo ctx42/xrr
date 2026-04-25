@@ -326,8 +326,11 @@ func AssertFieldCnt(t tester.T, want int, err error) bool {
 	if !success {
 		return false
 	}
-	if e := check.Len(want, xe); e != nil {
-		msg := notice.From(e, "xrr").Append("fields", "%s", dump.New().Any(xe))
+	fls := xe.ErrorFields()
+	if e := check.Len(want, fls); e != nil {
+		msg := notice.From(e).
+			SetHeader("[xrr] expected %T length", xe).
+			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
 		return false
 	}
@@ -347,12 +350,14 @@ func AssertHasField(t tester.T, field string, err error) (error, bool) {
 	if !success {
 		return nil, false
 	}
+	fls := xe.ErrorFields()
 	// Verify the field exists and retrieve its error value.
-	ve, e := check.HasKey(field, xe.ErrorFields())
+	ve, e := check.HasKey(field, fls)
 	if e != nil {
-		msg := notice.From(e, "xrr").
+		msg := notice.From(e).
+			SetHeader("[xrr] expected %T length", xe).
 			Remove("map").
-			Append("fields", "%s", dump.New().Any(xe))
+			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
 		return nil, false
 	}
@@ -372,19 +377,21 @@ func AssertFieldEqual(t tester.T, field, want string, err error) bool {
 	if !success {
 		return false
 	}
+	fls := xe.ErrorFields()
 	// Verify the field exists and retrieve its error value.
-	ve, e := check.HasKey(field, xe.ErrorFields())
+	ve, e := check.HasKey(field, fls)
 	if e != nil {
-		msg := notice.From(e, "xrr").
+		msg := notice.From(e).
+			SetHeader("[xrr] expected %T length", xe).
 			Remove("map").
-			Append("fields", "%s", dump.New().Any(xe))
+			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
 		return false
 	}
 	if e = check.ErrorEqual(want, ve); e != nil {
 		msg := notice.From(e, "xrr").
 			Remove("map").
-			Append("fields", "%s", dump.New().Any(xe))
+			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
 		return false
 	}
@@ -404,9 +411,9 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 	if !success {
 		return false
 	}
-
+	fls := xe.ErrorFields()
 	// Verify the field exists and retrieve its error value.
-	ve, e := check.HasKey(field, xe.ErrorFields())
+	ve, e := check.HasKey(field, fls)
 	if e != nil {
 		hHeader := "[xrr] expected field to exist"
 		msg := notice.From(e).
@@ -414,7 +421,7 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 			Remove("key").
 			Prepend("field", "%s", field).
 			Remove("map").
-			Append("fields", "%s", dump.New().Any(xe))
+			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
 		return false
 	}
@@ -423,7 +430,7 @@ func AssertFieldCode(t tester.T, field, code string, err error) bool {
 		msg := notice.From(e).
 			SetHeader(hHeader).
 			Prepend("field", "%s", field).
-			Append("fields", "%s", dump.New().Any(xe))
+			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
 		return false
 	}
@@ -465,17 +472,19 @@ func AssertFieldIs(t tester.T, field string, want, err error) bool {
 	if !success {
 		return false
 	}
+	fls := xe.ErrorFields()
 	// Verify the field exists and retrieve its error value.
-	ve, e := check.HasKey(field, xe.ErrorFields())
+	ve, e := check.HasKey(field, fls)
 	if e != nil {
 		msg := notice.From(e, "xrr").
+			SetHeader("[xrr] expected %T length", xe).
 			Remove("map").
-			Append("fields", "%s", dump.New().Any(xe))
+			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
 		return false
 	}
 	if e = check.ErrorIs(want, ve); e != nil {
-		msg := notice.From(e, "xrr").Append("fields", "%s", dump.New().Any(xe))
+		msg := notice.From(e, "xrr").Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
 		return false
 	}
