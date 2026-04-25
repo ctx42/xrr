@@ -55,8 +55,14 @@ func WithMetaFrom(src Metadater) Option {
 // WithCause is an option for setting the wrapped cause error. The cause is
 // accessible via [errors.Unwrap] and participates in [errors.Is] /
 // [errors.As] chain traversal.
+//
+// If the code field is empty at the time this option is applied, it is
+// inherited from cause via [GetCode]. Because options are applied in order,
+// placing [WithCode] before [WithCause] causes [WithCause] to overwrite the
+// code with the inherited value. Place [WithCode] after [WithCause] (or pass
+// the code as the positional argument to [New]) to ensure the explicit code
+// wins.
 func WithCause(cause error) Option {
-	// TODO(rz): Do we need it?
 	return func(ops *Options) {
 		if ops.code == "" {
 			ops.code = GetCode(cause)

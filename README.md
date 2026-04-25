@@ -153,19 +153,38 @@ slog.New(handler).Error(
 # Wrapping Errors
 
 When an error originates outside your code — from the standard library or
-a third-party package — `Wrap` lets you attach a code or metadata without
-losing the original error in the chain:
+a third-party package — use `New` with `WithCause` to attach a code without
+losing the original error in the chain. Pass an empty message to expose the
+cause's message directly:
 
-<!-- gmdoceg:pkg/xrr/ExampleWrap -->
+<!-- gmdoceg:pkg/xrr/ExampleNew_withCause -->
 ```go
 err := fmt.Errorf("connection refused")
-wrapped := xrr.Wrap[xrr.EDGeneric](err, xrr.WithCode("EC_CONN"))
+wrapped := xrr.New("", "EC_CONN", xrr.WithCause(err))
 
 fmt.Println(errors.Is(wrapped, err))
 fmt.Println(xrr.GetCode(wrapped))
+fmt.Println(wrapped.Error())
 // Output:
 // true
 // EC_CONN
+// connection refused
+```
+
+Provide a message to add context — it is prepended to the cause's message:
+
+<!-- gmdoceg:pkg/xrr/ExampleNew_withCauseAndMsg -->
+```go
+err := fmt.Errorf("connection refused")
+wrapped := xrr.New("dial failed", "EC_CONN", xrr.WithCause(err))
+
+fmt.Println(errors.Is(wrapped, err))
+fmt.Println(xrr.GetCode(wrapped))
+fmt.Println(wrapped.Error())
+// Output:
+// true
+// EC_CONN
+// dial failed: connection refused
 ```
 
 # Inspecting Error Trees

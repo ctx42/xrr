@@ -92,9 +92,37 @@ func ExampleWrap() {
 
 	fmt.Println(errors.Is(wrapped, err))
 	fmt.Println(xrr.GetCode(wrapped))
+	fmt.Println(wrapped.Error())
 	// Output:
 	// true
 	// EC_CONN
+	// connection refused
+}
+
+func ExampleNew_withCause() {
+	err := fmt.Errorf("connection refused")
+	wrapped := xrr.New("", "EC_CONN", xrr.WithCause(err))
+
+	fmt.Println(errors.Is(wrapped, err))
+	fmt.Println(xrr.GetCode(wrapped))
+	fmt.Println(wrapped.Error())
+	// Output:
+	// true
+	// EC_CONN
+	// connection refused
+}
+
+func ExampleNew_withCauseAndMsg() {
+	err := fmt.Errorf("connection refused")
+	wrapped := xrr.New("dial failed", "EC_CONN", xrr.WithCause(err))
+
+	fmt.Println(errors.Is(wrapped, err))
+	fmt.Println(xrr.GetCode(wrapped))
+	fmt.Println(wrapped.Error())
+	// Output:
+	// true
+	// EC_CONN
+	// dial failed: connection refused
 }
 
 func ExampleGenericFields() {

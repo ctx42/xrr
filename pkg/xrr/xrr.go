@@ -44,9 +44,20 @@ var (
 	fieldsError = FieldsFactory[EDGeneric]()
 )
 
-// New creates a new [GenericError[EDGeneric]] error instance with the given
-// message and error code. If the [WithCode] option is on the list of
-// options, it will override the code argument.
+// New creates a new [GenericError[EDGeneric]] error with the given message and
+// error code.
+//
+// When [WithCause] is provided:
+//   - If msg is empty, [Error] returns the cause's message directly.
+//   - If msg is non-empty, [Error] returns "msg: cause message".
+//   - If code is empty and [WithCode] is not provided, the cause's code is
+//     inherited via [GetCode]. Use an explicit code argument or [WithCode] to
+//     override it. Note that [WithCode] must appear after [WithCause] in the
+//     option list to take effect.
+//
+// For wrapping without a new message, prefer [Wrap] which makes the intent
+// clearer. New("", code, WithCause(err)) and Wrap[T](err, WithCode(code))
+// produce equivalent results when T is [EDGeneric].
 func New(msg, code string, opts ...Option) error {
 	return newError(msg, code, opts...)
 }
@@ -57,11 +68,16 @@ func NewField(field string, err error) error {
 	return fieldsError(field, err)
 }
 
-// Wrap wraps an error in a [GenericError] instance, applying the given options.
+// Wrap wraps an error in a [GenericError[T]] instance, applying the given
+// options. The wrapped error is accessible via [errors.Unwrap] and participates
+// in [errors.Is] / [errors.As] chain traversal.
 //
-// It returns nil if the error is nil. The returned error retains the same
-// error code as the input error, obtained via [GetCode] function. To override
-// the error code, use the [WithCode] option.
+// Returns nil if err is nil. The returned error inherits the code of err via
+// [GetCode]; use [WithCode] to override it. [Error] returns the cause's message
+// directly (no new message is associated with the wrapper).
+//
+// When both a new message and a cause are needed in the same error, use
+// [New] with [WithCause] instead.
 func Wrap[T Domain](err error, opts ...Option) error {
 	if err == nil || isNil(err) {
 		return nil
