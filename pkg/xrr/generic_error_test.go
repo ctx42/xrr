@@ -138,14 +138,27 @@ func Test_GenericError_Error(t *testing.T) {
 }
 
 func Test_GenericError_ErrorCode(t *testing.T) {
-	// --- Given ---
-	e := &GenericError[string]{code: "ECode"}
+	t.Run("returns code", func(t *testing.T) {
+		// --- Given ---
+		e := &GenericError[string]{code: "ECode"}
 
-	// --- When ---
-	have := e.ErrorCode()
+		// --- When ---
+		have := e.ErrorCode()
 
-	// --- Then ---
-	assert.Equal(t, "ECode", have)
+		// --- Then ---
+		assert.Equal(t, "ECode", have)
+	})
+
+	t.Run("returns ECGeneric when code is empty", func(t *testing.T) {
+		// --- Given ---
+		e := &GenericError[string]{}
+
+		// --- When ---
+		have := e.ErrorCode()
+
+		// --- Then ---
+		assert.Equal(t, ECGeneric, have)
+	})
 }
 
 func Test_GenericError_MetaAll(t *testing.T) {

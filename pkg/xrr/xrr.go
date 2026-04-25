@@ -17,8 +17,7 @@ type EDGeneric string
 // Coder is the interface that wraps the ErrorCode method.
 type Coder interface {
 	// ErrorCode returns the error code for the error. For errors without an
-	// explicit code, it should return [ECGeneric]. Callers should prefer
-	// [GetCode], which handles nil errors before invoking this method.
+	// explicit code, it should return [ECGeneric].
 	ErrorCode() string
 }
 
@@ -64,7 +63,7 @@ func NewField(field string, err error) error {
 // error code as the input error, obtained via [GetCode] function. To override
 // the error code, use the [WithCode] option.
 func Wrap[T Domain](err error, opts ...Option) error {
-	if err == nil {
+	if err == nil || isNil(err) {
 		return nil
 	}
 	ops := Options{code: GetCode(err)}.Set(opts...)

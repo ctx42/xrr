@@ -82,6 +82,17 @@ func Test_Wrap(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
+	t.Run("wrapping typed nil returns nil", func(t *testing.T) {
+		// --- Given ---
+		var e *GenericError[EDGeneric]
+
+		// --- When ---
+		err := Wrap[string](e)
+
+		// --- Then ---
+		assert.Nil(t, err)
+	})
+
 	t.Run("wrap error without options", func(t *testing.T) {
 		// --- Given ---
 		e := errors.New("msg")

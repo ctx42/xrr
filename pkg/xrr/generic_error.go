@@ -51,8 +51,13 @@ func (e *GenericError[T]) Error() string {
 	return e.msg
 }
 
-// ErrorCode returns error code.
-func (e *GenericError[T]) ErrorCode() string { return e.code }
+// ErrorCode returns error code. Returns [ECGeneric] when no code is set.
+func (e *GenericError[T]) ErrorCode() string {
+	if e.code == "" {
+		return ECGeneric
+	}
+	return e.code
+}
 
 // MetaAll returns a clone of the error's metadata.
 func (e *GenericError[T]) MetaAll() map[string]any { return maps.Clone(e.meta) }
@@ -66,13 +71,9 @@ func (e *GenericError[T]) Unwrap() error {
 }
 
 func (e *GenericError[T]) MarshalJSON() ([]byte, error) {
-	code := e.code
-	if code == "" {
-		code = ECGeneric
-	}
 	m := map[string]any{
 		"error": e.Error(),
-		"code":  code,
+		"code":  e.ErrorCode(),
 	}
 	if meta := GetMeta(e); len(meta) > 0 {
 		m["meta"] = meta
@@ -122,7 +123,7 @@ func (e *GenericError[T]) UnmarshalJSON(data []byte) error {
 
 // Format implements [fmt.Formatter] for [GenericError].
 func (e *GenericError[T]) Format(state fmt.State, verb rune) {
-	Format(e.Error(), e.code, state, verb)
+	Format(e.Error(), e.ErrorCode(), state, verb)
 }
 
 // Format is a custom formatter for [GenericError] instances.
