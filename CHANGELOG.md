@@ -1,3 +1,6 @@
+## v0.11.1 (Sun, 26 Apr 2026 13:25:32 UTC)
+- fix: update go.sum.
+
 ## v0.11.0 (Sun, 26 Apr 2026 13:01:36 UTC)
 - refactor(xrr): convert GenericFields to a struct type.
 - test(xrr): fix test style violations.
