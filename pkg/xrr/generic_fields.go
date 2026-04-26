@@ -52,8 +52,8 @@ func GetFields(err error) map[string]error {
 }
 
 // GetFieldError returns an error for the given field name. It expects the
-// error to be an instance of [Fields]. Returns nil when err is nil, not an
-// instance of [Fields] or when there is no error for the given field name.
+// error to implement [Fielder]. Returns nil when err is nil, does not
+// implement [Fielder], or has no error for the given field name.
 func GetFieldError(err error, field string) error {
 	if fs := GetFields(err); fs != nil {
 		return get(fs, field)
@@ -61,14 +61,14 @@ func GetFieldError(err error, field string) error {
 	return nil
 }
 
-// FieldErrorIs returns true if err is an instance of [Fields] with the given
-// field name and the [errors.Is] returns true for the error and the target.
+// FieldErrorIs returns true if err implements [Fielder], has the given field
+// name, and [errors.Is] returns true for that field's error and target.
 func FieldErrorIs(err error, field string, target error) bool {
 	return errors.Is(GetFieldError(err, field), target)
 }
 
-// FieldNames returns alphabetically sorted fields names if the error is an
-// instance of [Fields]. Otherwise, it returns nil.
+// FieldNames returns alphabetically sorted field names if the error implements
+// [Fielder]. Otherwise, it returns nil.
 func FieldNames(err error) []string {
 	fs := GetFields(err)
 	if fs == nil {
