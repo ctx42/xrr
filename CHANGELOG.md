@@ -1,3 +1,14 @@
+## v0.11.0 (Sun, 26 Apr 2026 13:01:36 UTC)
+- refactor(xrr): convert GenericFields to a struct type.
+- test(xrr): fix test style violations.
+- fix(xrr): ErrorCode returns ECGeneric for empty code; Wrap handles typed nil.
+- docs(xrr): update README, examples, and API documentation.
+- feat(xrr): add NewFields constructor; update domain-specific docs.
+- docs(xrr): fix GenericFields description in README.
+- docs(xrr): correct MergeFields comment in README.
+- docs(xrr): replace stale [Fields] godoc references with [Fielder].
+- docs(xrrtest): fix package doc sentence.
+
 ## v0.10.0 (Sat, 11 Apr 2026 09:53:32 UTC)
 - feat(xrr): add SetCode generic helper function.
 
