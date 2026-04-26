@@ -134,7 +134,7 @@ func ExampleGenericFields() {
 			xrr.Meta().Str("action", "context").Option(),
 		),
 	}
-	err := xrr.NewDomainFields[xrr.EDGeneric](fields)
+	err := xrr.NewFields(fields)
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 	// Output:
@@ -210,7 +210,7 @@ func ExampleEnclose_fields_error() {
 		"a": xrr.New("cause A", "EC_A"),
 		"b": xrr.New("cause B", "EC_B"),
 	}
-	cause := xrr.NewDomainFields[xrr.EDGeneric](fields)
+	cause := xrr.NewFields(fields)
 	lead := xrr.New("lead", "EC_LEAD")
 
 	err := xrr.Enclose(cause, lead)

@@ -73,6 +73,34 @@ func Test_NewField(t *testing.T) {
 	})
 }
 
+func Test_NewFields(t *testing.T) {
+	t.Run("creates EDGeneric fields from map", func(t *testing.T) {
+		// --- Given ---
+		m := map[string]error{"f0": errors.New("em0")}
+
+		// --- When ---
+		have := NewFields(m)
+
+		// --- Then ---
+		fs, _ := assert.SameType(t, &GenericFields[EDGeneric]{}, have)
+		assert.Equal(t, 1, fs.Len())
+		assert.ErrorEqual(t, "em0", fs.fields["f0"])
+	})
+
+	t.Run("map is stored directly without copying", func(t *testing.T) {
+		// --- Given ---
+		m := map[string]error{"f0": errors.New("em0")}
+
+		// --- When ---
+		have := NewFields(m)
+
+		// --- Then ---
+		fs, _ := assert.SameType(t, &GenericFields[EDGeneric]{}, have)
+		m["f1"] = errors.New("em1")
+		assert.Equal(t, 2, fs.Len())
+	})
+}
+
 func Test_Wrap(t *testing.T) {
 	t.Run("wrapping nil returns nil", func(t *testing.T) {
 		// --- When ---

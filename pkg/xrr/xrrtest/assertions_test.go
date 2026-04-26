@@ -971,7 +971,7 @@ func Test_AssertFieldsEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 				"f1": xrr.New("m1", "EC1"),
@@ -1012,7 +1012,7 @@ func Test_AssertFieldsEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("other"),
 				"f1": xrr.New("m1", "EC1"),
@@ -1034,7 +1034,7 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 				"f1": errors.New("m1"),
@@ -1079,7 +1079,7 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 				"f1": errors.New("m1"),
@@ -1122,7 +1122,7 @@ func Test_AssertHasField(t *testing.T) {
 
 		f0 := errors.New("m0")
 		f1 := errors.New("m1")
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{"f0": f0, "f1": f1},
 		)
 
@@ -1140,7 +1140,7 @@ func Test_AssertHasField(t *testing.T) {
 		tspy.Close()
 
 		f0 := errors.New("m0")
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{"f0": f0, "f1": nil},
 		)
 
@@ -1166,7 +1166,7 @@ func Test_AssertHasField(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{"f0": errors.New("m0")},
 		)
 
@@ -1206,7 +1206,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 				"f1": xrr.New("m1", "ECF1"),
@@ -1250,7 +1250,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 				"f1": xrr.New("m1", "ECF1"),
@@ -1280,7 +1280,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 				"f1": xrr.New("m1", "ECF1"),
@@ -1321,7 +1321,7 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 				"f1": xrr.New("m1", "ECF1"),
@@ -1352,7 +1352,7 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 				"f1": xrr.New("m1", "ECF1"),
@@ -1380,7 +1380,7 @@ func Test_AssertFieldCode(t *testing.T) {
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
 
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": errors.New("m0"),
 			},
@@ -1420,7 +1420,7 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f1": want,
 			},
@@ -1464,7 +1464,7 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f0": want,
 			},
@@ -1493,7 +1493,7 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.Close()
 
 		want := xrr.New("m1", "ECF1")
-		err := xrr.NewDomainFields[xrr.EDGeneric](
+		err := xrr.NewFields(
 			map[string]error{
 				"f1": xrr.New("m1", "ECF1"),
 			},

@@ -221,7 +221,7 @@ fields := map[string]error{
 		xrr.Meta().Str("action", "context").Option(),
 	),
 }
-err := xrr.NewDomainFields[xrr.EDGeneric](fields)
+err := xrr.NewFields(fields)
 
 fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // Output:
@@ -274,27 +274,45 @@ err := xrr.NewField("email", xrr.New("invalid email", "EC_INVALID_EMAIL"))
 
 # Domain-Specific Errors
 
-By default, all `xrr` errors share the same Go type. Using generics you
-can create a distinct error type per domain, so callers can identify
-which subsystem an error originated from:
+By default, all `xrr` errors share the same Go type. For larger codebases,
+define a distinct error type per domain so callers can identify which
+subsystem an error originates from without parsing codes.
+
+The recommended pattern uses an unexported zero-size struct as the domain
+marker and named type aliases for the concrete error types:
 
 ```go
-type EDPayment string
+// Unexported zero-size type used as the domain marker.
+type edPayment struct{}
 
-var (
-    NewPaymentError = xrr.ErrorFactory[EDPayment]()
-    PaymentFieldErr = xrr.FieldsFactory[EDPayment]()
+// Type aliases give callers readable names.
+type (
+    PaymentError       = xrr.GenericError[edPayment]
+    PaymentFieldsError = xrr.GenericFields[edPayment]
 )
 
-err := NewPaymentError("charge failed", "EC_CHARGE_FAILED")
+// Package-level factories — unexported; wrap them in named constructors.
+var (
+    newPaymentError = xrr.ErrorFactory[edPayment]()
+    paymentFieldErr = xrr.FieldsFactory[edPayment]()
+)
+
+func NewPaymentError(msg, code string, opts ...xrr.Option) error {
+    return newPaymentError(msg, code, opts...)
+}
+
+func IsPaymentError(err error) bool {
+    return xrr.IsDomain[edPayment](err)
+}
 ```
 
-Use `IsDomain[EDPayment](err)` to check at runtime whether an error
-originated from the payment domain:
+Callers use the exported constructor and type-check helper:
 
 ```go
-if xrr.IsDomain[EDPayment](err) {
-    // err is a *GenericError[EDPayment]
+err := NewPaymentError("charge failed", "EC_CHARGE_FAILED")
+
+if IsPaymentError(err) {
+    // err is a *PaymentError
 }
 ```
 
@@ -420,7 +438,7 @@ fields := map[string]error{
 	"a": xrr.New("cause A", "EC_A"),
 	"b": xrr.New("cause B", "EC_B"),
 }
-cause := xrr.NewDomainFields[xrr.EDGeneric](fields)
+cause := xrr.NewFields(fields)
 lead := xrr.New("lead", "EC_LEAD")
 
 err := xrr.Enclose(cause, lead)

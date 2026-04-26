@@ -62,10 +62,16 @@ func New(msg, code string, opts ...Option) error {
 	return newError(msg, code, opts...)
 }
 
-// NewField returns a new instance of [Fields] with the given error. Returns
-// nil when the error is nil.
+// NewField returns a new instance of [GenericFields[EDGeneric]] with the given
+// error. Returns nil when the error is nil.
 func NewField(field string, err error) error {
 	return fieldsError(field, err)
+}
+
+// NewFields creates a new [GenericFields[EDGeneric]] from the given map. The
+// map is stored directly without copying.
+func NewFields(fields map[string]error) error {
+	return NewDomainFields[EDGeneric](fields)
 }
 
 // Wrap wraps an error in a [GenericError[T]] instance, applying the given
