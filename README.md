@@ -253,7 +253,7 @@ When building or combining field maps — for example when merging validation
 results from multiple sources — the following helpers are available:
 
 ```go
-// Merge two field maps; existing non-nil keys are not overwritten.
+// Merge two field maps; later values win on key conflicts.
 merged := xrr.MergeFields[xrr.EDGeneric](fieldsA, fieldsB)
 
 // Flatten nested field maps to dot-notation keys.
