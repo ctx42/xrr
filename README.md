@@ -208,8 +208,8 @@ dur, ok := xrr.GetDuration(err, "elapsed")
 
 # Field Errors
 
-`GenericFields[T]` is a `map[string]error` for associating errors with named
-fields — most commonly used for validation:
+`GenericFields[T]` associates string field names with errors — most commonly
+used for validation:
 
 <!-- gmdoceg:pkg/xrr/ExampleGenericFields -->
 ```go
