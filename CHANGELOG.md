@@ -1,3 +1,6 @@
+## v0.13.0 (Fri, 01 May 2026 19:38:56 UTC)
+- chore: Update to Go 1.26 and update dependencies.
+
 ## v0.12.0 (Fri, 01 May 2026 18:57:15 UTC)
 - refactor(xrr)!: rename and tighten the public API.
 - refactor(xrr)!: rename API, add type aliases, fix docs and marshaling.
