@@ -146,7 +146,7 @@ func (e Envelope) MarshalJSON() ([]byte, error) {
 // given leading error.
 func encloseFieldsError(lead error, ef Fielder) ([]byte, error) {
 	ret := errorAsMap(lead)
-	ret["fields"] = ef.ErrorFields()
+	ret["fields"] = &GenericFields[EDXrr]{fields: ef.ErrorFields()}
 	if meta := GetMeta(lead); len(meta) > 0 {
 		ret["meta"] = meta
 	}

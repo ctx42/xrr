@@ -234,7 +234,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 			"error":"lead",
 			"code":"ECL",
 			"fields":{
-				"f0":{},
+				"f0":{"code":"ECGeneric","error":"f0"},
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			}
 		}`
@@ -260,7 +260,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 			"error":"fields error",
 			"code":"ECFields",
 			"fields":{
-				"f0":{},
+				"f0":{"code":"ECGeneric","error":"f0"},
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			}
 		}`
@@ -374,7 +374,7 @@ func Test_encloseFieldsError(t *testing.T) {
 			"error":"lead",
 			"code":"ECL",
 			"fields":{
-				"f0":{},
+				"f0":{"code":"ECGeneric","error":"f0"},
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			}
 		}`
@@ -401,7 +401,7 @@ func Test_encloseFieldsError(t *testing.T) {
 			"error":"lead",
 			"code":"ECL",
 			"fields":{
-				"f0":{},
+				"f0":{"code":"ECGeneric","error":"f0"},
 				"f1":{"error":"f1","code":"ECF1","meta":{"A": 0}}
 			},
 			"meta":{"B": 1}
