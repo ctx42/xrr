@@ -1,3 +1,8 @@
+## v0.12.0 (Fri, 01 May 2026 18:57:15 UTC)
+- refactor(xrr)!: rename and tighten the public API.
+- refactor(xrr)!: rename API, add type aliases, fix docs and marshaling.
+- fix(xrr): serialize field errors via GenericFields marshaler.
+
 ## v0.11.1 (Sun, 26 Apr 2026 13:25:32 UTC)
 - fix: update go.sum.
 
