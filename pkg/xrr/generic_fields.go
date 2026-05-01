@@ -13,10 +13,10 @@ import (
 
 // Compile time checks.
 var (
-	_ error            = (*GenericFields[EDGeneric])(nil)
-	_ Fielder          = (*GenericFields[EDGeneric])(nil)
-	_ json.Marshaler   = (*GenericFields[EDGeneric])(nil)
-	_ json.Unmarshaler = (*GenericFields[EDGeneric])(nil)
+	_ error            = (*GenericFields[edXrr])(nil)
+	_ Fielder          = (*GenericFields[edXrr])(nil)
+	_ json.Marshaler   = (*GenericFields[edXrr])(nil)
+	_ json.Unmarshaler = (*GenericFields[edXrr])(nil)
 )
 
 // GenericFields represents a generic type for creating domain-specific
@@ -25,15 +25,14 @@ type GenericFields[T Domain] struct {
 	fields map[string]error
 }
 
-// NewDomainFields creates a new [GenericFields][T] from the given map. The map
+// NewFields creates a new [GenericFields][T] from the given map. The map
 // is stored directly without copying.
-func NewDomainFields[T Domain](fields map[string]error) *GenericFields[T] {
+func NewFields[T Domain](fields map[string]error) *GenericFields[T] {
 	return &GenericFields[T]{fields: fields}
 }
 
-// FieldsFactory returns a factory function for creating domain-specific
-// field errors.
-func FieldsFactory[T Domain]() func(field string, err error) *GenericFields[T] {
+// FieldsFunc returns a function for creating domain-specific field errors.
+func FieldsFunc[T Domain]() func(field string, err error) *GenericFields[T] {
 	return func(field string, err error) *GenericFields[T] {
 		if err == nil {
 			return nil

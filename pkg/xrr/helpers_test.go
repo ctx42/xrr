@@ -311,7 +311,7 @@ func Test_IsDomain(t *testing.T) {
 		err := New("msg", "ECode")
 
 		// --- When ---
-		have := IsDomain[EDGeneric](err)
+		have := IsDomain[edXrr](err)
 
 		// --- Then ---
 		assert.True(t, have)
@@ -328,9 +328,31 @@ func Test_IsDomain(t *testing.T) {
 		assert.False(t, have)
 	})
 
+	t.Run("fields from matching domain returns true", func(t *testing.T) {
+		// --- Given ---
+		err := NewFieldError("f", errors.New("msg"))
+
+		// --- When ---
+		have := IsDomain[edXrr](err)
+
+		// --- Then ---
+		assert.True(t, have)
+	})
+
+	t.Run("fields from different domain returns false", func(t *testing.T) {
+		// --- Given ---
+		err := NewFieldError("f", errors.New("msg"))
+
+		// --- When ---
+		have := IsDomain[string](err)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
 	t.Run("nil returns false", func(t *testing.T) {
 		// --- When ---
-		have := IsDomain[EDGeneric](nil)
+		have := IsDomain[edXrr](nil)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -341,7 +363,7 @@ func Test_IsDomain(t *testing.T) {
 		err := errors.New("msg")
 
 		// --- When ---
-		have := IsDomain[EDGeneric](err)
+		have := IsDomain[edXrr](err)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -353,7 +375,7 @@ func Test_IsDomain(t *testing.T) {
 		wrapped := errors.Join(inner)
 
 		// --- When ---
-		have := IsDomain[EDGeneric](wrapped)
+		have := IsDomain[edXrr](wrapped)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -527,7 +549,7 @@ func Test_errorAsMap(t *testing.T) {
 	t.Run("error with meta", func(t *testing.T) {
 		// --- Given ---
 		m := map[string]any{"f0": "v0"}
-		e := Wrap[EDGeneric](errors.New("m0"), WithMeta(m))
+		e := Wrap[edXrr](errors.New("m0"), WithMeta(m))
 
 		// --- When ---
 		have := errorAsMap(e)

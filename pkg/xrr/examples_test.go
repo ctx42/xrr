@@ -87,8 +87,9 @@ func ExampleNew_with_slog() {
 }
 
 func ExampleWrap() {
+	type edMyDomain struct{}
 	err := fmt.Errorf("connection refused")
-	wrapped := xrr.Wrap[xrr.EDGeneric](err, xrr.WithCode("EC_CONN"))
+	wrapped := xrr.Wrap[edMyDomain](err, xrr.WithCode("EC_CONN"))
 
 	fmt.Println(errors.Is(wrapped, err))
 	fmt.Println(xrr.GetCode(wrapped))
@@ -134,7 +135,7 @@ func ExampleGenericFields() {
 			xrr.Meta().Str("action", "context").Option(),
 		),
 	}
-	err := xrr.NewFields(fields)
+	err := xrr.NewFieldErrors(fields)
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 	// Output:
@@ -210,7 +211,7 @@ func ExampleEnclose_fields_error() {
 		"a": xrr.New("cause A", "EC_A"),
 		"b": xrr.New("cause B", "EC_B"),
 	}
-	cause := xrr.NewFields(fields)
+	cause := xrr.NewFieldErrors(fields)
 	lead := xrr.New("lead", "EC_LEAD")
 
 	err := xrr.Enclose(cause, lead)

@@ -216,7 +216,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 
 	t.Run("xrr fields error with lead", func(t *testing.T) {
 		// --- Given ---
-		cause := &GenericFields[EDGeneric]{
+		cause := &GenericFields[edXrr]{
 			fields: map[string]error{
 				"f0": errors.New("f0"),
 				"f1": New("f1", "ECF1", Meta().Int("A", 0).Option()),
@@ -243,7 +243,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 
 	t.Run("xrr fields error without lead", func(t *testing.T) {
 		// --- Given ---
-		cause := &GenericFields[EDGeneric]{
+		cause := &GenericFields[edXrr]{
 			fields: map[string]error{
 				"f0": errors.New("f0"),
 				"f1": New("f1", "ECF1", Meta().Int("A", 0).Option()),
@@ -356,7 +356,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 func Test_encloseFieldsError(t *testing.T) {
 	t.Run("lead without metadata", func(t *testing.T) {
 		// --- Given ---
-		cause := &GenericFields[EDGeneric]{
+		cause := &GenericFields[edXrr]{
 			fields: map[string]error{
 				"f0": errors.New("f0"),
 				"f1": New("f1", "ECF1", Meta().Int("A", 0).Option()),
@@ -383,7 +383,7 @@ func Test_encloseFieldsError(t *testing.T) {
 
 	t.Run("lead with metadata", func(t *testing.T) {
 		// --- Given ---
-		cause := &GenericFields[EDGeneric]{
+		cause := &GenericFields[edXrr]{
 			fields: map[string]error{
 				"f0": errors.New("f0"),
 				"f1": New("f1", "ECF1", Meta().Int("A", 0).Option()),

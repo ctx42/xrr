@@ -11,8 +11,8 @@ const ECGeneric = "ECGeneric"
 // Domain represents types that can be used to define error domains.
 type Domain interface{ comparable }
 
-// EDGeneric represents generic error domain used in the xrr package.
-type EDGeneric string
+// edXrr is the marker type for the package's error domain.
+type edXrr struct{}
 
 // Coder is the interface that wraps the ErrorCode method.
 type Coder interface {
@@ -38,40 +38,43 @@ type Metadater interface {
 	MetaAll() map[string]any
 }
 
-// Error constructor functions for the xrr package [EDGeneric] domain.
+// Error constructor functions for the xrr package [edXrr] domain.
 var (
-	newError    = ErrorFactory[EDGeneric]()
-	fieldsError = FieldsFactory[EDGeneric]()
+	newError       = ErrorFunc[edXrr]()
+	newFieldsError = FieldsFunc[edXrr]()
 )
 
-// New creates a new [GenericError[EDGeneric]] error with the given message and
-// error code.
+// Error represents an error in the verax package error domain.
+type Error = GenericError[edXrr]
+
+// New creates a new [Error] with the given message and error code.
 //
 // When [WithCause] is provided:
-//   - If msg is empty, [Error] returns the cause's message directly.
-//   - If msg is non-empty, [Error] returns "msg: cause message".
+//   - If msg is empty, Error() returns the cause's message directly.
+//   - If msg is non-empty, Error() returns "msg: cause message".
 //   - If code is empty and [WithCode] is not provided, the cause's code is
-//     inherited via [GetCode]. Use an explicit code argument or [WithCode] to
-//     override it. Note that [WithCode] must appear after [WithCause] in the
-//     option list to take effect.
+//     inherited via [GetCode]. Pass a non-empty code argument or [WithCode]
+//     to override it.
 //
 // For wrapping without a new message, prefer [Wrap] which makes the intent
-// clearer. New("", code, WithCause(err)) and Wrap[T](err, WithCode(code))
-// produce equivalent results when T is [EDGeneric].
+// clearer.
 func New(msg, code string, opts ...Option) error {
 	return newError(msg, code, opts...)
 }
 
-// NewField returns a new instance of [GenericFields[EDGeneric]] with the given
+// FieldErrors represents a field error in the verax error domain.
+type FieldErrors = GenericFields[edXrr]
+
+// NewFieldError returns a new [FieldErrors] containing the given field and
 // error. Returns nil when the error is nil.
-func NewField(field string, err error) error {
-	return fieldsError(field, err)
+func NewFieldError(field string, err error) *FieldErrors {
+	return newFieldsError(field, err)
 }
 
-// NewFields creates a new [GenericFields[EDGeneric]] from the given map. The
-// map is stored directly without copying.
-func NewFields(fields map[string]error) error {
-	return NewDomainFields[EDGeneric](fields)
+// NewFieldErrors creates a new [FieldErrors] from the given map.
+// The map is stored directly without copying.
+func NewFieldErrors(fields map[string]error) *FieldErrors {
+	return NewFields[edXrr](fields)
 }
 
 // Wrap wraps an error in a [GenericError[T]] instance, applying the given

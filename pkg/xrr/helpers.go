@@ -79,10 +79,16 @@ func DefaultCode(otherwise string, codes ...string) string {
 	return otherwise
 }
 
-// IsDomain returns true if err is a [GenericError] of domain T.
+// IsDomain returns true if err is a [GenericError] or [GenericFields] of
+// domain T.
 func IsDomain[T Domain](err error) bool {
-	_, ok := err.(*GenericError[T])
-	return ok
+	if _, ok := err.(*GenericError[T]); ok {
+		return true
+	}
+	if _, ok := err.(*GenericFields[T]); ok {
+		return true
+	}
+	return false
 }
 
 // isNil returns true if v is nil or v is a typed nil interface value.

@@ -221,7 +221,7 @@ fields := map[string]error{
 		xrr.Meta().Str("action", "context").Option(),
 	),
 }
-err := xrr.NewFields(fields)
+err := xrr.NewFieldErrors(fields)
 
 fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // Output:
@@ -266,10 +266,10 @@ filtered := fs.Filter()
 fieldErr := fs.Get("address.city")
 ```
 
-To wrap a single error under a field name, use `NewField`:
+To wrap a single error under a field name, use `NewFieldError`:
 
 ```go
-err := xrr.NewField("email", xrr.New("invalid email", "EC_INVALID_EMAIL"))
+err := xrr.NewFieldError("email", xrr.New("invalid email", "EC_INVALID_EMAIL"))
 ```
 
 # Domain-Specific Errors
@@ -291,10 +291,10 @@ type (
     PaymentFieldsError = xrr.GenericFields[edPayment]
 )
 
-// Package-level factories — unexported; wrap them in named constructors.
+// Package-level error constructors; wrap them in named constructors.
 var (
-    newPaymentError = xrr.ErrorFactory[edPayment]()
-    paymentFieldErr = xrr.FieldsFactory[edPayment]()
+    newPaymentError       = xrr.ErrorFunc[edPayment]()
+    newPaymentFieldsError = xrr.FieldsFunc[edPayment]()
 )
 
 func NewPaymentError(msg, code string, opts ...xrr.Option) error {
@@ -438,7 +438,7 @@ fields := map[string]error{
 	"a": xrr.New("cause A", "EC_A"),
 	"b": xrr.New("cause B", "EC_B"),
 }
-cause := xrr.NewFields(fields)
+cause := xrr.NewFieldErrors(fields)
 lead := xrr.New("lead", "EC_LEAD")
 
 err := xrr.Enclose(cause, lead)

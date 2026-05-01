@@ -16,7 +16,7 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode")
 
 		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[EDGeneric]{}, err)
+		x, _ := assert.SameType(t, &GenericError[edXrr]{}, err)
 		assert.Equal(t, "msg", x.Error())
 		assert.Equal(t, "ECode", x.code)
 		assert.Nil(t, x.meta)
@@ -30,7 +30,7 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode", opt)
 
 		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[EDGeneric]{}, err)
+		x, _ := assert.SameType(t, &GenericError[edXrr]{}, err)
 		assert.Equal(t, "msg", x.Error())
 		assert.Equal(t, "ECode", x.code)
 		assert.Equal(t, map[string]any{"A": 1, "B": 2}, x.meta)
@@ -44,45 +44,45 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode", opt)
 
 		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[EDGeneric]{}, err)
+		x, _ := assert.SameType(t, &GenericError[edXrr]{}, err)
 		assert.Equal(t, "msg", x.Error())
 		assert.Equal(t, "MyCode", x.code)
 	})
 }
 
-func Test_NewField(t *testing.T) {
+func Test_NewFieldError(t *testing.T) {
 	t.Run("not nil error", func(t *testing.T) {
 		// --- Given ---
 		err := errors.New("msg")
 
 		// --- When ---
-		have := NewField("name", err)
+		have := NewFieldError("name", err)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericFields[EDGeneric]{}, have)
+		e, _ := assert.SameType(t, &GenericFields[edXrr]{}, have)
 		assert.Equal(t, 1, e.Len())
 		assert.ErrorEqual(t, "name: msg", have)
 	})
 
 	t.Run("nil error", func(t *testing.T) {
 		// --- When ---
-		have := NewField("name", nil)
+		have := NewFieldError("name", nil)
 
 		// --- Then ---
 		assert.Nil(t, have)
 	})
 }
 
-func Test_NewFields(t *testing.T) {
+func Test_NewFieldErrors(t *testing.T) {
 	t.Run("creates EDGeneric fields from map", func(t *testing.T) {
 		// --- Given ---
 		m := map[string]error{"f0": errors.New("em0")}
 
 		// --- When ---
-		have := NewFields(m)
+		have := NewFieldErrors(m)
 
 		// --- Then ---
-		fs, _ := assert.SameType(t, &GenericFields[EDGeneric]{}, have)
+		fs, _ := assert.SameType(t, &GenericFields[edXrr]{}, have)
 		assert.Equal(t, 1, fs.Len())
 		assert.ErrorEqual(t, "em0", fs.fields["f0"])
 	})
@@ -92,10 +92,10 @@ func Test_NewFields(t *testing.T) {
 		m := map[string]error{"f0": errors.New("em0")}
 
 		// --- When ---
-		have := NewFields(m)
+		have := NewFieldErrors(m)
 
 		// --- Then ---
-		fs, _ := assert.SameType(t, &GenericFields[EDGeneric]{}, have)
+		fs, _ := assert.SameType(t, &GenericFields[edXrr]{}, have)
 		m["f1"] = errors.New("em1")
 		assert.Equal(t, 2, fs.Len())
 	})
@@ -112,7 +112,7 @@ func Test_Wrap(t *testing.T) {
 
 	t.Run("wrapping typed nil returns nil", func(t *testing.T) {
 		// --- Given ---
-		var e *GenericError[EDGeneric]
+		var e *GenericError[edXrr]
 
 		// --- When ---
 		err := Wrap[string](e)
@@ -190,10 +190,10 @@ func Test_SetCode(t *testing.T) {
 		e := errors.New("error")
 
 		// --- When ---
-		err := SetCode[EDGeneric](e, "ECode")
+		err := SetCode[edXrr](e, "ECode")
 
 		// --- Then ---
-		var xe *GenericError[EDGeneric]
+		var xe *GenericError[edXrr]
 		assert.Type(t, &xe, err)
 		assert.Same(t, e, xe.Unwrap())
 		assert.Equal(t, "ECode", xe.ErrorCode())
@@ -201,7 +201,7 @@ func Test_SetCode(t *testing.T) {
 
 	t.Run("nil error", func(t *testing.T) {
 		// --- When ---
-		err := SetCode[EDGeneric](nil, "ECode")
+		err := SetCode[edXrr](nil, "ECode")
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -212,7 +212,7 @@ func Test_SetCode(t *testing.T) {
 		e := New("error", "ECode")
 
 		// --- When ---
-		err := SetCode[EDGeneric](e, "ECode")
+		err := SetCode[edXrr](e, "ECode")
 
 		// --- Then ---
 		assert.Same(t, e, err)
@@ -223,7 +223,7 @@ func Test_SetCode(t *testing.T) {
 		e := errors.New("error")
 
 		// --- When ---
-		err := SetCode[EDGeneric](e, "")
+		err := SetCode[edXrr](e, "")
 
 		// --- Then ---
 		assert.Same(t, e, err)

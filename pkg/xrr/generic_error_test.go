@@ -15,13 +15,13 @@ import (
 func Test_ErrorFactory(t *testing.T) {
 	t.Run("without options", func(t *testing.T) {
 		// --- Given ---
-		have := ErrorFactory[EDGeneric]()
+		have := ErrorFunc[edXrr]()
 
 		// --- When ---
 		err := have("msg", "ECode")
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDGeneric]{}, err)
+		e, _ := assert.SameType(t, &GenericError[edXrr]{}, err)
 		assert.Equal(t, "msg", e.msg)
 		assert.Equal(t, "ECode", e.code)
 		assert.Nil(t, e.meta)
@@ -31,13 +31,13 @@ func Test_ErrorFactory(t *testing.T) {
 	t.Run("with options", func(t *testing.T) {
 		// --- Given ---
 		m := map[string]any{"A": 1, "B": func() {}}
-		have := ErrorFactory[EDGeneric]()
+		have := ErrorFunc[edXrr]()
 
 		// --- When ---
 		err := have("msg", "ECode", WithMeta(m))
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDGeneric]{}, err)
+		e, _ := assert.SameType(t, &GenericError[edXrr]{}, err)
 		assert.Equal(t, "msg", e.msg)
 		assert.Equal(t, "ECode", e.code)
 		assert.NotSame(t, m, e.meta)
@@ -60,7 +60,7 @@ func Test_GenericError_Error(t *testing.T) {
 
 	t.Run("wrapped error", func(t *testing.T) {
 		// --- Given ---
-		e := Wrap[EDGeneric](errors.New("msg"), WithCode("ECode"))
+		e := Wrap[edXrr](errors.New("msg"), WithCode("ECode"))
 
 		// --- When ---
 		have := e.Error()
@@ -126,8 +126,8 @@ func Test_GenericError_Error(t *testing.T) {
 
 	t.Run("instance with wrapped error", func(t *testing.T) {
 		// --- Given ---
-		ne := ErrorFactory[string]()
-		e := ne("msg", "ECode", WithCause(errors.New("cause")))
+		errFunc := ErrorFunc[string]()
+		e := errFunc("msg", "ECode", WithCause(errors.New("cause")))
 
 		// --- When ---
 		have := e.Error()
@@ -373,7 +373,7 @@ func Test_GenericError_Format(t *testing.T) {
 	t.Run("wrapped errors", func(t *testing.T) {
 		// --- Given ---
 		e0 := New("msg0", "ECode0")
-		e1 := Wrap[EDGeneric](e0, WithCode("ECode1"))
+		e1 := Wrap[edXrr](e0, WithCode("ECode1"))
 		e2 := Wrap[string](e1, WithCode("ECode2"))
 
 		// --- When ---
@@ -414,7 +414,7 @@ func Test_GenericError_Format_tabular(t *testing.T) {
 			"msg",
 			"ECode",
 			"%T",
-			`*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDGeneric]`,
+			`*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.edXrr]`,
 		},
 	}
 

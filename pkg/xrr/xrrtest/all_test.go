@@ -6,8 +6,8 @@ import (
 	"github.com/ctx42/xrr/pkg/xrr"
 )
 
-// TstDomain is a test-only error domain distinct from [xrr.EDGeneric].
-type TstDomain string
+// edXrrTest is the marker type for the package's error domain.
+type edXrrTest struct{}
 
 // TstError returns a test error with metadata.
 func TstError() error {
@@ -17,19 +17,19 @@ func TstError() error {
 	e := xrr.New("msg", "EC", m)
 
 	m = xrr.Meta().Int("A", 2).Int("int", 2).Option()
-	e = xrr.Wrap[xrr.EDGeneric](e, m)
+	e = xrr.Wrap[edXrrTest](e, m)
 
 	m = xrr.Meta().Int("A", 3).Int64("int64", 3).Option()
-	e = xrr.Wrap[xrr.EDGeneric](e, m)
+	e = xrr.Wrap[edXrrTest](e, m)
 
 	m = xrr.Meta().Int("A", 4).Float64("float64", 4).Option()
-	e = xrr.Wrap[xrr.EDGeneric](e, m)
+	e = xrr.Wrap[edXrrTest](e, m)
 
 	m = xrr.Meta().Int("A", 5).Bool("bool", true).Option()
-	e = xrr.Wrap[xrr.EDGeneric](e, m)
+	e = xrr.Wrap[edXrrTest](e, m)
 
 	m = xrr.Meta().Int("A", 6).Time("tim", tim).Option()
-	e = xrr.Wrap[xrr.EDGeneric](e, m)
+	e = xrr.Wrap[edXrrTest](e, m)
 
 	return e
 }
