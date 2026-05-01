@@ -32,7 +32,7 @@ import (
 //	  ]
 //	}
 //
-// - the `cause` is an instance of [Fields] with `lead` error provided:
+// - the `cause` is an instance of [Fielder] with `lead` error provided:
 //
 //	{
 //	  "error": "lead",
@@ -42,7 +42,7 @@ import (
 //	  }
 //	}
 //
-// - the `cause` is instance of [Fields] and `lead` error is not provided:
+// - the `cause` is a [Fielder] and `lead` error is not provided:
 //
 //	{
 //	  "error": "fields error",

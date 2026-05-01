@@ -11,11 +11,11 @@ import (
 
 // Compile time checks.
 var (
-	_ error            = (*GenericError[edXrr])(nil)
-	_ Coder            = (*GenericError[edXrr])(nil)
-	_ Metadater        = (*GenericError[edXrr])(nil)
-	_ json.Marshaler   = (*GenericError[edXrr])(nil)
-	_ json.Unmarshaler = (*GenericError[edXrr])(nil)
+	_ error            = (*GenericError[EDXrr])(nil)
+	_ Coder            = (*GenericError[EDXrr])(nil)
+	_ Metadater        = (*GenericError[EDXrr])(nil)
+	_ json.Marshaler   = (*GenericError[EDXrr])(nil)
+	_ json.Unmarshaler = (*GenericError[EDXrr])(nil)
 )
 
 // GenericError represents a generic type for creating domain-specific errors.
@@ -30,13 +30,12 @@ type GenericError[T Domain] struct {
 func ErrorFunc[T Domain]() func(msg, code string, opts ...Option) *GenericError[T] {
 	return func(msg, code string, opts ...Option) *GenericError[T] {
 		ops := Options{code: code}.Set(opts...)
-		err := &GenericError[T]{
+		return &GenericError[T]{
 			msg:  msg,
 			code: ops.code,
 			meta: ops.meta,
 			err:  ops.err,
 		}
-		return err
 	}
 }
 
@@ -83,7 +82,7 @@ func (e *GenericError[T]) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals JSON representation of the [GenericError].
 //
-// The minimal valid JSON representation for an [GenericError] is
+// The minimal valid JSON representation for a [GenericError] is
 //
 //	{"error": "message"}
 //

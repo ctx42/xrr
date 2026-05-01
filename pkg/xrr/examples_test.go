@@ -88,7 +88,7 @@ func ExampleNew_with_slog() {
 
 func ExampleWrap() {
 	type edMyDomain struct{}
-	err := fmt.Errorf("connection refused")
+	err := fmt.Errorf("connection refused") // Some action error.
 	wrapped := xrr.Wrap[edMyDomain](err, xrr.WithCode("EC_CONN"))
 
 	fmt.Println(errors.Is(wrapped, err))
@@ -229,6 +229,88 @@ func ExampleEnclose_fields_error() {
 	//     "b": {
 	//       "code": "EC_B",
 	//       "error": "cause B"
+	//     }
+	//   }
+	// }
+}
+
+func ExampleSplit() {
+	joined := errors.Join(
+		xrr.New("first", "EC_FIRST"),
+		xrr.New("second", "EC_SECOND"),
+	)
+
+	for _, p := range xrr.Split(joined) {
+		fmt.Println(p)
+	}
+	// Output:
+	// first
+	// second
+}
+
+func ExampleJoin() {
+	combined := xrr.Join(
+		xrr.New("first", "EC_FIRST"),
+		nil,
+		xrr.New("second", "EC_SECOND"),
+	)
+
+	fmt.Println(xrr.IsJoined(combined))
+	for _, p := range xrr.Split(combined) {
+		fmt.Println(p)
+	}
+	// Output:
+	// true
+	// first
+	// second
+}
+
+func ExampleIsJoined() {
+	single := xrr.New("single error", "EC_SINGLE")
+	joined := errors.Join(
+		xrr.New("first", "EC_FIRST"),
+		xrr.New("second", "EC_SECOND"),
+	)
+
+	fmt.Println(xrr.IsJoined(single))
+	fmt.Println(xrr.IsJoined(joined))
+	// Output:
+	// false
+	// true
+}
+
+func ExampleDefaultCode() {
+	code := xrr.DefaultCode("ECFallback", "", "EC_FOUND", "EC_IGNORED")
+
+	fmt.Println(code)
+	// Output:
+	// EC_FOUND
+}
+
+func ExampleErrInvJSONError() {
+	var e xrr.Error
+	err := json.Unmarshal([]byte(`{"status": "ok"}`), &e)
+
+	fmt.Println(errors.Is(err, xrr.ErrInvJSONError))
+	// Output:
+	// true
+}
+
+func ExampleErrFields() {
+	cause := xrr.NewFieldErrors(map[string]error{
+		"email": xrr.New("invalid email", "EC_INVALID_EMAIL"),
+	})
+	err := xrr.Enclose(cause)
+
+	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+	// Output:
+	// {
+	//   "code": "ECFields",
+	//   "error": "fields error",
+	//   "fields": {
+	//     "email": {
+	//       "code": "EC_INVALID_EMAIL",
+	//       "error": "invalid email"
 	//     }
 	//   }
 	// }

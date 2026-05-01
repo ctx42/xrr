@@ -2,10 +2,16 @@
 [![GoDoc](https://img.shields.io/badge/api-Godoc-blue.svg)](https://pkg.go.dev/github.com/ctx42/xrr)
 ![Tests](https://github.com/ctx42/xrr/actions/workflows/go.yml/badge.svg?branch=master)
 
-Standard Go errors carry only a message string. The `xrr` module creates
-errors with string codes and optional typed metadata, while remaining
-fully compatible with the standard `error` interface — `errors.Is`,
-`errors.As`, and wrapping all work as expected.
+Standard Go errors carry only a message string. The `xrr` module extends
+errors with three additions, all compatible with the standard `error`
+interface — `errors.Is`, `errors.As`, and wrapping all work as expected:
+
+- **Error codes** — a stable string identifier alongside the message.
+- **Typed metadata** — key-value pairs attached to any error and retrieved by type.
+- **Domain types** — a generics-based pattern for defining distinct error
+  types per subsystem. Other packages instantiate `xrr`'s generic types
+  with their own domain marker and inherit marshaling, metadata, and error
+  traversal with no reimplementation.
 
 ```bash
 go get github.com/ctx42/xrr
@@ -17,6 +23,7 @@ go get github.com/ctx42/xrr
   * [Error Metadata](#error-metadata)
   * [Error Marshaling](#error-marshaling)
   * [Structured Logging](#structured-logging)
+  * [Domain Types](#domain-types)
 * [Wrapping Errors](#wrapping-errors)
 * [Inspecting Error Trees](#inspecting-error-trees)
 * [Field Errors](#field-errors)
@@ -77,11 +84,8 @@ When creating a new error from an existing one, use `WithMetaFrom` to
 carry its metadata forward without copying the map manually:
 
 ```go
-original := xrr.New("db timeout", "EC_TIMEOUT",
-    xrr.Meta().Str("query", "SELECT ...").Option())
-
-wrapped := xrr.New("request failed", "EC_REQUEST",
-    xrr.WithMetaFrom(original))
+original := xrr.New("db timeout", "EC_TIMEOUT", xrr.Meta().Str("query", "SELECT ...").Option())
+wrapped := xrr.New("request failed", "EC_REQUEST", xrr.WithMetaFrom(original))
 ```
 
 ## Error Marshaling
@@ -150,6 +154,24 @@ slog.New(handler).Error(
 // {"level":"ERROR","msg":"user not found","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"user_id":"u-123"}}
 ```
 
+## Domain Types
+
+For larger codebases, define a distinct error type per subsystem so
+callers can identify the origin without parsing codes:
+
+```go
+type edPayment struct{}                          // unexported domain marker
+type PaymentError = xrr.GenericError[edPayment]  // typed alias
+
+var newPaymentError = xrr.ErrorFunc[edPayment]()
+
+func NewPaymentError(msg, code string, opts ...xrr.Option) error {
+    return newPaymentError(msg, code, opts...)
+}
+```
+
+See [Domain-Specific Errors](#domain-specific-errors) for the full pattern.
+
 # Wrapping Errors
 
 When an error originates outside your code — from the standard library or
@@ -185,6 +207,24 @@ fmt.Println(wrapped.Error())
 // true
 // EC_CONN
 // dial failed: connection refused
+```
+
+When you only need to attach a code — no new message — use `Wrap` directly.
+It is more explicit about intent than `New` with an empty message:
+
+<!-- gmdoceg:pkg/xrr/ExampleWrap -->
+```go
+type edMyDomain struct{}
+err := fmt.Errorf("connection refused") // Some action error.
+wrapped := xrr.Wrap[edMyDomain](err, xrr.WithCode("EC_CONN"))
+
+fmt.Println(errors.Is(wrapped, err))
+fmt.Println(xrr.GetCode(wrapped))
+fmt.Println(wrapped.Error())
+// Output:
+// true
+// EC_CONN
+// connection refused
 ```
 
 # Inspecting Error Trees
@@ -254,10 +294,12 @@ results from multiple sources — the following helpers are available:
 
 ```go
 // Merge two field maps; later values win on key conflicts.
-merged := xrr.MergeFields[xrr.EDGeneric](fieldsA, fieldsB)
+// Pass your domain marker type as the type parameter.
+merged := xrr.MergeFields[edPayment](fieldsA, fieldsB)
 
 // Flatten nested field maps to dot-notation keys.
-flat := xrr.Flatten[xrr.EDGeneric](nested)
+// {"address": {"city": cityErr}} becomes {"address.city": cityErr}.
+flat := xrr.Flatten[edPayment](nested)
 
 // Remove nil entries.
 filtered := fs.Filter()
@@ -290,8 +332,12 @@ type (
     PaymentError       = xrr.GenericError[edPayment]
     PaymentFieldsError = xrr.GenericFields[edPayment]
 )
+```
 
-// Package-level error constructors; wrap them in named constructors.
+Bind constructors to the domain using `ErrorFunc` and `FieldsFunc`, then
+expose them through named public functions:
+
+```go
 var (
     newPaymentError       = xrr.ErrorFunc[edPayment]()
     newPaymentFieldsError = xrr.FieldsFunc[edPayment]()
@@ -319,40 +365,102 @@ if IsPaymentError(err) {
 # Error Utilities
 
 `xrr` provides several helpers that complement the standard `errors`
-package when working with joined errors and codes:
+package when working with joined errors and codes.
 
+`Split` breaks a joined error into its parts; `Join` assembles them,
+skipping nils:
+
+<!-- gmdoceg:pkg/xrr/ExampleJoin -->
 ```go
-// Split a joined error into its constituent errors.
-// Returns []error{err} for non-joined errors, nil for nil.
-parts := xrr.Split(err)
+combined := xrr.Join(
+	xrr.New("first", "EC_FIRST"),
+	nil,
+	xrr.New("second", "EC_SECOND"),
+)
 
-// Join errors, skipping nils. Returns the single error directly
-// when only one non-nil error is present.
-combined := xrr.Join(err1, err2, err3)
-
-// Check whether err was created by errors.Join.
-if xrr.IsJoined(err) { ... }
+fmt.Println(xrr.IsJoined(combined))
+for _, p := range xrr.Split(combined) {
+	fmt.Println(p)
+}
+// Output:
+// true
+// first
+// second
 ```
 
-When selecting a code from multiple candidates, `DefaultCode` returns
-the first non-empty value, falling back to the provided default:
+`IsJoined` distinguishes a joined error from a single one:
 
+<!-- gmdoceg:pkg/xrr/ExampleIsJoined -->
 ```go
-// Return the first non-empty code from the list, or the fallback.
-code := xrr.DefaultCode("ECGeneric", codeA, codeB)
+single := xrr.New("single error", "EC_SINGLE")
+joined := errors.Join(
+	xrr.New("first", "EC_FIRST"),
+	xrr.New("second", "EC_SECOND"),
+)
+
+fmt.Println(xrr.IsJoined(single))
+fmt.Println(xrr.IsJoined(joined))
+// Output:
+// false
+// true
+```
+
+`DefaultCode` returns the first non-empty code from a list, falling
+back to the provided default:
+
+<!-- gmdoceg:pkg/xrr/ExampleDefaultCode -->
+```go
+code := xrr.DefaultCode("ECFallback", "", "EC_FOUND", "EC_IGNORED")
+
+fmt.Println(code)
+// Output:
+// EC_FOUND
 ```
 
 # Sentinel Errors
 
 The library defines sentinel errors for conditions it detects internally.
-Use them with `errors.Is` to handle specific failure cases:
 
+`ErrInvJSONError` is returned when unmarshaling JSON that is syntactically
+valid but does not carry an `"error"` field — making it an invalid
+`GenericError` representation:
+
+<!-- gmdoceg:pkg/xrr/ExampleErrInvJSONError -->
 ```go
-xrr.ErrInvJSON      // invalid JSON (code: ECInvJSON)
-xrr.ErrInvJSONError // JSON is valid but not a GenericError representation
-// (code: ECInvJSONError)
-xrr.ErrFields // generic field error (code: ECFields)
+var e xrr.Error
+err := json.Unmarshal([]byte(`{"status": "ok"}`), &e)
+
+fmt.Println(errors.Is(err, xrr.ErrInvJSONError))
+// Output:
+// true
 ```
+
+`ErrFields` is used by `Enclose` as the default lead when the cause
+implements `Fielder` and no explicit lead is provided:
+
+<!-- gmdoceg:pkg/xrr/ExampleErrFields -->
+```go
+cause := xrr.NewFieldErrors(map[string]error{
+	"email": xrr.New("invalid email", "EC_INVALID_EMAIL"),
+})
+err := xrr.Enclose(cause)
+
+fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+// Output:
+// {
+//   "code": "ECFields",
+//   "error": "fields error",
+//   "fields": {
+//     "email": {
+//       "code": "EC_INVALID_EMAIL",
+//       "error": "invalid email"
+//     }
+//   }
+// }
+```
+
+`ErrInvJSON` (code: `ECInvJSON`) is a sentinel for callers to signal
+JSON format errors in their own code.
 
 # Envelope
 
@@ -495,7 +603,7 @@ assertions in test code:
 import "github.com/ctx42/xrr/pkg/xrr/xrrtest"
 
 // Assert error type and code.
-ge, ok := xrrtest.AssertError[xrr.EDGeneric](t, err)
+ge, ok := xrrtest.AssertError[edPayment](t, err)
 xrrtest.AssertCode(t, "EC_USER_NOT_FOUND", err)
 xrrtest.AssertEqual(t, "user not found (EC_USER_NOT_FOUND)", err)
 

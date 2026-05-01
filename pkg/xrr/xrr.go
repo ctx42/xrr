@@ -11,8 +11,8 @@ const ECGeneric = "ECGeneric"
 // Domain represents types that can be used to define error domains.
 type Domain interface{ comparable }
 
-// edXrr is the marker type for the package's error domain.
-type edXrr struct{}
+// EDXrr is the marker type for the package's error domain.
+type EDXrr struct{}
 
 // Coder is the interface that wraps the ErrorCode method.
 type Coder interface {
@@ -40,12 +40,12 @@ type Metadater interface {
 
 // Error constructor functions for the xrr package [edXrr] domain.
 var (
-	newError       = ErrorFunc[edXrr]()
-	newFieldsError = FieldsFunc[edXrr]()
+	newError       = ErrorFunc[EDXrr]()
+	newFieldsError = FieldsFunc[EDXrr]()
 )
 
-// Error represents an error in the verax package error domain.
-type Error = GenericError[edXrr]
+// Error represents an error in the xrr package error domain.
+type Error = GenericError[EDXrr]
 
 // New creates a new [Error] with the given message and error code.
 //
@@ -62,8 +62,8 @@ func New(msg, code string, opts ...Option) error {
 	return newError(msg, code, opts...)
 }
 
-// FieldErrors represents a field error in the verax error domain.
-type FieldErrors = GenericFields[edXrr]
+// FieldErrors represents a field error in the xrr error domain.
+type FieldErrors = GenericFields[EDXrr]
 
 // NewFieldError returns a new [FieldErrors] containing the given field and
 // error. Returns nil when the error is nil.
@@ -74,7 +74,7 @@ func NewFieldError(field string, err error) *FieldErrors {
 // NewFieldErrors creates a new [FieldErrors] from the given map.
 // The map is stored directly without copying.
 func NewFieldErrors(fields map[string]error) *FieldErrors {
-	return NewFields[edXrr](fields)
+	return NewFields[EDXrr](fields)
 }
 
 // Wrap wraps an error in a [GenericError[T]] instance, applying the given
@@ -93,7 +93,6 @@ func Wrap[T Domain](err error, opts ...Option) error {
 	}
 	ops := Options{code: GetCode(err)}.Set(opts...)
 	return &GenericError[T]{
-		msg:  "",
 		code: ops.code,
 		meta: ops.meta,
 		err:  err,

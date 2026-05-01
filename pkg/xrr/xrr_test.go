@@ -16,7 +16,7 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode")
 
 		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[edXrr]{}, err)
+		x, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.Equal(t, "msg", x.Error())
 		assert.Equal(t, "ECode", x.code)
 		assert.Nil(t, x.meta)
@@ -30,7 +30,7 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode", opt)
 
 		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[edXrr]{}, err)
+		x, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.Equal(t, "msg", x.Error())
 		assert.Equal(t, "ECode", x.code)
 		assert.Equal(t, map[string]any{"A": 1, "B": 2}, x.meta)
@@ -44,7 +44,7 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode", opt)
 
 		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[edXrr]{}, err)
+		x, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.Equal(t, "msg", x.Error())
 		assert.Equal(t, "MyCode", x.code)
 	})
@@ -59,7 +59,7 @@ func Test_NewFieldError(t *testing.T) {
 		have := NewFieldError("name", err)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericFields[edXrr]{}, have)
+		e, _ := assert.SameType(t, &GenericFields[EDXrr]{}, have)
 		assert.Equal(t, 1, e.Len())
 		assert.ErrorEqual(t, "name: msg", have)
 	})
@@ -82,7 +82,7 @@ func Test_NewFieldErrors(t *testing.T) {
 		have := NewFieldErrors(m)
 
 		// --- Then ---
-		fs, _ := assert.SameType(t, &GenericFields[edXrr]{}, have)
+		fs, _ := assert.SameType(t, &GenericFields[EDXrr]{}, have)
 		assert.Equal(t, 1, fs.Len())
 		assert.ErrorEqual(t, "em0", fs.fields["f0"])
 	})
@@ -95,7 +95,7 @@ func Test_NewFieldErrors(t *testing.T) {
 		have := NewFieldErrors(m)
 
 		// --- Then ---
-		fs, _ := assert.SameType(t, &GenericFields[edXrr]{}, have)
+		fs, _ := assert.SameType(t, &GenericFields[EDXrr]{}, have)
 		m["f1"] = errors.New("em1")
 		assert.Equal(t, 2, fs.Len())
 	})
@@ -112,7 +112,7 @@ func Test_Wrap(t *testing.T) {
 
 	t.Run("wrapping typed nil returns nil", func(t *testing.T) {
 		// --- Given ---
-		var e *GenericError[edXrr]
+		var e *GenericError[EDXrr]
 
 		// --- When ---
 		err := Wrap[string](e)
@@ -190,10 +190,10 @@ func Test_SetCode(t *testing.T) {
 		e := errors.New("error")
 
 		// --- When ---
-		err := SetCode[edXrr](e, "ECode")
+		err := SetCode[EDXrr](e, "ECode")
 
 		// --- Then ---
-		var xe *GenericError[edXrr]
+		var xe *GenericError[EDXrr]
 		assert.Type(t, &xe, err)
 		assert.Same(t, e, xe.Unwrap())
 		assert.Equal(t, "ECode", xe.ErrorCode())
@@ -201,7 +201,7 @@ func Test_SetCode(t *testing.T) {
 
 	t.Run("nil error", func(t *testing.T) {
 		// --- When ---
-		err := SetCode[edXrr](nil, "ECode")
+		err := SetCode[EDXrr](nil, "ECode")
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -212,7 +212,7 @@ func Test_SetCode(t *testing.T) {
 		e := New("error", "ECode")
 
 		// --- When ---
-		err := SetCode[edXrr](e, "ECode")
+		err := SetCode[EDXrr](e, "ECode")
 
 		// --- Then ---
 		assert.Same(t, e, err)
@@ -223,7 +223,7 @@ func Test_SetCode(t *testing.T) {
 		e := errors.New("error")
 
 		// --- When ---
-		err := SetCode[edXrr](e, "")
+		err := SetCode[EDXrr](e, "")
 
 		// --- Then ---
 		assert.Same(t, e, err)

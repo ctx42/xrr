@@ -3,6 +3,7 @@
 
 package xrr
 
+// Sentinel error codes.
 const (
 	// ECInvJSON represents invalid JSON error code.
 	ECInvJSON = "ECInvJSON"
@@ -11,10 +12,11 @@ const (
 	// invalid syntax or structure to be the [GenericError] representation.
 	ECInvJSONError = "ECInvJSONError"
 
-	// ECFields represents generic [Fields] error code.
+	// ECFields represents the [ErrFields] error code.
 	ECFields = "ECFields"
 )
 
+// Sentinel errors.
 var (
 	// ErrInvJSON represents an error indicating JSON structure or format error.
 	ErrInvJSON = New("invalid JSON", ECInvJSON)
@@ -23,6 +25,7 @@ var (
 	// syntax or structure to be the [GenericError] representation.
 	ErrInvJSONError = New("invalid JSON error representation", ECInvJSONError)
 
-	// ErrFields represents generic [Fields] error.
+	// ErrFields is the default lead error used by [Enclose] when the cause
+	// implements [Fielder] and no explicit lead error is provided.
 	ErrFields = New("fields error", ECFields)
 )

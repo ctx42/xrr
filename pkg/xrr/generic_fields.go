@@ -13,10 +13,10 @@ import (
 
 // Compile time checks.
 var (
-	_ error            = (*GenericFields[edXrr])(nil)
-	_ Fielder          = (*GenericFields[edXrr])(nil)
-	_ json.Marshaler   = (*GenericFields[edXrr])(nil)
-	_ json.Unmarshaler = (*GenericFields[edXrr])(nil)
+	_ error            = (*GenericFields[EDXrr])(nil)
+	_ Fielder          = (*GenericFields[EDXrr])(nil)
+	_ json.Marshaler   = (*GenericFields[EDXrr])(nil)
+	_ json.Unmarshaler = (*GenericFields[EDXrr])(nil)
 )
 
 // GenericFields represents a generic type for creating domain-specific

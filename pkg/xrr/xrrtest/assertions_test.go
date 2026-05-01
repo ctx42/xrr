@@ -1069,7 +1069,7 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.edXrr] length:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDXrr] length:\n" +
 			"    want: 3\n" +
 			"    have: 2\n" +
 			"  fields:\n" +
@@ -1158,7 +1158,7 @@ func Test_AssertHasField(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.edXrr] length:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDXrr] length:\n" +
 			"     key: \"f1\"\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
@@ -1241,7 +1241,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.edXrr] length:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDXrr] length:\n" +
 			"     key: \"f2\"\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
@@ -1455,7 +1455,7 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.edXrr] length:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDXrr] length:\n" +
 			"     key: \"other\"\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
@@ -1484,8 +1484,8 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.ExpectError()
 		wMsg := "" +
 			"[xrr] expected error to have a target in its tree:\n" +
-			"    want: (*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.edXrr]) m1\n" +
-			"    have: (*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.edXrr]) m1\n" +
+			"    want: (*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDXrr]) m1\n" +
+			"    have: (*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDXrr]) m1\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
 			"            \"f1\": \"m1\",\n" +
