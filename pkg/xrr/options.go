@@ -45,9 +45,9 @@ func WithMeta(meta map[string]any) Option {
 	}
 }
 
-// WithMetaFrom is an option for [New] and [Wrap] setting the metadata from a
-// [Metadater] instance. The types that are not supported by the [GenericError]
-// metadata are not going to be added.
+// WithMetaFrom is an option for [New] and [WrapUsing] setting the metadata
+// from a [Metadater] instance. The types that are not supported by the
+// [GenericError] metadata are not going to be added.
 func WithMetaFrom(src Metadater) Option {
 	return WithMeta(src.MetaAll())
 }

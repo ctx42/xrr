@@ -86,10 +86,23 @@ func ExampleNew_with_slog() {
 	// {"level":"ERROR","msg":"user not found","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"user_id":"u-123"}}
 }
 
-func ExampleWrap() {
+func ExampleWrapUsing() {
 	type edMyDomain struct{}
 	err := fmt.Errorf("connection refused") // Some action error.
-	wrapped := xrr.Wrap[edMyDomain](err, xrr.WithCode("EC_CONN"))
+	wrapped := xrr.WrapUsing[edMyDomain](err, xrr.WithCode("EC_CONN"))
+
+	fmt.Println(errors.Is(wrapped, err))
+	fmt.Println(xrr.GetCode(wrapped))
+	fmt.Println(wrapped.Error())
+	// Output:
+	// true
+	// EC_CONN
+	// connection refused
+}
+
+func ExampleWrap() {
+	err := fmt.Errorf("connection refused")
+	wrapped := xrr.Wrap(err, xrr.WithCode("EC_CONN"))
 
 	fmt.Println(errors.Is(wrapped, err))
 	fmt.Println(xrr.GetCode(wrapped))

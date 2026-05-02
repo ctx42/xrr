@@ -174,15 +174,14 @@ See [Domain-Specific Errors](#domain-specific-errors) for the full pattern.
 
 # Wrapping Errors
 
-When an error originates outside your code — from the standard library or
-a third-party package — use `New` with `WithCause` to attach a code without
-losing the original error in the chain. Pass an empty message to expose the
-cause's message directly:
+Use `Wrap` to annotate an existing error with a code and optional metadata,
+without changing its message. The original error remains accessible in the
+chain for `errors.Is` and `errors.As`:
 
-<!-- gmdoceg:pkg/xrr/ExampleNew_withCause -->
+<!-- gmdoceg:pkg/xrr/ExampleWrap -->
 ```go
 err := fmt.Errorf("connection refused")
-wrapped := xrr.New("", "EC_CONN", xrr.WithCause(err))
+wrapped := xrr.Wrap(err, xrr.WithCode("EC_CONN"))
 
 fmt.Println(errors.Is(wrapped, err))
 fmt.Println(xrr.GetCode(wrapped))
@@ -193,7 +192,7 @@ fmt.Println(wrapped.Error())
 // connection refused
 ```
 
-Provide a message to add context — it is prepended to the cause's message:
+To also prepend a new message, use `New` with `WithCause`:
 
 <!-- gmdoceg:pkg/xrr/ExampleNew_withCauseAndMsg -->
 ```go
@@ -209,14 +208,13 @@ fmt.Println(wrapped.Error())
 // dial failed: connection refused
 ```
 
-When you only need to attach a code — no new message — use `Wrap` directly.
-It is more explicit about intent than `New` with an empty message:
+For custom domains, use `WrapUsing[T]` instead of `Wrap`:
 
-<!-- gmdoceg:pkg/xrr/ExampleWrap -->
+<!-- gmdoceg:pkg/xrr/ExampleWrapUsing -->
 ```go
 type edMyDomain struct{}
 err := fmt.Errorf("connection refused") // Some action error.
-wrapped := xrr.Wrap[edMyDomain](err, xrr.WithCode("EC_CONN"))
+wrapped := xrr.WrapUsing[edMyDomain](err, xrr.WithCode("EC_CONN"))
 
 fmt.Println(errors.Is(wrapped, err))
 fmt.Println(xrr.GetCode(wrapped))

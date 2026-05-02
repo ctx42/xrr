@@ -11,9 +11,6 @@ const ECGeneric = "ECGeneric"
 // Domain represents types that can be used to define error domains.
 type Domain interface{ comparable }
 
-// EDXrr is the marker type for the package's error domain.
-type EDXrr struct{}
-
 // Coder is the interface that wraps the ErrorCode method.
 type Coder interface {
 	// ErrorCode returns the error code for the error. For errors without an
@@ -38,56 +35,17 @@ type Metadater interface {
 	MetaAll() map[string]any
 }
 
-// Error constructor functions for the xrr package [edXrr] domain.
-var (
-	newError       = ErrorFunc[EDXrr]()
-	newFieldsError = FieldsFunc[EDXrr]()
-)
-
-// Error represents an error in the xrr package error domain.
-type Error = GenericError[EDXrr]
-
-// New creates a new [Error] with the given message and error code.
+// WrapUsing annotates err with a code and optional metadata in domain T,
+// without adding a new message. The returned error's Error() is identical to
+// err.Error().
 //
-// When [WithCause] is provided:
-//   - If msg is empty, Error() returns the cause's message directly.
-//   - If msg is non-empty, Error() returns "msg: cause message".
-//   - If code is empty and [WithCode] is not provided, the cause's code is
-//     inherited via [GetCode]. Pass a non-empty code argument or [WithCode]
-//     to override it.
+// Returns nil if err is nil. The code defaults to the code of err (via
+// [GetCode]); pass [WithCode] to override it. The original err is preserved in
+// the error chain for [errors.Is] and [errors.As].
 //
-// For wrapping without a new message, prefer [Wrap] which makes the intent
-// clearer.
-func New(msg, code string, opts ...Option) error {
-	return newError(msg, code, opts...)
-}
-
-// FieldErrors represents a field error in the xrr error domain.
-type FieldErrors = GenericFields[EDXrr]
-
-// NewFieldError returns a new [FieldErrors] containing the given field and
-// error. Returns nil when the error is nil.
-func NewFieldError(field string, err error) *FieldErrors {
-	return newFieldsError(field, err)
-}
-
-// NewFieldErrors creates a new [FieldErrors] from the given map.
-// The map is stored directly without copying.
-func NewFieldErrors(fields map[string]error) *FieldErrors {
-	return NewFields[EDXrr](fields)
-}
-
-// Wrap wraps an error in a [GenericError[T]] instance, applying the given
-// options. The wrapped error is accessible via [errors.Unwrap] and participates
-// in [errors.Is] / [errors.As] chain traversal.
-//
-// Returns nil if err is nil. The returned error inherits the code of err via
-// [GetCode]; use [WithCode] to override it. [Error] returns the cause's message
-// directly (no new message is associated with the wrapper).
-//
-// When both a new message and a cause are needed in the same error, use
-// [New] with [WithCause] instead.
-func Wrap[T Domain](err error, opts ...Option) error {
+// To annotate with a new message as well, obtain a constructor with [ErrorFunc]
+// and pass [WithCause].
+func WrapUsing[T Domain](err error, opts ...Option) error {
 	if err == nil || isNil(err) {
 		return nil
 	}
@@ -99,9 +57,9 @@ func Wrap[T Domain](err error, opts ...Option) error {
 	}
 }
 
-// SetCode assigns code to err by wrapping it with [Wrap]. Returns nil if err
-// is nil. Returns err unchanged if code is empty or err already carries the
-// given code.
+// SetCode assigns code to err by wrapping it with [WrapUsing]. Returns nil if
+// err is nil. Returns err unchanged if code is empty or err already carries
+// the given code.
 func SetCode[T Domain](err error, code string) error {
 	if code == "" {
 		return err
@@ -109,5 +67,5 @@ func SetCode[T Domain](err error, code string) error {
 	if have := GetCode(err); have == code {
 		return err
 	}
-	return Wrap[T](err, WithCode(code))
+	return WrapUsing[T](err, WithCode(code))
 }

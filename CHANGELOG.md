@@ -12,7 +12,7 @@
 ## v0.11.0 (Sun, 26 Apr 2026 13:01:36 UTC)
 - refactor(xrr): convert GenericFields to a struct type.
 - test(xrr): fix test style violations.
-- fix(xrr): ErrorCode returns ECGeneric for empty code; Wrap handles typed nil.
+- fix(xrr): ErrorCode returns ECGeneric for empty code; WrapUsing handles typed nil.
 - docs(xrr): update README, examples, and API documentation.
 - feat(xrr): add NewFields constructor; update domain-specific docs.
 - docs(xrr): fix GenericFields description in README.
@@ -111,7 +111,7 @@
 - feat: Implement `xrr.Fields`.
 - feat: Implement `xrr.IsJoin` helper returning true when an error is implementing `Unwrap() []error`.
 - feat: Implement `xrr.Envelope`.
-- test: Add `xrr.Wrap` tests.
+- test: Add `xrr.WrapUsing` tests.
 - doc: Update code documentation.
 - doc: Add README documentation.
 - chore: Update dependencies.

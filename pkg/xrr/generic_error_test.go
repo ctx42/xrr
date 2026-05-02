@@ -60,7 +60,7 @@ func Test_GenericError_Error(t *testing.T) {
 
 	t.Run("wrapped error", func(t *testing.T) {
 		// --- Given ---
-		e := Wrap[EDXrr](errors.New("msg"), WithCode("ECode"))
+		e := Wrap(errors.New("msg"), WithCode("ECode"))
 
 		// --- When ---
 		have := e.Error()
@@ -373,8 +373,8 @@ func Test_GenericError_Format(t *testing.T) {
 	t.Run("wrapped errors", func(t *testing.T) {
 		// --- Given ---
 		e0 := New("msg0", "ECode0")
-		e1 := Wrap[EDXrr](e0, WithCode("ECode1"))
-		e2 := Wrap[string](e1, WithCode("ECode2"))
+		e1 := Wrap(e0, WithCode("ECode1"))
+		e2 := WrapUsing[string](e1, WithCode("ECode2"))
 
 		// --- When ---
 		have := fmt.Sprintf("%+v", e2)

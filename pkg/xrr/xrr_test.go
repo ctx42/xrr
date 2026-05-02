@@ -10,101 +10,10 @@ import (
 	"github.com/ctx42/testing/pkg/assert"
 )
 
-func Test_New(t *testing.T) {
-	t.Run("without options", func(t *testing.T) {
-		// --- When ---
-		err := New("msg", "ECode")
-
-		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", x.Error())
-		assert.Equal(t, "ECode", x.code)
-		assert.Nil(t, x.meta)
-	})
-
-	t.Run("with options", func(t *testing.T) {
-		// --- Given ---
-		opt := Meta().Int("A", 1).Int("B", 2).Option()
-
-		// --- When ---
-		err := New("msg", "ECode", opt)
-
-		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", x.Error())
-		assert.Equal(t, "ECode", x.code)
-		assert.Equal(t, map[string]any{"A": 1, "B": 2}, x.meta)
-	})
-
-	t.Run("WithCode overrides code argument", func(t *testing.T) {
-		// --- Given ---
-		opt := WithCode("MyCode")
-
-		// --- When ---
-		err := New("msg", "ECode", opt)
-
-		// --- Then ---
-		x, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", x.Error())
-		assert.Equal(t, "MyCode", x.code)
-	})
-}
-
-func Test_NewFieldError(t *testing.T) {
-	t.Run("not nil error", func(t *testing.T) {
-		// --- Given ---
-		err := errors.New("msg")
-
-		// --- When ---
-		have := NewFieldError("name", err)
-
-		// --- Then ---
-		e, _ := assert.SameType(t, &GenericFields[EDXrr]{}, have)
-		assert.Equal(t, 1, e.Len())
-		assert.ErrorEqual(t, "name: msg", have)
-	})
-
-	t.Run("nil error", func(t *testing.T) {
-		// --- When ---
-		have := NewFieldError("name", nil)
-
-		// --- Then ---
-		assert.Nil(t, have)
-	})
-}
-
-func Test_NewFieldErrors(t *testing.T) {
-	t.Run("creates EDGeneric fields from map", func(t *testing.T) {
-		// --- Given ---
-		m := map[string]error{"f0": errors.New("em0")}
-
-		// --- When ---
-		have := NewFieldErrors(m)
-
-		// --- Then ---
-		fs, _ := assert.SameType(t, &GenericFields[EDXrr]{}, have)
-		assert.Equal(t, 1, fs.Len())
-		assert.ErrorEqual(t, "em0", fs.fields["f0"])
-	})
-
-	t.Run("map is stored directly without copying", func(t *testing.T) {
-		// --- Given ---
-		m := map[string]error{"f0": errors.New("em0")}
-
-		// --- When ---
-		have := NewFieldErrors(m)
-
-		// --- Then ---
-		fs, _ := assert.SameType(t, &GenericFields[EDXrr]{}, have)
-		m["f1"] = errors.New("em1")
-		assert.Equal(t, 2, fs.Len())
-	})
-}
-
-func Test_Wrap(t *testing.T) {
+func Test_WrapUsing(t *testing.T) {
 	t.Run("wrapping nil returns nil", func(t *testing.T) {
 		// --- When ---
-		err := Wrap[string](nil)
+		err := WrapUsing[string](nil)
 
 		// --- Then ---
 		assert.Nil(t, err)
@@ -115,7 +24,7 @@ func Test_Wrap(t *testing.T) {
 		var e *GenericError[EDXrr]
 
 		// --- When ---
-		err := Wrap[string](e)
+		err := WrapUsing[string](e)
 
 		// --- Then ---
 		assert.Nil(t, err)
@@ -126,7 +35,7 @@ func Test_Wrap(t *testing.T) {
 		e := errors.New("msg")
 
 		// --- When ---
-		err := Wrap[string](e)
+		err := WrapUsing[string](e)
 
 		// --- Then ---
 		assert.Same(t, e, errors.Unwrap(err))
@@ -138,7 +47,7 @@ func Test_Wrap(t *testing.T) {
 		opt := WithCode("ECode")
 
 		// --- When ---
-		err := Wrap[string](e, opt)
+		err := WrapUsing[string](e, opt)
 
 		// --- Then ---
 		assert.NotSame(t, e, err)
@@ -152,7 +61,7 @@ func Test_Wrap(t *testing.T) {
 		opt := Meta().Int("A", 1).Int("B", 2).Option()
 
 		// --- When ---
-		err := Wrap[string](e, opt)
+		err := WrapUsing[string](e, opt)
 
 		// --- Then ---
 		assert.NotSame(t, e, err)
@@ -172,7 +81,7 @@ func Test_Wrap(t *testing.T) {
 		}
 
 		// --- When ---
-		err := Wrap[string](e, opts...)
+		err := WrapUsing[string](e, opts...)
 
 		// --- Then ---
 		assert.NotSame(t, e, err)

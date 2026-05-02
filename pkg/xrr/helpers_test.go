@@ -549,7 +549,7 @@ func Test_errorAsMap(t *testing.T) {
 	t.Run("error with meta", func(t *testing.T) {
 		// --- Given ---
 		m := map[string]any{"f0": "v0"}
-		e := Wrap[EDXrr](errors.New("m0"), WithMeta(m))
+		e := Wrap(errors.New("m0"), WithMeta(m))
 
 		// --- When ---
 		have := errorAsMap(e)

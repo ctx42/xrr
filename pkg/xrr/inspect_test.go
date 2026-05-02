@@ -102,7 +102,7 @@ func Test_GetCode_tabular(t *testing.T) {
 		},
 		{
 			"error wrapped with xrr.Wrap",
-			Wrap[EDXrr](New("msg a", "a"), Meta().Int("A", 1).Option()),
+			Wrap(New("msg a", "a"), Meta().Int("A", 1).Option()),
 			"a",
 		},
 	}
