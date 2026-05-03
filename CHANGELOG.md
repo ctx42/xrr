@@ -1,3 +1,6 @@
+## v0.14.1 (Sun, 03 May 2026 09:23:10 UTC)
+- docs(xrr): warn about typed-nil trap in Flatten.
+
 ## v0.14.0 (Sat, 02 May 2026 19:45:32 UTC)
 - refactor(xrr)!: rename generic Wrap to WrapUsing.
 
