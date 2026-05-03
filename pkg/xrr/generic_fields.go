@@ -213,6 +213,18 @@ func (fs *GenericFields[T]) Format(state fmt.State, verb rune) {
 //	  "a": errors.New("a"),
 //	  "a.b": errors.New("b"),
 //	}
+//
+// WARNING: typed-nil trap. Because [GenericFields] implements error, assigning
+// the return value to an error interface always produces a non-nil interface
+// value — even when the resulting map is empty — so `if err == nil` will
+// always be false:
+//
+//	var err error = fields.Flatten() // err != nil even if no field errors
+//
+// To obtain an error that is nil when there are no surviving entries, chain
+// [GenericFields.Filter]:
+//
+//	err := fields.Flatten().Filter() // nil when all fields are nil/absent
 func (fs *GenericFields[T]) Flatten() *GenericFields[T] {
 	visitor := make(map[string]error, len(fs.fields))
 	flatten(visitor, "", fs.fields)
