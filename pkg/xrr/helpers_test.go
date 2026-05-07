@@ -485,6 +485,54 @@ func Test_sortFields(t *testing.T) {
 	assert.Nil(t, hErs[5])
 }
 
+func Test_newfArgs_tabular(t *testing.T) {
+	e0 := errors.New("e0")
+	opt0 := WithCode("c0")
+	opt1 := WithCode("c1")
+
+	tt := []struct {
+		testN string
+
+		ags     []any
+		wHasErr bool
+		wArgs   []any
+		wOpts   []Option
+	}{
+		{"no args", nil, false, nil, nil},
+		{"string only", []any{"str"}, false, []any{"str"}, nil},
+		{"error only", []any{e0}, true, []any{e0}, nil},
+		{"option only", []any{opt0}, false, nil, []Option{opt0}},
+		{"two options", []any{opt0, opt1}, false, nil, []Option{opt0, opt1}},
+		{
+			"string and error",
+			[]any{"fmt %v", e0},
+			true,
+			[]any{"fmt %v", e0},
+			nil,
+		},
+		{"error and option", []any{e0, opt0}, true, []any{e0}, []Option{opt0}},
+		{
+			"string, error, and option",
+			[]any{"fmt %v", e0, opt0},
+			true,
+			[]any{"fmt %v", e0},
+			[]Option{opt0},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			hHasErr, hArgs, hOpts := newfArgs(tc.ags...)
+
+			// --- Then ---
+			assert.Equal(t, tc.wHasErr, hHasErr)
+			assert.Equal(t, tc.wArgs, hArgs)
+			assert.Equal(t, tc.wOpts, hOpts)
+		})
+	}
+}
+
 func Test_marshalError(t *testing.T) {
 	t.Run("std error", func(t *testing.T) {
 		// --- Given ---

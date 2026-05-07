@@ -196,3 +196,37 @@ func errorAsMap(err error) map[string]any {
 	}
 	return m
 }
+
+func newArgs(ags ...any) (string, []Option) {
+	var code string
+	var opts []Option
+	for _, arg := range ags {
+		switch a := arg.(type) {
+		case string:
+			code = a
+		case Option:
+			opts = append(opts, a)
+		default:
+			// TODO(rz):
+		}
+	}
+	return code, opts
+}
+
+func newfArgs(ags ...any) (bool, []any, []Option) {
+	var args []any
+	var opts []Option
+	var hasErr bool
+	for _, arg := range ags {
+		switch a := arg.(type) {
+		case Option:
+			opts = append(opts, a)
+		case error:
+			hasErr = true
+			args = append(args, a)
+		default:
+			args = append(args, a)
+		}
+	}
+	return hasErr, args, opts
+}
