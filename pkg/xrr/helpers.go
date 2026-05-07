@@ -8,6 +8,7 @@ import (
 	"errors"
 	"reflect"
 	"slices"
+	"strings"
 	"time"
 	"unsafe"
 )
@@ -195,4 +196,44 @@ func errorAsMap(err error) map[string]any {
 		m["meta"] = meta
 	}
 	return m
+}
+
+// newArgs extracts an optional error code and zero or more [Option] values
+// from a mixed argument list. The last string argument wins as the code.
+// Arguments of any other type are silently ignored.
+func newArgs(ags ...any) (string, []Option) {
+	var code string
+	var opts []Option
+	for _, arg := range ags {
+		switch a := arg.(type) {
+		case string:
+			code = a
+		case Option:
+			opts = append(opts, a)
+		default:
+			// Skip silently.
+		}
+	}
+	return code, opts
+}
+
+// newfArgs separates format-style constructor arguments into three groups:
+// wrapsErr is true when msg contains %w; non-[Option] values (including errors)
+// are collected as positional format args; [Option] values form the option
+// slice.
+func newfArgs(format string, ags ...any) (bool, []any, []Option) {
+	var args []any
+	var opts []Option
+	wrapsErr := strings.Index(format, "%w") >= 0
+	for _, arg := range ags {
+		switch a := arg.(type) {
+		case Option:
+			opts = append(opts, a)
+		case error:
+			args = append(args, a)
+		default:
+			args = append(args, a)
+		}
+	}
+	return wrapsErr, args, opts
 }

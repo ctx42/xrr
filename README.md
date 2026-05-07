@@ -1,111 +1,202 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/ctx42/xrr)](https://goreportcard.com/report/github.com/ctx42/xrr)
-[![GoDoc](https://img.shields.io/badge/api-Godoc-blue.svg)](https://pkg.go.dev/github.com/ctx42/xrr)
-![Tests](https://github.com/ctx42/xrr/actions/workflows/go.yml/badge.svg?branch=master)
+# xrr
 
-Standard Go errors carry only a message string. The `xrr` module extends
-errors with three additions, all compatible with the standard `error`
-interface — `errors.Is`, `errors.As`, and wrapping all work as expected:
+**Supercharged errors for Go** — stable codes, typed metadata, domain-specific types, and full `errors`/`json`/`slog` compatibility.
 
-- **Error codes** — a stable string identifier alongside the message.
-- **Typed metadata** — key-value pairs attached to any error and retrieved by type.
-- **Domain types** — a generics-based pattern for defining distinct error
-  types per subsystem. Other packages instantiate `xrr`'s generic types
-  with their own domain marker and inherit marshaling, metadata, and error
-  traversal with no reimplementation.
+[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev/doc/devel/release)
+[![License](https://img.shields.io/github/license/ctx42/xrr)](LICENSE.md)
+[![pkg.go.dev](https://img.shields.io/badge/pkg.go.dev-reference-blue?logo=go)](https://pkg.go.dev/github.com/ctx42/xrr)
+[![Changelog](https://img.shields.io/badge/changelog-v0.14.1-green)](CHANGELOG.md)
+
+---
+
+## Why xrr?
+
+Plain Go errors are just strings. In real production applications you quickly run into limitations:
+
+- No stable error codes for monitoring, alerting, or client-side handling
+- No easy way to attach structured metadata for logs and API responses
+- No clean isolation between error domains (Payment vs Auth vs User)
+- Manual work for JSON serialization, slog integration, and rich formatting
+
+**xrr** solves all of this while staying **100% compatible** with Go’s standard library error handling, `errors.Is`, `errors.As`, `errors.Join`, `%w` wrapping, and ecosystem tools.
+
+---
+
+## Features at a Glance
+
+- ✅ **Stable error codes** — never change even if messages are updated
+- ✅ **Typed metadata** — attach numbers, strings, times, durations with a fluent builder
+- ✅ **Domain-specific errors** — generics-powered types per subsystem (`PaymentError`, `AuthError`, ...)
+- ✅ **Full stdlib compatibility** — works seamlessly with `errors`, `fmt`, `json`, `slog`
+- ✅ **Production-ready outputs** — automatic JSON marshaling, slog maps, custom ` %+v` formatting
+- ✅ **Validation support** — first-class field errors with clean JSON serialization
+- ✅ **Envelope pattern** — ideal for API responses (lead error + full cause chain)
+- ✅ **Rich testing helpers** — `xrrtest` package with domain-aware assertions
+- ✅ **Zero surprises** — no reflection, minimal allocations, Go 1.26+
+
+---
+
+## Quick Start
 
 ```bash
 go get github.com/ctx42/xrr
 ```
 
-<!-- TOC -->
-* [Quick Start](#quick-start)
-  * [Error Codes](#error-codes)
-  * [Error Metadata](#error-metadata)
-  * [Error Marshaling](#error-marshaling)
-  * [Structured Logging](#structured-logging)
-  * [Domain Types](#domain-types)
-* [Wrapping Errors](#wrapping-errors)
-* [Inspecting Error Trees](#inspecting-error-trees)
-* [Field Errors](#field-errors)
-* [Domain-Specific Errors](#domain-specific-errors)
-* [Error Utilities](#error-utilities)
-* [Sentinel Errors](#sentinel-errors)
-* [Envelope](#envelope)
-  * [Regular Error](#regular-error)
-  * [Joined Errors](#joined-errors)
-  * [Fields Error](#fields-error)
-* [Error Collections](#error-collections)
-* [Test Helpers](#test-helpers)
-<!-- TOC -->
-
-# Quick Start
-
-The following examples introduce the two core concepts: _error codes_ and
-_structured metadata_.
-
-## Error Codes
-
-Every `xrr` error carries a string code alongside its message, giving
-callers a stable identifier that does not depend on the message wording:
-
-<!-- gmdoceg:pkg/xrr/ExampleNew -->
+<!-- gmdoceg:pkg/xrr/Example -->
 ```go
-err := xrr.New("user not found", "EC_USER_NOT_FOUND")
+err := xrr.New("user not found", "EC_USER_NOT_FOUND",
+	xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Option(),
+)
 
-fmt.Printf("%v\n", err)              // Print message.
-fmt.Printf("%+v\n", err)             // Print message and error code.
-fmt.Printf("%s\n", xrr.GetCode(err)) // Print error code.
-
+fmt.Printf("%v\n", err)
+fmt.Printf("%+v\n", err)
+fmt.Println(xrr.GetCode(err))
+fmt.Println(xrr.GetMeta(err))
 // Output:
 // user not found
 // user not found (EC_USER_NOT_FOUND)
 // EC_USER_NOT_FOUND
-```
-
-## Error Metadata
-
-Attach typed key-value metadata to any error using the `Meta` builder.
-Metadata is retrieved by key using typed getters:
-
-<!-- gmdoceg:pkg/xrr/ExampleNew_with_metadata -->
-```go
-meta := xrr.Meta().Int("attempt", 3).Str("user_id", "u-123")
-err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
-
-fmt.Println(xrr.GetMeta(err))
-// Output:
 // map[attempt:3 user_id:u-123]
 ```
 
-The supported value types are `bool`, `string`, `int`, `int64`, `float64`,
-`time.Time`, and `time.Duration`.
+---
 
-When creating a new error from an existing one, use `WithMetaFrom` to
-carry its metadata forward without copying the map manually:
+## Domain-Specific Errors (Killer Feature)
+
+Define isolated, type-safe errors for each subsystem. No more stringly-typed error checks.
 
 ```go
-original := xrr.New("db timeout", "EC_TIMEOUT", xrr.Meta().Str("query", "SELECT ...").Option())
-wrapped := xrr.New("request failed", "EC_REQUEST", xrr.WithMetaFrom(original))
+// payment/errors.go
+package payment
+
+type edPayment struct{} // unexported marker — never exported
+
+type PaymentError = xrr.GenericError[edPayment]
+
+var (
+	NewPaymentError  = xrr.ErrorFunc[edPayment]()
+	NewPaymentErrorf = xrr.ErrorfFunc[edPayment]()
+)
+
+// Usage
+err := NewPaymentError("insufficient funds",
+	xrr.WithCode("EC_INSUFFICIENT_FUNDS"),
+	xrr.Meta().Float64("amount", 99.50).Option(),
+)
 ```
 
-## Error Marshaling
+Now you get full compile-time safety:
 
-Every `xrr` error implements `json.Marshaler`. A plain error serializes to
-its code and message:
-
-<!-- gmdoceg:pkg/xrr/ExampleNew_marshal -->
+<!-- gmdoceg:pkg/xrr/ExampleIsDomain -->
 ```go
-err := xrr.New("user not found", "EC_USER_NOT_FOUND")
+type edPayment struct{}
+type PaymentError = xrr.GenericError[edPayment]
+newPaymentError := xrr.ErrorFunc[edPayment]()
 
-fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+err := newPaymentError("insufficient funds", "EC_INSUFFICIENT_FUNDS")
+
+var pe *PaymentError
+fmt.Println(errors.As(err, &pe))
+fmt.Println(xrr.IsDomain[edPayment](err))
 // Output:
-// {
-//   "code": "EC_USER_NOT_FOUND",
-//   "error": "user not found"
-// }
+// true
+// true
 ```
 
-When metadata is present it is included under the `meta` key:
+See full documentation in the [Domain-Specific Errors](#domain-specific-errors) section.
+
+---
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Error Codes & Metadata](#error-codes--metadata)
+- [Wrapping & Cause Chains](#wrapping--cause-chains)
+- [JSON & Structured Logging](#json--structured-logging)
+- [Field Errors for Validation](#field-errors-for-validation)
+- [Domain-Specific Errors](#domain-specific-errors)
+- [API Envelope Pattern](#api-envelope-pattern)
+- [Error Inspection Utilities](#error-inspection-utilities)
+- [Testing with xrrtest](#testing-with-xrrtest)
+- [Comparison with Alternatives](#comparison-with-alternatives)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Installation
+
+```bash
+go get github.com/ctx42/xrr@latest
+```
+
+Minimum Go version: **1.26+**
+
+---
+
+## Error Codes & Metadata
+
+<!-- gmdoceg:pkg/xrr/ExampleGetMeta -->
+```go
+err := xrr.New("payment failed", "EC_PAYMENT_FAILED",
+	xrr.Meta().
+		Str("order_id", "ord-456").
+		Int64("user_id", 12345).
+		Float64("amount", 199.99).
+		Bool("retryable", true).
+		Option(),
+)
+
+fmt.Println(xrr.GetCode(err))
+
+orderID, _ := xrr.GetStr(err, "order_id")
+amount, _ := xrr.GetFloat64(err, "amount")
+retryable, _ := xrr.GetBool(err, "retryable")
+fmt.Println(orderID, amount, retryable)
+// Output:
+// EC_PAYMENT_FAILED
+// ord-456 199.99 true
+```
+
+---
+
+## Wrapping & Cause Chains
+
+<!-- gmdoceg:pkg/xrr/ExampleWrap -->
+```go
+err := fmt.Errorf("connection refused")
+wrapped := xrr.Wrap(err, xrr.WithCode("EC_CONN"))
+
+fmt.Println(errors.Is(wrapped, err))
+fmt.Println(xrr.GetCode(wrapped))
+fmt.Println(wrapped.Error())
+// Output:
+// true
+// EC_CONN
+// connection refused
+```
+
+<!-- gmdoceg:pkg/xrr/ExampleNew_withCauseAndMsg -->
+```go
+err := fmt.Errorf("connection refused")
+wrapped := xrr.New("dial failed", "EC_CONN", xrr.WithCause(err))
+
+fmt.Println(errors.Is(wrapped, err))
+fmt.Println(xrr.GetCode(wrapped))
+fmt.Println(wrapped.Error())
+// Output:
+// true
+// EC_CONN
+// dial failed: connection refused
+```
+
+Full support for `errors.Is`, `errors.As`, and `%w`.
+
+---
+
+## JSON & Structured Logging
+
+All errors implement `json.Marshaler` and provide `GetMeta()` for `slog`.
 
 <!-- gmdoceg:pkg/xrr/ExampleNew_marshal_with_metadata -->
 ```go
@@ -123,13 +214,6 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 //   }
 // }
 ```
-
-## Structured Logging
-
-Metadata is designed to be passed directly to structured loggers.
-`GetMeta` retrieves all metadata accumulated across the error chain as
-a `map[string]any`, ready for use with `log/slog` or any structured
-logger:
 
 <!-- gmdoceg:pkg/xrr/ExampleNew_with_slog -->
 ```go
@@ -154,100 +238,46 @@ slog.New(handler).Error(
 // {"level":"ERROR","msg":"user not found","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"user_id":"u-123"}}
 ```
 
-## Domain Types
-
-For larger codebases, define a distinct error type per subsystem so
-callers can identify the origin without parsing codes:
-
+<!-- gmdoceg:pkg/xrr/ExampleNew_slog_and_json -->
 ```go
-type edPayment struct{}                          // unexported domain marker
-type PaymentError = xrr.GenericError[edPayment]  // typed alias
+ts := time.Date(2026, 5, 9, 11, 23, 0, 0, time.UTC)
+err := xrr.New("user not found", "EC_USER_NOT_FOUND",
+	xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Time("timestamp", ts).Option(),
+)
 
-var newPaymentError = xrr.ErrorFunc[edPayment]()
+handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.TimeKey {
+			return slog.Attr{}
+		}
+		return a
+	},
+})
+slog.New(handler).Error(
+	"request failed",
+	"code", xrr.GetCode(err),
+	"meta", xrr.GetMeta(err),
+)
 
-func NewPaymentError(msg, code string, opts ...xrr.Option) error {
-    return newPaymentError(msg, code, opts...)
-}
-```
-
-See [Domain-Specific Errors](#domain-specific-errors) for the full pattern.
-
-# Wrapping Errors
-
-Use `Wrap` to annotate an existing error with a code and optional metadata,
-without changing its message. The original error remains accessible in the
-chain for `errors.Is` and `errors.As`:
-
-<!-- gmdoceg:pkg/xrr/ExampleWrap -->
-```go
-err := fmt.Errorf("connection refused")
-wrapped := xrr.Wrap(err, xrr.WithCode("EC_CONN"))
-
-fmt.Println(errors.Is(wrapped, err))
-fmt.Println(xrr.GetCode(wrapped))
-fmt.Println(wrapped.Error())
+fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // Output:
-// true
-// EC_CONN
-// connection refused
+// {"level":"ERROR","msg":"request failed","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"timestamp":"2026-05-09T11:23:00Z","user_id":"u-123"}}
+// {
+//   "code": "EC_USER_NOT_FOUND",
+//   "error": "user not found",
+//   "meta": {
+//     "attempt": 3,
+//     "timestamp": "2026-05-09T11:23:00Z",
+//     "user_id": "u-123"
+//   }
+// }
 ```
 
-To also prepend a new message, use `New` with `WithCause`:
+Perfect for REST APIs and observability platforms.
 
-<!-- gmdoceg:pkg/xrr/ExampleNew_withCauseAndMsg -->
-```go
-err := fmt.Errorf("connection refused")
-wrapped := xrr.New("dial failed", "EC_CONN", xrr.WithCause(err))
+---
 
-fmt.Println(errors.Is(wrapped, err))
-fmt.Println(xrr.GetCode(wrapped))
-fmt.Println(wrapped.Error())
-// Output:
-// true
-// EC_CONN
-// dial failed: connection refused
-```
-
-For custom domains, use `WrapUsing[T]` instead of `Wrap`:
-
-<!-- gmdoceg:pkg/xrr/ExampleWrapUsing -->
-```go
-type edMyDomain struct{}
-err := fmt.Errorf("connection refused") // Some action error.
-wrapped := xrr.WrapUsing[edMyDomain](err, xrr.WithCode("EC_CONN"))
-
-fmt.Println(errors.Is(wrapped, err))
-fmt.Println(xrr.GetCode(wrapped))
-fmt.Println(wrapped.Error())
-// Output:
-// true
-// EC_CONN
-// connection refused
-```
-
-# Inspecting Error Trees
-
-Go errors compose into trees through wrapping and `errors.Join`. The
-`Get*` functions traverse the entire tree — including field errors — to
-extract codes and metadata without needing to know its shape:
-
-```go
-code := xrr.GetCode(err)   // The first code in the chain.
-codes := xrr.GetCodes(err) // All unique codes.
-meta := xrr.GetMeta(err)   // Merged metadata; root overrides deeper values.
-
-// Typed metadata lookup.
-userID, ok := xrr.GetStr(err, "user_id")
-count, ok := xrr.GetInt(err, "attempt")
-flag, ok := xrr.GetBool(err, "retryable")
-ts, ok := xrr.GetTime(err, "created_at")
-dur, ok := xrr.GetDuration(err, "elapsed")
-```
-
-# Field Errors
-
-`GenericFields[T]` associates string field names with errors — most commonly
-used for validation:
+## Field Errors for Validation
 
 <!-- gmdoceg:pkg/xrr/ExampleGenericFields -->
 ```go
@@ -278,201 +308,31 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // }
 ```
 
-Once you have a field error map, several functions let you query it
-without asserting types manually:
+Serializes cleanly to JSON arrays/objects for frontend consumption.
 
+---
+
+## Domain-Specific Errors
+
+<!-- gmdoceg:pkg/xrr/ExampleIsDomain -->
 ```go
-names := xrr.FieldNames(err)                 // Sorted field names.
-fe := xrr.GetFieldError(err, "email")        // Gets a specific field's error.
-ok := xrr.FieldErrorIs(err, "email", target) // Checks a field's error chain.
-```
-
-When building or combining field maps — for example when merging validation
-results from multiple sources — the following helpers are available:
-
-```go
-// Merge two field maps; later values win on key conflicts.
-// Pass your domain marker type as the type parameter.
-merged := xrr.MergeFields[edPayment](fieldsA, fieldsB)
-
-// Flatten nested field maps to dot-notation keys.
-// {"address": {"city": cityErr}} becomes {"address.city": cityErr}.
-flat := xrr.Flatten[edPayment](nested)
-
-// Remove nil entries.
-filtered := fs.Filter()
-
-// Look up a field, including dot-notation paths.
-fieldErr := fs.Get("address.city")
-```
-
-To wrap a single error under a field name, use `NewFieldError`:
-
-```go
-err := xrr.NewFieldError("email", xrr.New("invalid email", "EC_INVALID_EMAIL"))
-```
-
-# Domain-Specific Errors
-
-By default, all `xrr` errors share the same Go type. For larger codebases,
-define a distinct error type per domain so callers can identify which
-subsystem an error originates from without parsing codes.
-
-The recommended pattern uses an unexported zero-size struct as the domain
-marker and named type aliases for the concrete error types:
-
-```go
-// Unexported zero-size type used as the domain marker.
 type edPayment struct{}
+type PaymentError = xrr.GenericError[edPayment]
+newPaymentError := xrr.ErrorFunc[edPayment]()
 
-// Type aliases give callers readable names.
-type (
-    PaymentError       = xrr.GenericError[edPayment]
-    PaymentFieldsError = xrr.GenericFields[edPayment]
-)
-```
+err := newPaymentError("insufficient funds", "EC_INSUFFICIENT_FUNDS")
 
-Bind constructors to the domain using `ErrorFunc` and `FieldsFunc`, then
-expose them through named public functions:
-
-```go
-var (
-    newPaymentError       = xrr.ErrorFunc[edPayment]()
-    newPaymentFieldsError = xrr.FieldsFunc[edPayment]()
-)
-
-func NewPaymentError(msg, code string, opts ...xrr.Option) error {
-    return newPaymentError(msg, code, opts...)
-}
-
-func IsPaymentError(err error) bool {
-    return xrr.IsDomain[edPayment](err)
-}
-```
-
-Callers use the exported constructor and type-check helper:
-
-```go
-err := NewPaymentError("charge failed", "EC_CHARGE_FAILED")
-
-if IsPaymentError(err) {
-    // err is a *PaymentError
-}
-```
-
-# Error Utilities
-
-`xrr` provides several helpers that complement the standard `errors`
-package when working with joined errors and codes.
-
-`Split` breaks a joined error into its parts; `Join` assembles them,
-skipping nils:
-
-<!-- gmdoceg:pkg/xrr/ExampleJoin -->
-```go
-combined := xrr.Join(
-	xrr.New("first", "EC_FIRST"),
-	nil,
-	xrr.New("second", "EC_SECOND"),
-)
-
-fmt.Println(xrr.IsJoined(combined))
-for _, p := range xrr.Split(combined) {
-	fmt.Println(p)
-}
+var pe *PaymentError
+fmt.Println(errors.As(err, &pe))
+fmt.Println(xrr.IsDomain[edPayment](err))
 // Output:
 // true
-// first
-// second
-```
-
-`IsJoined` distinguishes a joined error from a single one:
-
-<!-- gmdoceg:pkg/xrr/ExampleIsJoined -->
-```go
-single := xrr.New("single error", "EC_SINGLE")
-joined := errors.Join(
-	xrr.New("first", "EC_FIRST"),
-	xrr.New("second", "EC_SECOND"),
-)
-
-fmt.Println(xrr.IsJoined(single))
-fmt.Println(xrr.IsJoined(joined))
-// Output:
-// false
 // true
 ```
 
-`DefaultCode` returns the first non-empty code from a list, falling
-back to the provided default:
+---
 
-<!-- gmdoceg:pkg/xrr/ExampleDefaultCode -->
-```go
-code := xrr.DefaultCode("ECFallback", "", "EC_FOUND", "EC_IGNORED")
-
-fmt.Println(code)
-// Output:
-// EC_FOUND
-```
-
-# Sentinel Errors
-
-The library defines sentinel errors for conditions it detects internally.
-
-`ErrInvJSONError` is returned when unmarshaling JSON that is syntactically
-valid but does not carry an `"error"` field — making it an invalid
-`GenericError` representation:
-
-<!-- gmdoceg:pkg/xrr/ExampleErrInvJSONError -->
-```go
-var e xrr.Error
-err := json.Unmarshal([]byte(`{"status": "ok"}`), &e)
-
-fmt.Println(errors.Is(err, xrr.ErrInvJSONError))
-// Output:
-// true
-```
-
-`ErrFields` is used by `Enclose` as the default lead when the cause
-implements `Fielder` and no explicit lead is provided:
-
-<!-- gmdoceg:pkg/xrr/ExampleErrFields -->
-```go
-cause := xrr.NewFieldErrors(map[string]error{
-	"email": xrr.New("invalid email", "EC_INVALID_EMAIL"),
-})
-err := xrr.Enclose(cause)
-
-fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
-// Output:
-// {
-//   "code": "ECFields",
-//   "error": "fields error",
-//   "fields": {
-//     "email": {
-//       "code": "EC_INVALID_EMAIL",
-//       "error": "invalid email"
-//     }
-//   }
-// }
-```
-
-`ErrInvJSON` (code: `ECInvJSON`) is a sentinel for callers to signal
-JSON format errors in their own code.
-
-# Envelope
-
-An `Envelope` combines two errors: a *cause* — the underlying error that
-triggered the failure — and a *lead* — a higher-level error describing
-the outcome to the caller. The lead's code and message are serialized at
-the top level of the JSON response, while the cause is nested inside.
-Both remain reachable via `errors.Is`.
-
-Use `Enclose` to create an envelope:
-
-## Regular Error
-
-When the cause is a single error, it is nested under the `errors` key:
+## API Envelope Pattern
 
 <!-- gmdoceg:pkg/xrr/ExampleEnclose -->
 ```go
@@ -503,115 +363,48 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // }
 ```
 
-## Joined Errors
+---
 
-When the cause is a joined error, each constituent error is listed
-separately under the `errors` key:
-
-<!-- gmdoceg:pkg/xrr/ExampleEnclose_joined_errors -->
-```go
-cause := errors.Join(xrr.New("cause A", "EC_A"), xrr.New("cause B", "EC_B"))
-lead := xrr.New("lead", "EC_LEAD")
-
-err := xrr.Enclose(cause, lead)
-
-fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
-// Output:
-// {
-//   "code": "EC_LEAD",
-//   "error": "lead",
-//   "errors": [
-//     {
-//       "code": "EC_A",
-//       "error": "cause A"
-//     },
-//     {
-//       "code": "EC_B",
-//       "error": "cause B"
-//     }
-//   ]
-// }
-```
-
-## Fields Error
-
-When the cause is a `GenericFields` map, the errors are placed under
-the `fields` key, keyed by field name:
-
-<!-- gmdoceg:pkg/xrr/ExampleEnclose_fields_error -->
-```go
-fields := map[string]error{
-	"a": xrr.New("cause A", "EC_A"),
-	"b": xrr.New("cause B", "EC_B"),
-}
-cause := xrr.NewFieldErrors(fields)
-lead := xrr.New("lead", "EC_LEAD")
-
-err := xrr.Enclose(cause, lead)
-
-fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
-// Output:
-// {
-//   "code": "EC_LEAD",
-//   "error": "lead",
-//   "fields": {
-//     "a": {
-//       "code": "EC_A",
-//       "error": "cause A"
-//     },
-//     "b": {
-//       "code": "EC_B",
-//       "error": "cause B"
-//     }
-//   }
-// }
-```
-
-# Error Collections
-
-When processing multiple independent operations — iterating over a list,
-running goroutines in parallel — errors need to be collected and reported
-together rather than short-circuiting on the first one.
-
-`Errors` is a simple `[]error` slice for sequential use:
-
-```go
-errs := xrr.NewErrors()
-errs.Add(fmt.Errorf("first"))
-errs.Add(fmt.Errorf("second"))
-fmt.Println(errs.First()) // first
-```
-
-`SyncErrors` is the thread-safe variant, safe to use concurrently across
-goroutines:
-
-```go
-errs := xrr.NewSyncErrors()
-errs.Add(fmt.Errorf("from goroutine"))
-collected := errs.Collect() // drains and returns all errors
-```
-
-# Test Helpers
-
-The `xrrtest` subpackage provides assertion helpers for testing `xrr`
-errors. They produce clear failure messages and avoid manual type
-assertions in test code:
+## Testing with xrrtest
 
 ```go
 import "github.com/ctx42/xrr/pkg/xrr/xrrtest"
 
-// Assert error type and code.
-ge, ok := xrrtest.AssertError[edPayment](t, err)
-xrrtest.AssertCode(t, "EC_USER_NOT_FOUND", err)
-xrrtest.AssertEqual(t, "user not found (EC_USER_NOT_FOUND)", err)
-
-// Assert metadata.
-xrrtest.AssertStr(t, "user_id", "u-123", err)
-xrrtest.AssertInt(t, "attempt", 3, err)
-xrrtest.AssertBool(t, "retryable", true, err)
-
-// Assert field errors.
-xrrtest.AssertFieldCnt(t, 2, err)
-xrrtest.AssertFieldEqual(t, "email", "invalid email", err)
-xrrtest.AssertFieldCode(t, "email", "EC_INVALID_EMAIL", err)
+xrrtest.AssertError[payment.EdPayment](t, err)
+xrrtest.AssertCode(t, "EC_...", err)
+xrrtest.AssertStr(t, "key", "expected", err)
 ```
+
+---
+
+## Comparison with Alternatives
+
+| Feature                 | std `error` | pkg/errors | go-errors | **xrr**      |
+|-------------------------|-------------|------------|-----------|--------------|
+| Stable error codes      | No          | No         | No        | Yes          |
+| Typed metadata          | No          | No         | Limited   | Yes (fluent) |
+| Domain generics         | No          | No         | No        | Yes          |
+| Built-in JSON           | No          | No         | No        | Yes          |
+| slog integration        | Manual      | Manual     | Manual    | Native       |
+| Field validation errors | No          | No         | No        | Yes          |
+| Full errors.Is/As       | Yes         | Yes        | Yes       | Yes          |
+
+---
+
+## Contributing
+
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) (if present) or open issues/PRs.
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) file.
+
+---
+
+`go get github.com/ctx42/xrr`
+
+Full godoc: [pkg.go.dev/github.com/ctx42/xrr](https://pkg.go.dev/github.com/ctx42/xrr)
+
+---

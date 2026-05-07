@@ -563,3 +563,100 @@ func Test_errorAsMap(t *testing.T) {
 		assert.Equal(t, want, have)
 	})
 }
+
+func Test_newArgs_tabular(t *testing.T) {
+	opt0 := WithCode("c0")
+	opt1 := WithCode("c1")
+
+	tt := []struct {
+		testN string
+
+		ags   []any
+		wCode string
+		wOpts []Option
+	}{
+		{"no args", nil, "", nil},
+		{"string only", []any{"ECode"}, "ECode", nil},
+		{"option only", []any{opt0}, "", []Option{opt0}},
+		{"two options", []any{opt0, opt1}, "", []Option{opt0, opt1}},
+		{"string and option", []any{"ECode", opt0}, "ECode", []Option{opt0}},
+		{"unknown type ignored", []any{42}, "", nil},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			hCode, hOpts := newArgs(tc.ags...)
+
+			// --- Then ---
+			assert.Equal(t, tc.wCode, hCode)
+			assert.Equal(t, tc.wOpts, hOpts)
+		})
+	}
+}
+
+func Test_newfArgs_tabular(t *testing.T) {
+	e0 := errors.New("e0")
+	opt0 := WithCode("c0")
+	opt1 := WithCode("c1")
+
+	tt := []struct {
+		testN string
+
+		msg       string
+		ags       []any
+		wWrapsErr bool
+		wArgs     []any
+		wOpts     []Option
+	}{
+		{"no args", "", nil, false, nil, nil},
+		{"string only", "", []any{"str"}, false, []any{"str"}, nil},
+		{"error only", "", []any{e0}, false, []any{e0}, nil},
+		{"option only", "", []any{opt0}, false, nil, []Option{opt0}},
+		{"msg with %w", "wrapping: %w", nil, true, nil, nil},
+		{
+			"two options",
+			"",
+			[]any{opt0, opt1},
+			false,
+			nil,
+			[]Option{opt0, opt1},
+		},
+		{
+			"msg and error arg",
+			"fmt %v",
+			[]any{e0},
+			false,
+			[]any{e0},
+			nil,
+		},
+		{
+			"error and option",
+			"",
+			[]any{e0, opt0},
+			false,
+			[]any{e0},
+			[]Option{opt0},
+		},
+		{
+			"msg, error, and option",
+			"fmt %v",
+			[]any{e0, opt0},
+			false,
+			[]any{e0},
+			[]Option{opt0},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			hWrapsErr, hArgs, hOpts := newfArgs(tc.msg, tc.ags...)
+
+			// --- Then ---
+			assert.Equal(t, tc.wWrapsErr, hWrapsErr)
+			assert.Equal(t, tc.wArgs, hArgs)
+			assert.Equal(t, tc.wOpts, hOpts)
+		})
+	}
+}

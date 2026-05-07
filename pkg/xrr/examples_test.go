@@ -9,11 +9,62 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/ctx42/testing/pkg/must"
 
 	"github.com/ctx42/xrr/pkg/xrr"
 )
+
+func Example() {
+	err := xrr.New("user not found", "EC_USER_NOT_FOUND",
+		xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Option(),
+	)
+
+	fmt.Printf("%v\n", err)
+	fmt.Printf("%+v\n", err)
+	fmt.Println(xrr.GetCode(err))
+	fmt.Println(xrr.GetMeta(err))
+	// Output:
+	// user not found
+	// user not found (EC_USER_NOT_FOUND)
+	// EC_USER_NOT_FOUND
+	// map[attempt:3 user_id:u-123]
+}
+
+func ExampleNew_slog_and_json() {
+	ts := time.Date(2026, 5, 9, 11, 23, 0, 0, time.UTC)
+	err := xrr.New("user not found", "EC_USER_NOT_FOUND",
+		xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Time("timestamp", ts).Option(),
+	)
+
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey {
+				return slog.Attr{}
+			}
+			return a
+		},
+	})
+	slog.New(handler).Error(
+		"request failed",
+		"code", xrr.GetCode(err),
+		"meta", xrr.GetMeta(err),
+	)
+
+	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+	// Output:
+	// {"level":"ERROR","msg":"request failed","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"timestamp":"2026-05-09T11:23:00Z","user_id":"u-123"}}
+	// {
+	//   "code": "EC_USER_NOT_FOUND",
+	//   "error": "user not found",
+	//   "meta": {
+	//     "attempt": 3,
+	//     "timestamp": "2026-05-09T11:23:00Z",
+	//     "user_id": "u-123"
+	//   }
+	// }
+}
 
 func ExampleNew() {
 	err := xrr.New("user not found", "EC_USER_NOT_FOUND")
@@ -35,6 +86,27 @@ func ExampleNew_with_metadata() {
 	fmt.Println(xrr.GetMeta(err))
 	// Output:
 	// map[attempt:3 user_id:u-123]
+}
+
+func ExampleGetMeta() {
+	err := xrr.New("payment failed", "EC_PAYMENT_FAILED",
+		xrr.Meta().
+			Str("order_id", "ord-456").
+			Int64("user_id", 12345).
+			Float64("amount", 199.99).
+			Bool("retryable", true).
+			Option(),
+	)
+
+	fmt.Println(xrr.GetCode(err))
+
+	orderID, _ := xrr.GetStr(err, "order_id")
+	amount, _ := xrr.GetFloat64(err, "amount")
+	retryable, _ := xrr.GetBool(err, "retryable")
+	fmt.Println(orderID, amount, retryable)
+	// Output:
+	// EC_PAYMENT_FAILED
+	// ord-456 199.99 true
 }
 
 func ExampleNew_marshal() {
@@ -137,6 +209,21 @@ func ExampleNew_withCauseAndMsg() {
 	// true
 	// EC_CONN
 	// dial failed: connection refused
+}
+
+func ExampleIsDomain() {
+	type edPayment struct{}
+	type PaymentError = xrr.GenericError[edPayment]
+	newPaymentError := xrr.ErrorFunc[edPayment]()
+
+	err := newPaymentError("insufficient funds", "EC_INSUFFICIENT_FUNDS")
+
+	var pe *PaymentError
+	fmt.Println(errors.As(err, &pe))
+	fmt.Println(xrr.IsDomain[edPayment](err))
+	// Output:
+	// true
+	// true
 }
 
 func ExampleGenericFields() {

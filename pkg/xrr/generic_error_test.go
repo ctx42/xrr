@@ -46,6 +46,110 @@ func Test_ErrorFactory(t *testing.T) {
 	})
 }
 
+func Test_ErrorfFunc(t *testing.T) {
+	t.Run("plain message", func(t *testing.T) {
+		// --- Given ---
+		have := ErrorfFunc[EDXrr]()
+
+		// --- When ---
+		err := have("msg")
+
+		// --- Then ---
+		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", e.msg)
+		assert.Equal(t, "", e.code)
+		assert.Nil(t, e.meta)
+		assert.Nil(t, e.err)
+		assert.ErrorEqual(t, "msg", err)
+	})
+
+	t.Run("format with args", func(t *testing.T) {
+		// --- Given ---
+		have := ErrorfFunc[EDXrr]()
+
+		// --- When ---
+		err := have("value: %d", 42)
+
+		// --- Then ---
+		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "value: 42", e.msg)
+		assert.Equal(t, "", e.code)
+		assert.Nil(t, e.meta)
+		assert.Nil(t, e.err)
+		assert.ErrorEqual(t, "value: 42", err)
+	})
+
+	t.Run("with code", func(t *testing.T) {
+		// --- Given ---
+		have := ErrorfFunc[EDXrr]()
+
+		// --- When ---
+		err := have("msg", WithCode("ECode"))
+
+		// --- Then ---
+		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", e.msg)
+		assert.Equal(t, "ECode", e.code)
+		assert.Nil(t, e.meta)
+		assert.Nil(t, e.err)
+		assert.ErrorEqual(t, "msg", err)
+	})
+
+	t.Run("with options", func(t *testing.T) {
+		// --- Given ---
+		m := map[string]any{"A": 1, "B": func() {}}
+		have := ErrorfFunc[EDXrr]()
+
+		// --- When ---
+		err := have("msg", WithMeta(m))
+
+		// --- Then ---
+		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", e.msg)
+		assert.Equal(t, "", e.code)
+		assert.NotSame(t, m, e.meta)
+		assert.Equal(t, map[string]any{"A": 1}, e.meta)
+		assert.Nil(t, e.err)
+		assert.ErrorEqual(t, "msg", err)
+	})
+
+	t.Run("wraps error via %w", func(t *testing.T) {
+		// --- Given ---
+		cause := errors.New("original")
+		have := ErrorfFunc[EDXrr]()
+
+		// --- When ---
+		err := have("wrap: %w", cause)
+
+		// --- Then ---
+		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "", e.msg)
+		assert.Equal(t, ECGeneric, e.code)
+		assert.Nil(t, e.meta)
+		assert.NotNil(t, e.err)
+		assert.True(t, errors.Is(err, cause))
+		assert.ErrorEqual(t, "wrap: original", err)
+	})
+
+	t.Run("wraps error with code", func(t *testing.T) {
+		// --- Given ---
+		cause := errors.New("original")
+		have := ErrorfFunc[EDXrr]()
+
+		// --- When ---
+		err := have("wrap: %w", cause, WithCode("ECode"))
+
+		// --- Then ---
+		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "", e.msg)
+		assert.Equal(t, "ECode", e.code)
+		assert.Nil(t, e.meta)
+		assert.NotNil(t, e.err)
+		assert.True(t, errors.Is(err, cause))
+		assert.ErrorEqual(t, "wrap: original", err)
+	})
+}
+
 func Test_GenericError_Error(t *testing.T) {
 	t.Run("xrr error", func(t *testing.T) {
 		// --- Given ---

@@ -26,10 +26,61 @@ type GenericError[T Domain] struct {
 	err  error          // Wrapped error.
 }
 
-// ErrorFunc returns a function for creating domain-specific errors.
-func ErrorFunc[T Domain]() func(msg, code string, opts ...Option) *GenericError[T] {
-	return func(msg, code string, opts ...Option) *GenericError[T] {
+// ErrorFunc returns a constructor for domain-T errors. The returned function
+// accepts a message string followed by an optional error code string and any
+// number of [Option] values in any order.
+//
+// Examples:
+//
+//	newErr := xrr.ErrorFunc[MyDomain]()
+//	newErr("message")
+//	newErr("message", "ECode")
+//	newErr("message", "ECode", xrr.Option())
+func ErrorFunc[T Domain]() func(msg string, args ...any) *GenericError[T] {
+	return func(msg string, args ...any) *GenericError[T] {
+		code, opts := newArgs(args...)
 		ops := Options{code: code}.Set(opts...)
+		return &GenericError[T]{
+			msg:  msg,
+			code: ops.code,
+			meta: ops.meta,
+			err:  ops.err,
+		}
+	}
+}
+
+// ErrorfFunc returns a format-style constructor for domain-T errors. The
+// returned function behaves like [fmt.Sprintf]: non-[Option] args are passed
+// as format arguments, and [Option] values are applied to the error.
+//
+// When the format string contains %w, the constructor uses [fmt.Errorf] to
+// build the cause (preserving the error chain for [errors.Is] / [errors.As])
+// and leaves the message empty so [GenericError.Error] delegates to the cause.
+// Without %w, the message is set to fmt.Sprintf(format, args...).
+//
+// The error code must be passed via [WithCode]; unlike [ErrorFunc], a bare
+// string argument is treated as a format argument, not a code.
+//
+// Examples:
+//
+//	newErrf := xrr.ErrorfFunc[MyDomain]()
+//	newErrf("user %d not found", userID)
+//	newErrf("user %d not found", userID, xrr.WithCode("ECode"))
+//	newErrf("connect failed: %w", err)
+//	newErrf("connect failed: %w", err, xrr.WithCode("ECode"))
+func ErrorfFunc[T Domain]() func(format string, args ...any) *GenericError[T] {
+	return func(format string, args ...any) *GenericError[T] {
+		wraps, args, opts := newfArgs(format, args...)
+
+		var msg string
+		if wraps {
+			err := fmt.Errorf(format, args...)
+			opts = append(opts, WithCause(err))
+		} else {
+			msg = fmt.Sprintf(format, args...)
+		}
+
+		ops := Options{}.Set(opts...)
 		return &GenericError[T]{
 			msg:  msg,
 			code: ops.code,

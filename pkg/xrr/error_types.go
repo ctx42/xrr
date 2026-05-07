@@ -9,25 +9,52 @@ type EDXrr struct{}
 // Error constructor functions for the xrr package [edXrr] domain.
 var (
 	newError       = ErrorFunc[EDXrr]()
+	newfError      = ErrorfFunc[EDXrr]()
 	newFieldsError = FieldsFunc[EDXrr]()
 )
 
 // Error represents an error in the xrr package error domain.
 type Error = GenericError[EDXrr]
 
-// New creates a new [Error] with the given message and error code.
+// New creates a new [Error] with the given message. The args may contain an
+// optional string error code and any number of [Option] values in any order.
+//
+// Examples:
+//
+//	xrr.New("message")
+//	xrr.New("message", "ECode")
+//	xrr.New("message", "ECode", xrr.Option())
 //
 // When [WithCause] is provided:
 //   - If msg is empty, Error() returns the cause's message directly.
 //   - If msg is non-empty, Error() returns "msg: cause message".
-//   - If code is empty and [WithCode] is not provided, the cause's code is
-//     inherited via [GetCode]. Pass a non-empty code argument or [WithCode]
-//     to override it.
+//   - If no code is given and [WithCode] is not provided, the cause's code is
+//     inherited via [GetCode]. Pass a code string or [WithCode] to override it.
 //
-// For wrapping without a new message, prefer [Wrap] which makes the intent
+// For wrapping without a new message, prefer [Wrap], which makes the intent
 // clearer.
-func New(msg, code string, opts ...Option) error {
-	return newError(msg, code, opts...)
+func New(msg string, args ...any) error {
+	return newError(msg, args...)
+}
+
+// Newf creates a new [Error] using a format string. It is the format-style
+// counterpart of [New]: non-[Option] args are passed to the format string,
+// while [Option] values are applied to the error. Unlike [New], a bare string
+// argument is treated as a format argument, not an error code — pass [WithCode]
+// to set the code.
+//
+// When the format string contains %w, the error is created via [fmt.Errorf]
+// and stored as the cause; [GenericError.Error] delegates to it. Without %w,
+// the message is set to fmt.Sprintf(format, args...).
+//
+// Examples:
+//
+//	xrr.Newf("user %d not found", userID)
+//	xrr.Newf("user %d not found", userID, xrr.WithCode("ECode"))
+//	xrr.Newf("connect failed: %w", err)
+//	xrr.Newf("connect failed: %w", err, xrr.WithCode("ECode"))
+func Newf(format string, args ...any) error {
+	return newfError(format, args...)
 }
 
 // FieldErrors represents a field error in the xrr error domain.
