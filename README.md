@@ -22,11 +22,11 @@ go get github.com/ctx42/xrr
   * [Error Codes](#error-codes)
   * [Error Metadata](#error-metadata)
   * [Error Marshaling](#error-marshaling)
-  * [Structured Logging](#structured-logging)
   * [Domain Types](#domain-types)
 * [Wrapping Errors](#wrapping-errors)
 * [Format-Style Errors](#format-style-errors)
 * [Inspecting Error Trees](#inspecting-error-trees)
+* [Structured Logging](#structured-logging)
 * [Field Errors](#field-errors)
 * [Domain-Specific Errors](#domain-specific-errors)
 * [Error Utilities](#error-utilities)
@@ -123,36 +123,6 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 //     "user_id": "u-123"
 //   }
 // }
-```
-
-## Structured Logging
-
-Metadata is designed to be passed directly to structured loggers.
-`GetMeta` retrieves all metadata accumulated across the error chain as
-a `map[string]any`, ready for use with `log/slog` or any structured
-logger:
-
-<!-- gmdoceg:pkg/xrr/ExampleNew_with_slog -->
-```go
-meta := xrr.Meta().Int("attempt", 3).Str("user_id", "u-123")
-err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
-
-handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-	ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
-		if a.Key == slog.TimeKey {
-			return slog.Attr{}
-		}
-		return a
-	},
-})
-
-slog.New(handler).Error(
-	err.Error(),
-	"code", xrr.GetCode(err),
-	"meta", xrr.GetMeta(err),
-)
-// Output:
-// {"level":"ERROR","msg":"user not found","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"user_id":"u-123"}}
 ```
 
 ## Domain Types
@@ -272,6 +242,35 @@ count, ok := xrr.GetInt(err, "attempt")
 flag, ok := xrr.GetBool(err, "retryable")
 ts, ok := xrr.GetTime(err, "created_at")
 dur, ok := xrr.GetDuration(err, "elapsed")
+```
+
+# Structured Logging
+
+`GetMeta` retrieves all metadata accumulated across the error chain as
+a `map[string]any`, ready for use with `log/slog` or any structured
+logger:
+
+<!-- gmdoceg:pkg/xrr/ExampleNew_with_slog -->
+```go
+meta := xrr.Meta().Int("attempt", 3).Str("user_id", "u-123")
+err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
+
+handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.TimeKey {
+			return slog.Attr{}
+		}
+		return a
+	},
+})
+
+slog.New(handler).Error(
+	err.Error(),
+	"code", xrr.GetCode(err),
+	"meta", xrr.GetMeta(err),
+)
+// Output:
+// {"level":"ERROR","msg":"user not found","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"user_id":"u-123"}}
 ```
 
 # Field Errors
