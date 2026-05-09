@@ -221,10 +221,10 @@ func newArgs(ags ...any) (string, []Option) {
 // wrapsErr is true when msg contains %w; non-[Option] values (including errors)
 // are collected as positional format args; [Option] values form the option
 // slice.
-func newfArgs(msg string, ags ...any) (bool, []any, []Option) {
+func newfArgs(format string, ags ...any) (bool, []any, []Option) {
 	var args []any
 	var opts []Option
-	wrapsErr := strings.Index(msg, "%w") >= 0
+	wrapsErr := strings.Index(format, "%w") >= 0
 	for _, arg := range ags {
 		switch a := arg.(type) {
 		case Option:
