@@ -44,39 +44,19 @@ go get github.com/ctx42/xrr
 
 <!-- gmdoceg:pkg/xrr/Example -->
 ```go
-ts := time.Date(2026, 5, 9, 11, 23, 0, 0, time.UTC)
-meta := xrr.Meta().
-	Int("attempt", 3).
-	Str("user_id", "u-123").
-	Time("timestamp", ts)
-err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
-
-handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-	ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
-		if a.Key == slog.TimeKey {
-			return slog.Attr{}
-		}
-		return a
-	},
-})
-slog.New(handler).Error(
-	"request failed",
-	"code", xrr.GetCode(err),
-	"meta", xrr.GetMeta(err),
+err := xrr.New("user not found", "EC_USER_NOT_FOUND",
+	xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Option(),
 )
 
-fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+fmt.Printf("%v\n", err)
+fmt.Printf("%+v\n", err)
+fmt.Println(xrr.GetCode(err))
+fmt.Println(xrr.GetMeta(err))
 // Output:
-// {"level":"ERROR","msg":"request failed","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"timestamp":"2026-05-09T11:23:00Z","user_id":"u-123"}}
-// {
-//   "code": "EC_USER_NOT_FOUND",
-//   "error": "user not found",
-//   "meta": {
-//     "attempt": 3,
-//     "timestamp": "2026-05-09T11:23:00Z",
-//     "user_id": "u-123"
-//   }
-// }
+// user not found
+// user not found (EC_USER_NOT_FOUND)
+// EC_USER_NOT_FOUND
+// map[attempt:3 user_id:u-123]
 ```
 
 ---
@@ -256,6 +236,41 @@ slog.New(handler).Error(
 )
 // Output:
 // {"level":"ERROR","msg":"user not found","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"user_id":"u-123"}}
+```
+
+<!-- gmdoceg:pkg/xrr/ExampleNew_slog_and_json -->
+```go
+ts := time.Date(2026, 5, 9, 11, 23, 0, 0, time.UTC)
+err := xrr.New("user not found", "EC_USER_NOT_FOUND",
+	xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Time("timestamp", ts).Option(),
+)
+
+handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.TimeKey {
+			return slog.Attr{}
+		}
+		return a
+	},
+})
+slog.New(handler).Error(
+	"request failed",
+	"code", xrr.GetCode(err),
+	"meta", xrr.GetMeta(err),
+)
+
+fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+// Output:
+// {"level":"ERROR","msg":"request failed","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"timestamp":"2026-05-09T11:23:00Z","user_id":"u-123"}}
+// {
+//   "code": "EC_USER_NOT_FOUND",
+//   "error": "user not found",
+//   "meta": {
+//     "attempt": 3,
+//     "timestamp": "2026-05-09T11:23:00Z",
+//     "user_id": "u-123"
+//   }
+// }
 ```
 
 Perfect for REST APIs and observability platforms.

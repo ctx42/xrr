@@ -17,12 +17,26 @@ import (
 )
 
 func Example() {
+	err := xrr.New("user not found", "EC_USER_NOT_FOUND",
+		xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Option(),
+	)
+
+	fmt.Printf("%v\n", err)
+	fmt.Printf("%+v\n", err)
+	fmt.Println(xrr.GetCode(err))
+	fmt.Println(xrr.GetMeta(err))
+	// Output:
+	// user not found
+	// user not found (EC_USER_NOT_FOUND)
+	// EC_USER_NOT_FOUND
+	// map[attempt:3 user_id:u-123]
+}
+
+func ExampleNew_slog_and_json() {
 	ts := time.Date(2026, 5, 9, 11, 23, 0, 0, time.UTC)
-	meta := xrr.Meta().
-		Int("attempt", 3).
-		Str("user_id", "u-123").
-		Time("timestamp", ts)
-	err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
+	err := xrr.New("user not found", "EC_USER_NOT_FOUND",
+		xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Time("timestamp", ts).Option(),
+	)
 
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
