@@ -403,7 +403,9 @@ MIT License — see [LICENSE](LICENSE) file.
 
 ---
 
-`go get github.com/ctx42/xrr`
+```
+go get github.com/ctx42/xrr
+```
 
 Full godoc: [pkg.go.dev/github.com/ctx42/xrr](https://pkg.go.dev/github.com/ctx42/xrr)
 
