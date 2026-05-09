@@ -26,9 +26,19 @@ type GenericError[T Domain] struct {
 	err  error          // Wrapped error.
 }
 
-// ErrorFunc returns a function for creating domain-specific errors.
-func ErrorFunc[T Domain]() func(msg, code string, opts ...Option) *GenericError[T] {
-	return func(msg, code string, opts ...Option) *GenericError[T] {
+// ErrorFunc returns a constructor for domain-T errors. The returned function
+// accepts a message string followed by an optional error code string and any
+// number of [Option] values in any order.
+//
+// Examples:
+//
+//	newErr := xrr.ErrorFunc[MyDomain]()
+//	newErr("message")
+//	newErr("message", "ECode")
+//	newErr("message", "ECode", xrr.Option())
+func ErrorFunc[T Domain]() func(msg string, args ...any) *GenericError[T] {
+	return func(msg string, args ...any) *GenericError[T] {
+		code, opts := newArgs(args...)
 		ops := Options{code: code}.Set(opts...)
 		return &GenericError[T]{
 			msg:  msg,

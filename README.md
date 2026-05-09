@@ -160,13 +160,13 @@ For larger codebases, define a distinct error type per subsystem so
 callers can identify the origin without parsing codes:
 
 ```go
-type edPayment struct{}                          // unexported domain marker
-type PaymentError = xrr.GenericError[edPayment]  // typed alias
+type edPayment struct{}                          // Unexported domain marker.
+type PaymentError = xrr.GenericError[edPayment]  // Typed alias.
 
 var newPaymentError = xrr.ErrorFunc[edPayment]()
 
-func NewPaymentError(msg, code string, opts ...xrr.Option) error {
-    return newPaymentError(msg, code, opts...)
+func NewPaymentError(msg string, args ...any) error {
+    return newPaymentError(msg, args...)
 }
 ```
 
@@ -341,8 +341,8 @@ var (
     newPaymentFieldsError = xrr.FieldsFunc[edPayment]()
 )
 
-func NewPaymentError(msg, code string, opts ...xrr.Option) error {
-    return newPaymentError(msg, code, opts...)
+func NewPaymentError(msg string, args ...any) error {
+    return newPaymentError(msg, args...)
 }
 
 func IsPaymentError(err error) bool {
