@@ -9,7 +9,7 @@ type EDXrr struct{}
 // Error constructor functions for the xrr package [edXrr] domain.
 var (
 	newError       = ErrorFunc[EDXrr]()
-	newfError      = ErrorfFunc[EDXrr]()
+	newErrorf      = ErrorfFunc[EDXrr]()
 	newFieldsError = FieldsFunc[EDXrr]()
 )
 
@@ -54,7 +54,7 @@ func New(msg string, args ...any) error {
 //	xrr.Newf("connect failed: %w", err)
 //	xrr.Newf("connect failed: %w", err, xrr.WithCode("ECode"))
 func Newf(format string, args ...any) error {
-	return newfError(format, args...)
+	return newErrorf(format, args...)
 }
 
 // FieldErrors represents a field error in the xrr error domain.

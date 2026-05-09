@@ -57,10 +57,10 @@ func Test_Newf(t *testing.T) {
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.ErrorEqual(t, "msg", err)
 		assert.Equal(t, "", e.code)
 		assert.Nil(t, e.meta)
 		assert.Nil(t, e.err)
-		assert.ErrorEqual(t, "msg", err)
 	})
 
 	t.Run("format with args", func(t *testing.T) {
@@ -69,22 +69,22 @@ func Test_Newf(t *testing.T) {
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.ErrorEqual(t, "value: 42", err)
 		assert.Equal(t, "", e.code)
 		assert.Nil(t, e.meta)
 		assert.Nil(t, e.err)
-		assert.ErrorEqual(t, "value: 42", err)
 	})
 
 	t.Run("with code", func(t *testing.T) {
 		// --- When ---
-		err := Newf("msg", WithCode("ECode"))
+		err := Newf("msg %d", 42, WithCode("ECode"))
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.ErrorEqual(t, "msg 42", err)
 		assert.Equal(t, "ECode", e.code)
 		assert.Nil(t, e.meta)
 		assert.Nil(t, e.err)
-		assert.ErrorEqual(t, "msg", err)
 	})
 
 	t.Run("wraps error via %w", func(t *testing.T) {
@@ -96,11 +96,11 @@ func Test_Newf(t *testing.T) {
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.ErrorEqual(t, "connect failed: original", err)
+		assert.True(t, errors.Is(err, cause))
 		assert.Equal(t, ECGeneric, e.code)
 		assert.Nil(t, e.meta)
 		assert.NotNil(t, e.err)
-		assert.True(t, errors.Is(err, cause))
-		assert.ErrorEqual(t, "connect failed: original", err)
 	})
 
 	t.Run("wraps error with code", func(t *testing.T) {
@@ -112,11 +112,11 @@ func Test_Newf(t *testing.T) {
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.ErrorEqual(t, "connect failed: original", err)
+		assert.True(t, errors.Is(err, cause))
 		assert.Equal(t, "ECode", e.code)
 		assert.Nil(t, e.meta)
 		assert.NotNil(t, e.err)
-		assert.True(t, errors.Is(err, cause))
-		assert.ErrorEqual(t, "connect failed: original", err)
 	})
 }
 
