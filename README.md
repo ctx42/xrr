@@ -25,6 +25,7 @@ go get github.com/ctx42/xrr
   * [Structured Logging](#structured-logging)
   * [Domain Types](#domain-types)
 * [Wrapping Errors](#wrapping-errors)
+* [Format-Style Errors](#format-style-errors)
 * [Inspecting Error Trees](#inspecting-error-trees)
 * [Field Errors](#field-errors)
 * [Domain-Specific Errors](#domain-specific-errors)
@@ -163,10 +164,17 @@ callers can identify the origin without parsing codes:
 type edPayment struct{}                          // Unexported domain marker.
 type PaymentError = xrr.GenericError[edPayment]  // Typed alias.
 
-var newPaymentError = xrr.ErrorFunc[edPayment]()
+var (
+    newPaymentError  = xrr.ErrorFunc[edPayment]()
+    newPaymentErrorf = xrr.ErrorfFunc[edPayment]()
+)
 
 func NewPaymentError(msg string, args ...any) error {
     return newPaymentError(msg, args...)
+}
+
+func NewPaymentErrorf(format string, args ...any) error {
+    return newPaymentErrorf(format, args...)
 }
 ```
 
@@ -223,6 +231,28 @@ fmt.Println(wrapped.Error())
 // true
 // EC_CONN
 // connection refused
+```
+
+# Format-Style Errors
+
+`Newf` is the `fmt.Sprintf`-style counterpart of `New`. Non-`Option` arguments
+are passed to the format string; the error code must be set via `WithCode`:
+
+```go
+err := xrr.Newf("user %d not found", userID, xrr.WithCode("EC_NOT_FOUND"))
+```
+
+When the format string contains `%w`, `Newf` uses `fmt.Errorf` to wrap the
+cause and preserves the error chain for `errors.Is` and `errors.As`. This is
+the concise alternative to `New` with `WithCause`:
+
+```go
+cause := fmt.Errorf("connection refused")
+err := xrr.Newf("dial failed: %w", cause, xrr.WithCode("EC_CONN"))
+
+fmt.Println(errors.Is(err, cause))  // true
+fmt.Println(xrr.GetCode(err))       // EC_CONN
+fmt.Println(err.Error())            // dial failed: connection refused
 ```
 
 # Inspecting Error Trees
@@ -332,17 +362,22 @@ type (
 )
 ```
 
-Bind constructors to the domain using `ErrorFunc` and `FieldsFunc`, then
-expose them through named public functions:
+Bind constructors to the domain using `ErrorFunc`, `ErrorfFunc`, and
+`FieldsFunc`, then expose them through named public functions:
 
 ```go
 var (
     newPaymentError       = xrr.ErrorFunc[edPayment]()
+    newPaymentErrorf      = xrr.ErrorfFunc[edPayment]()
     newPaymentFieldsError = xrr.FieldsFunc[edPayment]()
 )
 
 func NewPaymentError(msg string, args ...any) error {
     return newPaymentError(msg, args...)
+}
+
+func NewPaymentErrorf(format string, args ...any) error {
+    return newPaymentErrorf(format, args...)
 }
 
 func IsPaymentError(err error) bool {
