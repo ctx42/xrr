@@ -1,3 +1,6 @@
+## v0.15.0 (Sat, 09 May 2026 10:35:34 UTC)
+- feat(xrr)!: relax constructor signatures; add Newf and ErrorfFunc.
+
 ## v0.14.1 (Sun, 03 May 2026 09:23:10 UTC)
 - docs(xrr): warn about typed-nil trap in Flatten.
 
