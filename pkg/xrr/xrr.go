@@ -4,6 +4,10 @@
 // Package xrr provides errors supporting error codes and metadata.
 package xrr
 
+import (
+	"fmt"
+)
+
 // ECGeneric represents generic error code used for non-nil errors which have
 // no error code assigned.
 const ECGeneric = "ECGeneric"
@@ -49,7 +53,12 @@ func WrapUsing[T Domain](err error, opts ...Option) error {
 	if err == nil || isNil(err) {
 		return nil
 	}
+
 	ops := Options{code: GetCode(err)}.Set(opts...)
+	if ops.err != nil {
+		err = fmt.Errorf("%w; %w", err, ops.err)
+	}
+
 	return &GenericError[T]{
 		code: ops.code,
 		meta: ops.meta,
