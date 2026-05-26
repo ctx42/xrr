@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -8,12 +8,11 @@ import (
 	"errors"
 )
 
-// Envelope provides facilities to create JSON envelope for errors.
+// Envelope provides a JSON envelope for errors.
 //
-// Envelope has two fields `cause` and `lead`. The `cause` is the error we
-// encountered during the execution of our program. The `lead` is the error
-// we want to put as the top-level error in the JSON message. See examples
-// below.
+// An [Envelope] has two fields: `cause` (the error encountered during
+// execution) and `lead` (the error to surface as the top-level error in the
+// JSON output). See the examples below.
 //
 // - the `lead` error is not provided:
 //
@@ -52,7 +51,7 @@ import (
 //	  }
 //	}
 //
-// - the `cause` is join errors and `lead` error is provided:
+// - the `cause` is a joined error and `lead` error is provided:
 //
 //	{
 //	  "error": "lead",
@@ -63,7 +62,7 @@ import (
 //	  ]
 //	}
 //
-// - the `cause` is join errors and `lead` error is not provided:
+// - the `cause` is a joined error and `lead` error is not provided:
 //
 //	{
 //	  "error": "cause 0",
@@ -77,10 +76,10 @@ type Envelope struct {
 	lead  error
 }
 
-// Enclose creates a new instance of [Envelope] from cause and optional leading
+// Envelop creates a new instance of [Envelope] from cause and optional leading
 // error. Returns nil if the cause is nil. When more than one leading error is
 // provided, only the first one is used.
-func Enclose(cause error, lead ...error) error {
+func Envelop(cause error, lead ...error) error {
 	if cause == nil {
 		return nil
 	}
@@ -119,12 +118,18 @@ func (e Envelope) Is(target error) bool {
 	return errors.Is(e.lead, target) || errors.Is(e.cause, target)
 }
 
+// MarshalJSON returns the JSON representation of the envelope.
+//
+// The exact shape depends on the contents:
+//   - If the cause is a [Fielder], it delegates to [envelopeFieldsToJSON].
+//   - If the cause is a joined error, it delegates to [envelopeErrorsToJSON].
+//   - Otherwise it uses the lead (if present) + cause via [envelopeErrorsToJSON].
 func (e Envelope) MarshalJSON() ([]byte, error) {
 	if ef, ok := e.cause.(Fielder); ok {
 		if e.lead == nil {
 			e.lead = ErrFields
 		}
-		return encloseFieldsError(e.lead, ef)
+		return envelopeFieldsToJSON(e.lead, ef)
 	}
 
 	if IsJoined(e.cause) {
@@ -133,19 +138,22 @@ func (e Envelope) MarshalJSON() ([]byte, error) {
 			e.lead = ers[0]
 			ers = ers[1:]
 		}
-		return encloseMultiError(e.lead, ers...)
+		return envelopeErrorsToJSON(e.lead, ers...)
 	}
 
 	if e.lead != nil {
-		return encloseMultiError(e.lead, e.cause)
+		return envelopeErrorsToJSON(e.lead, e.cause)
 	}
-	return encloseMultiError(e.cause)
+	return envelopeErrorsToJSON(e.cause)
 }
 
-// encloseFieldsError returns [Fields] error enclosed in an error envelope with
-// given leading error.
-func encloseFieldsError(lead error, ef Fielder) ([]byte, error) {
-	ret := errorAsMap(lead)
+// envelopeFieldsToJSON returns the JSON representation of an
+// [Envelope] that contains field validation errors.
+//
+// It is called by [Envelope.MarshalJSON] when the cause implements [Fielder].
+// The resulting object includes the lead error plus a "fields" key.
+func envelopeFieldsToJSON(lead error, ef Fielder) ([]byte, error) {
+	ret := errorToMap(lead)
 	ret["fields"] = &GenericFields[EDXrr]{fields: ef.ErrorFields()}
 	if meta := GetMeta(lead); len(meta) > 0 {
 		ret["meta"] = meta
@@ -153,14 +161,19 @@ func encloseFieldsError(lead error, ef Fielder) ([]byte, error) {
 	return json.Marshal(ret)
 }
 
-// encloseMultiError returns multiple errors enclosed in an error envelope with
-// given leading error.
-func encloseMultiError(lead error, ers ...error) ([]byte, error) {
-	ret := errorAsMap(lead)
+// envelopeErrorsToJSON returns the JSON representation of an
+// [Envelope] that wraps multiple errors (or a single cause with a lead).
+//
+// It is called by [Envelope.MarshalJSON] for joined errors, for a lead
+// error plus one or more causes, and for plain single-cause envelopes.
+// The resulting object includes an "errors" array when there is more than
+// one error.
+func envelopeErrorsToJSON(lead error, ers ...error) ([]byte, error) {
+	ret := errorToMap(lead)
 	if len(ers) > 0 {
 		es := make([]json.RawMessage, len(ers))
 		for i, e := range ers {
-			entry, err := marshalError(e)
+			entry, err := errorToJSON(e)
 			if err != nil {
 				return nil, err
 			}

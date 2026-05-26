@@ -90,6 +90,9 @@ func ErrorfFunc[T Domain]() func(format string, args ...any) *GenericError[T] {
 	}
 }
 
+// Error returns the error message. For errors with a cause or joined errors
+// it delegates to [errorMessage] (which produces "; "-separated messages for
+// joined errors).
 func (e *GenericError[T]) Error() string {
 	if e.err != nil {
 		em := errorMessage(e.err)
@@ -131,16 +134,12 @@ func (e *GenericError[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-// UnmarshalJSON unmarshals JSON representation of the [GenericError].
+// UnmarshalJSON unmarshals the JSON representation of a [GenericError].
 //
-// The minimal valid JSON representation for a [GenericError] is
+// The minimal valid form is {"error": "message"}; in that case the code
+// defaults to [ECGeneric].
 //
-//	{"error": "message"}
-//
-// and in this case, the error code is set to [ECGeneric].
-//
-// Notes:
-//   - Numeric values will be unmarshalled as float64.
+// Note: Numeric metadata values are unmarshaled as float64.
 func (e *GenericError[T]) UnmarshalJSON(data []byte) error {
 	m := make(map[string]any, 3)
 	if err := json.Unmarshal(data, &m); err != nil {
@@ -176,7 +175,8 @@ func (e *GenericError[T]) Format(state fmt.State, verb rune) {
 	Format(e.Error(), e.ErrorCode(), state, verb)
 }
 
-// Format is a custom formatter for [GenericError] instances.
+// Format is the implementation backing [GenericError.Format] (and used by
+// field error formatting).
 func Format(msg, code string, state fmt.State, verb rune) {
 	switch verb {
 	case 's', 'q':

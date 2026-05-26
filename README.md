@@ -31,6 +31,7 @@ Plain Go errors are just strings. In real production applications you quickly ru
 - ✅ **Production-ready outputs** — automatic JSON marshaling, slog maps, custom ` %+v` formatting
 - ✅ **Validation support** — first-class field errors with clean JSON serialization
 - ✅ **Envelope pattern** — ideal for API responses (lead error + full cause chain)
+- ✅ **Masked envelope** — expose a safe public-facing error while keeping the cause in the chain
 - ✅ **Rich testing helpers** — `xrrtest` package with domain-aware assertions
 - ✅ **Zero surprises** — no reflection, minimal allocations, Go 1.26+
 
@@ -103,19 +104,19 @@ fmt.Println(xrr.IsDomain[edPayment](err))
 // true
 ```
 
-See full documentation in the [Domain-Specific Errors](#domain-specific-errors) section.
+See the [Domain-Specific Errors (Killer Feature)](#domain-specific-errors-killer-feature) section for more details.
 
 ---
 
 ## Table of Contents
 
 - [Installation](#installation)
-- [Error Codes & Metadata](#error-codes--metadata)
-- [Wrapping & Cause Chains](#wrapping--cause-chains)
-- [JSON & Structured Logging](#json--structured-logging)
+- [Error Codes & Metadata](#error-codes-metadata)
+- [Wrapping & Cause Chains](#wrapping-cause-chains)
+- [JSON & Structured Logging](#json-structured-logging)
 - [Field Errors for Validation](#field-errors-for-validation)
-- [Domain-Specific Errors](#domain-specific-errors)
 - [API Envelope Pattern](#api-envelope-pattern)
+  - [Masked Envelope](#masked-envelope)
 - [Error Inspection Utilities](#error-inspection-utilities)
 - [Testing with xrrtest](#testing-with-xrrtest)
 - [Comparison with Alternatives](#comparison-with-alternatives)
@@ -191,6 +192,73 @@ fmt.Println(wrapped.Error())
 ```
 
 Full support for `errors.Is`, `errors.As`, and `%w`.
+
+---
+
+## Error Inspection Utilities
+
+### Working with Joined Errors
+
+<!-- gmdoceg:pkg/xrr/ExampleSplit -->
+```go
+joined := errors.Join(
+	xrr.New("first", "EC_FIRST"),
+	xrr.New("second", "EC_SECOND"),
+)
+
+for _, p := range xrr.Split(joined) {
+	fmt.Println(p)
+}
+// Output:
+// first
+// second
+```
+
+<!-- gmdoceg:pkg/xrr/ExampleJoin -->
+```go
+combined := xrr.Join(
+	xrr.New("first", "EC_FIRST"),
+	nil,
+	xrr.New("second", "EC_SECOND"),
+)
+
+fmt.Println(xrr.IsJoined(combined))
+for _, p := range xrr.Split(combined) {
+	fmt.Println(p)
+}
+// Output:
+// true
+// first
+// second
+```
+
+<!-- gmdoceg:pkg/xrr/ExampleIsJoined -->
+```go
+single := xrr.New("single error", "EC_SINGLE")
+joined := errors.Join(
+	xrr.New("first", "EC_FIRST"),
+	xrr.New("second", "EC_SECOND"),
+)
+
+fmt.Println(xrr.IsJoined(single))
+fmt.Println(xrr.IsJoined(joined))
+// Output:
+// false
+// true
+```
+
+### Default Code
+
+`DefaultCode` is useful when you have multiple possible codes and want a fallback.
+
+<!-- gmdoceg:pkg/xrr/ExampleDefaultCode -->
+```go
+code := xrr.DefaultCode("ECFallback", "", "EC_FOUND", "EC_IGNORED")
+
+fmt.Println(code)
+// Output:
+// EC_FOUND
+```
 
 ---
 
@@ -312,34 +380,14 @@ Serializes cleanly to JSON arrays/objects for frontend consumption.
 
 ---
 
-## Domain-Specific Errors
-
-<!-- gmdoceg:pkg/xrr/ExampleIsDomain -->
-```go
-type edPayment struct{}
-type PaymentError = xrr.GenericError[edPayment]
-newPaymentError := xrr.ErrorFunc[edPayment]()
-
-err := newPaymentError("insufficient funds", "EC_INSUFFICIENT_FUNDS")
-
-var pe *PaymentError
-fmt.Println(errors.As(err, &pe))
-fmt.Println(xrr.IsDomain[edPayment](err))
-// Output:
-// true
-// true
-```
-
----
-
 ## API Envelope Pattern
 
-<!-- gmdoceg:pkg/xrr/ExampleEnclose -->
+<!-- gmdoceg:pkg/xrr/ExampleEnvelop -->
 ```go
 cause := xrr.New("cause", "EC_CAUSE")
 lead := xrr.New("lead", "EC_LEAD")
 
-err := xrr.Enclose(cause, lead)
+err := xrr.Envelop(cause, lead)
 
 fmt.Printf("is lead error: %v\n", errors.Is(err, cause))
 fmt.Printf("id db error: %v\n", errors.Is(err, lead))
@@ -360,6 +408,93 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 //       "error": "cause"
 //     }
 //   ]
+// }
+```
+
+#### Advanced Envelope Usage
+
+When the cause is a joined error:
+
+<!-- gmdoceg:pkg/xrr/ExampleEnvelop_joined_errors -->
+```go
+cause := errors.Join(xrr.New("cause A", "EC_A"), xrr.New("cause B", "EC_B"))
+lead := xrr.New("lead", "EC_LEAD")
+
+err := xrr.Envelop(cause, lead)
+
+fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+// Output:
+// {
+//   "code": "EC_LEAD",
+//   "error": "lead",
+//   "errors": [
+//     {
+//       "code": "EC_A",
+//       "error": "cause A"
+//     },
+//     {
+//       "code": "EC_B",
+//       "error": "cause B"
+//     }
+//   ]
+// }
+```
+
+When the cause contains field errors:
+
+<!-- gmdoceg:pkg/xrr/ExampleEnvelop_fields_error -->
+```go
+fields := map[string]error{
+	"a": xrr.New("cause A", "EC_A"),
+	"b": xrr.New("cause B", "EC_B"),
+}
+cause := xrr.NewFieldErrors(fields)
+lead := xrr.New("lead", "EC_LEAD")
+
+err := xrr.Envelop(cause, lead)
+
+fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+// Output:
+// {
+//   "code": "EC_LEAD",
+//   "error": "lead",
+//   "fields": {
+//     "a": {
+//       "code": "EC_A",
+//       "error": "cause A"
+//     },
+//     "b": {
+//       "code": "EC_B",
+//       "error": "cause B"
+//     }
+//   }
+// }
+```
+
+### Masked Envelope
+
+`Masked` exposes the `lead` to callers while keeping `cause` accessible
+in the Go error chain. Use it to present a clean public-facing error without
+leaking internal details.
+
+<!-- gmdoceg:pkg/xrr/ExampleMasked -->
+```go
+cause := xrr.New("db: connection refused", "EC_DB_ERR")
+lead := xrr.New("service unavailable", "EC_SERVICE_UNAVAILABLE")
+
+err := xrr.Mask(cause, lead)
+
+fmt.Printf("is cause: %v\n", errors.Is(err, cause))
+fmt.Printf("is lead: %v\n", errors.Is(err, lead))
+fmt.Printf("message: %v\n", err.Error())
+fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+// Output:
+// is cause: true
+// is lead: true
+// message: service unavailable
+// {
+//   "code": "EC_SERVICE_UNAVAILABLE",
+//   "error": "service unavailable"
 // }
 ```
 
@@ -393,20 +528,12 @@ xrrtest.AssertStr(t, "key", "expected", err)
 
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) (if present) or open issues/PRs.
+Contributions are welcome. Please open an issue or pull request.
 
 ---
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) file.
-
----
-
-```
-go get github.com/ctx42/xrr
-```
-
-Full godoc: [pkg.go.dev/github.com/ctx42/xrr](https://pkg.go.dev/github.com/ctx42/xrr)
+MIT License — see [LICENSE.md](LICENSE.md) file.
 
 ---

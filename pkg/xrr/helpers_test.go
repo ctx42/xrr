@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -406,7 +406,7 @@ func Test_isNil_tabular(t *testing.T) {
 	}
 }
 
-func Test_prefix_tabular(t *testing.T) {
+func Test_joinKey_tabular(t *testing.T) {
 	tt := []struct {
 		testN string
 
@@ -423,7 +423,7 @@ func Test_prefix_tabular(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.testN, func(t *testing.T) {
 			// --- When ---
-			have := prefix(tc.prefix, tc.key)
+			have := joinKey(tc.prefix, tc.key)
 
 			// --- Then ---
 			assert.Equal(t, tc.want, have)
@@ -431,7 +431,7 @@ func Test_prefix_tabular(t *testing.T) {
 	}
 }
 
-func Test_isTypeSupported_tabular(t *testing.T) {
+func Test_isValidMetaValue_tabular(t *testing.T) {
 	tt := []struct {
 		testN string
 
@@ -451,7 +451,7 @@ func Test_isTypeSupported_tabular(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.testN, func(t *testing.T) {
 			// --- When ---
-			have := isTypeSupported(tc.typ)
+			have := isValidMetaValue(tc.typ)
 
 			// --- Then ---
 			assert.Equal(t, tc.want, have)
@@ -459,7 +459,7 @@ func Test_isTypeSupported_tabular(t *testing.T) {
 	}
 }
 
-func Test_sortFields(t *testing.T) {
+func Test_sortFieldErrors(t *testing.T) {
 	// --- Given ---
 	fs := map[string]error{
 		"f0": errors.New("em0"),
@@ -471,7 +471,7 @@ func Test_sortFields(t *testing.T) {
 	}
 
 	// --- When ---
-	hFields, hErs := sortFields(fs)
+	hFields, hErs := sortFieldErrors(fs)
 
 	// --- Then ---
 	assert.Len(t, 6, hFields)
@@ -485,13 +485,13 @@ func Test_sortFields(t *testing.T) {
 	assert.Nil(t, hErs[5])
 }
 
-func Test_marshalError(t *testing.T) {
+func Test_errorToJSON(t *testing.T) {
 	t.Run("std error", func(t *testing.T) {
 		// --- Given ---
 		e := errors.New("e")
 
 		// --- When ---
-		have, err := marshalError(e)
+		have, err := errorToJSON(e)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -503,7 +503,7 @@ func Test_marshalError(t *testing.T) {
 		e := New("msg a", "a")
 
 		// --- When ---
-		data, err := marshalError(e)
+		data, err := errorToJSON(e)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -515,7 +515,7 @@ func Test_marshalError(t *testing.T) {
 		e := &TErrMarshalJSON{errors.New("e")}
 
 		// --- When ---
-		have, err := marshalError(e)
+		have, err := errorToJSON(e)
 
 		// --- Then ---
 		wMsg := "json: " +
@@ -525,10 +525,10 @@ func Test_marshalError(t *testing.T) {
 	})
 }
 
-func Test_errorAsMap(t *testing.T) {
+func Test_errorToMap(t *testing.T) {
 	t.Run("nil error", func(t *testing.T) {
 		// --- When ---
-		have := errorAsMap(nil)
+		have := errorToMap(nil)
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -539,7 +539,7 @@ func Test_errorAsMap(t *testing.T) {
 		e := errors.New("m0")
 
 		// --- When ---
-		have := errorAsMap(e)
+		have := errorToMap(e)
 
 		// --- Then ---
 		want := map[string]any{"code": "ECGeneric", "error": "m0"}
@@ -552,7 +552,7 @@ func Test_errorAsMap(t *testing.T) {
 		e := Wrap(errors.New("m0"), WithMeta(m))
 
 		// --- When ---
-		have := errorAsMap(e)
+		have := errorToMap(e)
 
 		// --- Then ---
 		want := map[string]any{

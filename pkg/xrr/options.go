@@ -30,11 +30,12 @@ func WithCode(code string) Option {
 // modified or reused by the caller after passing it to this function. The
 // value types that are not supported will be skipped.
 //
-// For supported metadata types see [MetaType] type constraint.
+// See [MetaType] for supported metadata types. Unsupported values are
+// filtered using [isValidMetaValue].
 func WithMeta(meta map[string]any) Option {
 	return func(ops *Options) {
 		for key, value := range meta {
-			if !isTypeSupported(value) {
+			if !isValidMetaValue(value) {
 				continue
 			}
 			if ops.meta == nil {
@@ -46,8 +47,8 @@ func WithMeta(meta map[string]any) Option {
 }
 
 // WithMetaFrom is an option for [New] and [WrapUsing] setting the metadata
-// from a [Metadater] instance. The types that are not supported by the
-// [GenericError] metadata are not going to be added.
+// from a [Metadater] instance. Only types supported by [MetaType] (filtered
+// via [isValidMetaValue]) are added.
 func WithMetaFrom(src Metadater) Option {
 	return WithMeta(src.MetaAll())
 }
@@ -55,6 +56,12 @@ func WithMetaFrom(src Metadater) Option {
 // WithCause is an option for setting the wrapped cause error. The cause is
 // accessible via [errors.Unwrap] and participates in [errors.Is] /
 // [errors.As] chain traversal.
+//
+// Special behavior with [WrapUsing]:
+// When passed to [WrapUsing], the resulting error's Error() string becomes
+// "original; cause". The original error remains the primary Unwrap target,
+// while the cause is still discoverable via [errors.Is] and [errors.As].
+// See [WrapUsing] for details.
 //
 // If the code field is empty at the time this option is applied, it is
 // inherited from cause via [GetCode]. Because options are applied in order,

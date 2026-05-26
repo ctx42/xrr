@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -53,9 +53,10 @@ func GetFields(err error) map[string]error {
 // GetFieldError returns an error for the given field name. It expects the
 // error to implement [Fielder]. Returns nil when err is nil, does not
 // implement [Fielder], or has no error for the given field name.
+// (Delegates to the internal [getFieldError] for dotted-path support.)
 func GetFieldError(err error, field string) error {
 	if fs := GetFields(err); fs != nil {
-		return get(fs, field)
+		return getFieldError(fs, field)
 	}
 	return nil
 }
@@ -81,7 +82,8 @@ func FieldNames(err error) []string {
 	return names
 }
 
-// MergeFields merges multiple [Fielder] errors into a single [GenericFields[T]].
+// MergeFields merges multiple [Fielder] errors into a single
+// [GenericFields[T]].
 // Returns nil if all inputs are nil or the slice is empty.
 //
 // Merge rules:
@@ -92,15 +94,18 @@ func FieldNames(err error) []string {
 //   - When two inputs share a field name, the later one wins.
 //   - nil field values are preserved (they are not treated as absent).
 func MergeFields[T Domain](ers ...error) error {
-	if fe := mergeFields(ers...); fe != nil {
+	if fe := mergeFieldErrors(ers...); fe != nil {
 		return &GenericFields[T]{fields: fe}
 	}
 	return nil
 }
 
-// mergeFields merges multiple field error maps into a single map. Non-[Fielder]
-// errors are assigned synthetic keys of the form "__field__N".
-func mergeFields(ers ...error) map[string]error {
+// mergeFieldErrors combines multiple errors that may implement [Fielder] into one
+// flat map of field → error.
+//
+// Non-Fielder errors (plain errors) are given synthetic keys of the form
+// "__field__N" so they still appear in the resulting [GenericFields].
+func mergeFieldErrors(ers ...error) map[string]error {
 	if len(ers) == 0 {
 		return nil
 	}
@@ -155,12 +160,12 @@ func mergeFields(ers ...error) map[string]error {
 func (fs *GenericFields[T]) ErrorFields() map[string]error { return fs.fields }
 
 func (fs *GenericFields[T]) Error() string {
-	return formatFields(fs.ErrorFields(), false)
+	return formatFieldErrors(fs.ErrorFields(), false)
 }
 
 func (fs *GenericFields[T]) Unwrap() []error {
 	flat := fs.Flatten()
-	fields, ers := sortFields(flat.fields)
+	fields, ers := sortFieldErrors(flat.fields)
 	var j int
 	for i, err := range ers {
 		if err != nil {
@@ -195,7 +200,7 @@ func (fs *GenericFields[T]) Format(state fmt.State, verb rune) {
 
 	case 'v':
 		if state.Flag('+') {
-			_, _ = fmt.Fprint(state, formatFields(fs.ErrorFields(), true))
+			_, _ = fmt.Fprint(state, formatFieldErrors(fs.ErrorFields(), true))
 		} else {
 			msg := fs.Error()
 			_, _ = fmt.Fprint(state, msg)
@@ -227,7 +232,7 @@ func (fs *GenericFields[T]) Format(state fmt.State, verb rune) {
 //	err := fields.Flatten().Filter() // nil when all fields are nil/absent
 func (fs *GenericFields[T]) Flatten() *GenericFields[T] {
 	visitor := make(map[string]error, len(fs.fields))
-	flatten(visitor, "", fs.fields)
+	flattenFieldErrors(visitor, "", fs.fields)
 	return &GenericFields[T]{fields: visitor}
 }
 
@@ -237,22 +242,24 @@ func (fs *GenericFields[T]) Filter() error {
 	if fs == nil {
 		return nil
 	}
-	if ret := filterMap[T](fs.fields); ret != nil {
+	if ret := filterFieldErrors[T](fs.fields); ret != nil {
 		return ret
 	}
 	return nil
 }
 
-// filterMap returns a new map with nil values removed. Nested [Fielder] values
-// are filtered recursively. Returns nil if no entries survive filtering.
-func filterMap[T Domain](fs map[string]error) *GenericFields[T] {
+// filterFieldErrors creates a new [GenericFields][T] containing only the non-nil entries
+// from the input map. Any nested [Fielder] values are filtered recursively.
+//
+// Returns nil if the resulting map would be empty.
+func filterFieldErrors[T Domain](fs map[string]error) *GenericFields[T] {
 	ret := make(map[string]error, len(fs))
 	for key, value := range fs {
 		if value == nil {
 			continue
 		}
 		if fls, ok := value.(Fielder); ok {
-			if filtered := filterMap[T](fls.ErrorFields()); filtered != nil {
+			if filtered := filterFieldErrors[T](fls.ErrorFields()); filtered != nil {
 				ret[key] = filtered
 			}
 			continue
@@ -281,13 +288,15 @@ func (fs *GenericFields[T]) Merge(errs map[string]error) {
 	}
 }
 
-// Get returns an error for the given field, nil if the field does not exist.
+// Get returns an error for the given field, or nil if the field does not exist.
 func (fs *GenericFields[T]) Get(field string) error {
-	return get(fs.fields, field)
+	return getFieldError(fs.fields, field)
 }
 
-// get returns an error for the given field, nil if the field does not exist.
-func get(ers map[string]error, field string) error {
+// getFieldError looks up a field by exact name or by dotted prefix (supporting
+// nested fields such as "user.email"). It is the implementation behind
+// [GenericFields.Get].
+func getFieldError(ers map[string]error, field string) error {
 	for key, err := range ers {
 		if field == key {
 			return err
@@ -297,7 +306,7 @@ func get(ers map[string]error, field string) error {
 			continue
 		}
 		if fls, ok := err.(Fielder); ok {
-			if err = get(fls.ErrorFields(), suffix); err != nil {
+			if err = getFieldError(fls.ErrorFields(), suffix); err != nil {
 				return err
 			}
 		}
@@ -324,11 +333,15 @@ func (fs *GenericFields[T]) Len() int {
 	return len(fs.fields)
 }
 
+// MarshalJSON returns the fields as a JSON object, with each field name
+// as a key. Nested field errors are flattened to dotted keys using
+// [flattenFieldErrors] (and filtered via [filterFieldErrors]).
+// If there are no fields, it returns "{}".
 func (fs *GenericFields[T]) MarshalJSON() ([]byte, error) {
 	visitor := make(map[string]error, len(fs.fields))
-	flatten(visitor, "", fs.fields)
+	flattenFieldErrors(visitor, "", fs.fields)
 	ret := make(map[string]json.RawMessage, len(visitor))
-	fls := filterMap[T](visitor)
+	fls := filterFieldErrors[T](visitor)
 	if fls == nil {
 		return []byte(`{}`), nil
 	}
@@ -341,7 +354,7 @@ func (fs *GenericFields[T]) MarshalJSON() ([]byte, error) {
 			ret[k] = data
 			continue
 		}
-		m := errorAsMap(v)
+		m := errorToMap(v)
 		data, err := json.Marshal(m)
 		if err != nil {
 			return nil, err
@@ -379,30 +392,38 @@ func (fs *GenericFields[T]) UnmarshalJSON(data []byte) error {
 //	}
 func Flatten[T Domain](err ...error) error {
 	visitor := make(map[string]error)
-	fls := mergeFields(err...)
-	flatten(visitor, "", fls)
+	fls := mergeFieldErrors(err...)
+	flattenFieldErrors(visitor, "", fls)
 	return &GenericFields[T]{fields: visitor}
 }
 
-// flatten flattens nested map of errors.
-func flatten(visitor map[string]error, pref string, fields map[string]error) {
+// flattenFieldErrors recursively walks a nested [Fielder] structure and writes every
+// leaf error into the visitor map using dotted keys (e.g. "user.email").
+//
+// Non-[Fielder] errors are stored directly.
+// Nested [Fielder] errors cause recursion with an extended prefix (via [joinKey]).
+func flattenFieldErrors(visitor map[string]error, pref string, fields map[string]error) {
 	for field, err := range fields {
 		if fls, ok := err.(Fielder); ok {
-			flatten(visitor, prefix(pref, field), fls.ErrorFields())
+			flattenFieldErrors(visitor, joinKey(pref, field), fls.ErrorFields())
 			continue
 		}
-		visitor[prefix(pref, field)] = err
+		visitor[joinKey(pref, field)] = err
 	}
 }
 
-// formatFields returns string representation of Fields.
-func formatFields(fs map[string]error, codes bool) string {
+// formatFieldErrors returns a human-readable string for a field error map.
+//
+// When codes is true, it includes the error code for each field
+// (used by %+v formatting of [GenericFields]). Otherwise it uses the plain
+// error message via [errorMessage] (used by the default Error() string).
+func formatFieldErrors(fs map[string]error, codes bool) string {
 	if len(fs) == 0 {
 		return ""
 	}
 
 	visitor := make(map[string]error, len(fs))
-	flatten(visitor, "", fs)
+	flattenFieldErrors(visitor, "", fs)
 
 	keys := make([]string, len(visitor))
 	i := 0

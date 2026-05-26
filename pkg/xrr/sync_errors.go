@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -19,8 +19,8 @@ func NewSyncErrors() *SyncErrors {
 	return &SyncErrors{ers: make([]error, 0)}
 }
 
-// Add adds an error to [SyncErrors] in a thread-safe way. The nil errors are
-// ignored. If the [SyncErrors] is nil, the call is no-op.
+// Add adds errors to [SyncErrors] in a thread-safe way. Nil errors are ignored.
+// If the [SyncErrors] is nil, the call is a no-op.
 func (ers *SyncErrors) Add(err ...error) {
 	if ers == nil {
 		return
@@ -37,7 +37,7 @@ func (ers *SyncErrors) Add(err ...error) {
 }
 
 // Collect retrieves all errors from [SyncErrors] and resets the internal error
-// slice. If the [SyncErrors] is nil, the call is no-op and returns nil.
+// slice. If the [SyncErrors] is nil, the call is a no-op and returns nil.
 func (ers *SyncErrors) Collect() []error {
 	if ers == nil {
 		return nil
@@ -50,7 +50,8 @@ func (ers *SyncErrors) Collect() []error {
 	return clone
 }
 
-// Reset clears any errors in the slice.
+// Reset clears any errors in the slice. If the [SyncErrors] is nil, the call
+// is a no-op.
 func (ers *SyncErrors) Reset() {
 	if ers == nil {
 		return

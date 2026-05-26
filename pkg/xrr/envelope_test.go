@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -12,13 +12,13 @@ import (
 	"github.com/ctx42/testing/pkg/must"
 )
 
-func Test_Enclose(t *testing.T) {
+func Test_Envelop(t *testing.T) {
 	t.Run("nil cause", func(t *testing.T) {
 		// --- Given ---
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		err := Enclose(nil, lead)
+		err := Envelop(nil, lead)
 
 		// --- Then ---
 		assert.Nil(t, err)
@@ -29,7 +29,7 @@ func Test_Enclose(t *testing.T) {
 		cause := New("cause", "ECC")
 
 		// --- When ---
-		err := Enclose(cause, nil)
+		err := Envelop(cause, nil)
 
 		// --- Then ---
 		assert.NotNil(t, err)
@@ -41,7 +41,7 @@ func Test_Enclose(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		err := Enclose(cause, lead)
+		err := Envelop(cause, lead)
 
 		// --- Then ---
 		var enc Envelope
@@ -57,7 +57,7 @@ func Test_Enclose(t *testing.T) {
 		lead1 := New("lead1", "ECL")
 
 		// --- When ---
-		err := Enclose(cause, lead0, lead1)
+		err := Envelop(cause, lead0, lead1)
 
 		// --- Then ---
 		var enc Envelope
@@ -71,7 +71,7 @@ func Test_Enclose(t *testing.T) {
 		evp := Envelope{cause: New("cause", "ECC"), lead: New("lead", "ECL")}
 
 		// --- When ---
-		err := Enclose(evp)
+		err := Envelop(evp)
 
 		// --- Then ---
 		assert.Same(t, evp.cause, err.(Envelope).cause) // nolint: errorlint
@@ -84,7 +84,7 @@ func Test_Enclose(t *testing.T) {
 		evp := Envelope{cause: New("cause", "ECC"), lead: New("lead", "ECL")}
 
 		// --- When ---
-		err := Enclose(evp, other)
+		err := Envelop(evp, other)
 
 		// --- Then ---
 		assert.Same(t, evp.cause, err.(Envelope).cause) // nolint: errorlint
@@ -163,7 +163,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		cause := errors.New("cause")
 
 		// --- When ---
-		have := Enclose(cause)
+		have := Envelop(cause)
 
 		// --- Then ---
 		data := must.Value(json.Marshal(have))
@@ -180,7 +180,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		cause := New("cause", "ECC", Meta().Int("A", 0).Option())
 
 		// --- When ---
-		have := Enclose(cause)
+		have := Envelop(cause)
 
 		// --- Then ---
 		data := must.Value(json.Marshal(have))
@@ -199,7 +199,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		have := Enclose(cause, lead)
+		have := Envelop(cause, lead)
 
 		// --- Then ---
 		data := must.Value(json.Marshal(have))
@@ -225,7 +225,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		have := Enclose(cause, lead)
+		have := Envelop(cause, lead)
 
 		// --- Then ---
 		data := must.Value(json.Marshal(have))
@@ -251,7 +251,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		}
 
 		// --- When ---
-		have := Enclose(cause)
+		have := Envelop(cause)
 
 		// --- Then ---
 		data := must.Value(json.Marshal(have))
@@ -273,7 +273,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		have := Enclose(cause, lead)
+		have := Envelop(cause, lead)
 
 		// --- Then ---
 		data := must.Value(json.Marshal(have))
@@ -297,7 +297,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		have := Enclose(cause, lead)
+		have := Envelop(cause, lead)
 
 		// --- Then ---
 		data := must.Value(json.Marshal(have))
@@ -315,10 +315,11 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 
 	t.Run("joined errors without lead", func(t *testing.T) {
 		// --- Given ---
-		cause := errors.Join(New("e0", "ECE0", Meta().Int("A", 0).Option()), errors.New("e1"))
+		e0 := New("e0", "ECE0", Meta().Int("A", 0).Option())
+		cause := errors.Join(e0, errors.New("e1"))
 
 		// --- When ---
-		have := Enclose(cause)
+		have := Envelop(cause)
 
 		// --- Then ---
 		data := must.Value(json.Marshal(have))
@@ -340,7 +341,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		cause := errors.Join(New("msg b", "b"), e1)
 
 		// --- When ---
-		have := Enclose(cause)
+		have := Envelop(cause)
 
 		// --- Then ---
 		data, err := json.Marshal(have)
@@ -353,7 +354,7 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 	})
 }
 
-func Test_encloseFieldsError(t *testing.T) {
+func Test_envelopeFieldsToJSON(t *testing.T) {
 	t.Run("lead without metadata", func(t *testing.T) {
 		// --- Given ---
 		cause := &GenericFields[EDXrr]{
@@ -365,7 +366,7 @@ func Test_encloseFieldsError(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		have, err := encloseFieldsError(lead, cause)
+		have, err := envelopeFieldsToJSON(lead, cause)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -392,7 +393,7 @@ func Test_encloseFieldsError(t *testing.T) {
 		lead := New("lead", "ECL", Meta().Int("B", 1).Option())
 
 		// --- When ---
-		have, err := encloseFieldsError(lead, cause)
+		have, err := envelopeFieldsToJSON(lead, cause)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -410,7 +411,7 @@ func Test_encloseFieldsError(t *testing.T) {
 	})
 }
 
-func Test_encloseMultiError(t *testing.T) {
+func Test_envelopeErrorsToJSON(t *testing.T) {
 	t.Run("lead without metadata", func(t *testing.T) {
 		// --- Given ---
 		e0 := New("e0", "ECE0", Meta().Int("A", 0).Option())
@@ -418,7 +419,7 @@ func Test_encloseMultiError(t *testing.T) {
 		lead := New("lead", "ECL")
 
 		// --- When ---
-		have, err := encloseMultiError(lead, e0, e1)
+		have, err := envelopeErrorsToJSON(lead, e0, e1)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -440,7 +441,7 @@ func Test_encloseMultiError(t *testing.T) {
 		lead := New("lead", "ECL", Meta().Int("B", 1).Option())
 
 		// --- When ---
-		have, err := encloseMultiError(lead, cause)
+		have, err := envelopeErrorsToJSON(lead, cause)
 
 		// --- Then ---
 		assert.NoError(t, err)
@@ -461,7 +462,7 @@ func Test_encloseMultiError(t *testing.T) {
 		lead := New("lead", "ECL", Meta().Int("A", 0).Option())
 
 		// --- When ---
-		have, err := encloseMultiError(lead)
+		have, err := envelopeErrorsToJSON(lead)
 
 		// --- Then ---
 		assert.NoError(t, err)

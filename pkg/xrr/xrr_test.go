@@ -156,20 +156,21 @@ func Test_WrapUsing(t *testing.T) {
 		assert.ErrorIs(t, cause, err)
 	})
 
-	t.Run("cause code not inherited when err has no explicit code", func(t *testing.T) {
-		// --- Given ---
-		e := errors.New("msg")
-		cause := New("cause", "ECCause")
+	t.Run("cause code not inherited when err has no explicit code",
+		func(t *testing.T) {
+			// --- Given ---
+			e := errors.New("msg")
+			cause := New("cause", "ECCause")
 
-		// --- When ---
-		err := WrapUsing[string](e, WithCause(cause))
+			// --- When ---
+			err := WrapUsing[string](e, WithCause(cause))
 
-		// --- Then ---
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Equal(t, "ECGeneric", x.code)
-		assert.ErrorIs(t, cause, err)
-	})
+			// --- Then ---
+			var x *GenericError[string]
+			assert.Type(t, &x, err)
+			assert.Equal(t, "ECGeneric", x.code)
+			assert.ErrorIs(t, cause, err)
+		})
 
 	t.Run("WithCode after WithCause overrides code", func(t *testing.T) {
 		// --- Given ---

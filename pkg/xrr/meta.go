@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -72,11 +72,11 @@ func (m Metadata) Duration(key string, value time.Duration) Metadata {
 	return m.set(key, value)
 }
 
-// MetaSetAll copies all metadata from the given map. Only the supported types
-// will be copied.
+// MetaSetAll copies all metadata from the given map. Only types supported by
+// [MetaType] (see [isValidMetaValue]) will be copied.
 func (m Metadata) MetaSetAll(meta map[string]any) Metadata {
 	for key, value := range meta {
-		if !isTypeSupported(value) {
+		if !isValidMetaValue(value) {
 			continue
 		}
 		if m.m == nil {
@@ -88,11 +88,11 @@ func (m Metadata) MetaSetAll(meta map[string]any) Metadata {
 }
 
 // MetaSetFrom copies all metadata from the given [Metadater] instance. Only
-// the supported types will be copied.
+// types supported by [MetaType] (see [isValidMetaValue]) will be copied.
 func (m Metadata) MetaSetFrom(meta Metadater) Metadata {
 	all := meta.MetaAll()
 	for key, value := range all {
-		if !isTypeSupported(value) {
+		if !isValidMetaValue(value) {
 			continue
 		}
 		if m.m == nil {

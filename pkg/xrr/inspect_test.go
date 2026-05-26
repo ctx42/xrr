@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -590,7 +590,7 @@ func Test_GetDuration(t *testing.T) {
 	}
 }
 
-func Test_getKey(t *testing.T) {
+func Test_getMeta(t *testing.T) {
 	tt := []struct {
 		testN string
 
@@ -610,7 +610,7 @@ func Test_getKey(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.testN, func(t *testing.T) {
 			// --- When ---
-			value, exist := getKey[string](tc.err, tc.key)
+			value, exist := getMeta[string](tc.err, tc.key)
 
 			// --- Then ---
 			assert.Equal(t, tc.exist, exist)
@@ -619,7 +619,7 @@ func Test_getKey(t *testing.T) {
 	}
 }
 
-func Test_walk(t *testing.T) {
+func Test_walkErrors(t *testing.T) {
 	t.Run("tree configuration 1", func(t *testing.T) {
 		// --- Given ---
 		e := TstTreeCase1()
@@ -628,7 +628,7 @@ func Test_walk(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walk(e, cb)
+		walkErrors(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "abcedfg", have)
@@ -642,7 +642,7 @@ func Test_walk(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walk(e, cb)
+		walkErrors(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "abcehdfgi", have)
@@ -656,7 +656,7 @@ func Test_walk(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walk(e, cb)
+		walkErrors(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "abcehdfig", have)
@@ -670,7 +670,7 @@ func Test_walk(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walk(e, cb)
+		walkErrors(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "acbde", have)
@@ -684,7 +684,7 @@ func Test_walk(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walk(e, cb)
+		walkErrors(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "abdegh", have)
@@ -698,7 +698,7 @@ func Test_walk(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return false }
 
 		// --- When ---
-		walk(e, cb)
+		walkErrors(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "a", have)
@@ -715,14 +715,14 @@ func Test_walk(t *testing.T) {
 		}
 
 		// --- When ---
-		walk(e, cb)
+		walkErrors(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "abc", have)
 	})
 }
 
-func Test_walkReverse(t *testing.T) {
+func Test_walkErrorsReverse(t *testing.T) {
 	t.Run("tree configuration 1", func(t *testing.T) {
 		// --- Given ---
 		e := TstTreeCase1()
@@ -731,7 +731,7 @@ func Test_walkReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkReverse(e, cb)
+		walkErrorsReverse(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "gfdecba", have)
@@ -745,7 +745,7 @@ func Test_walkReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkReverse(e, cb)
+		walkErrorsReverse(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "igfdhecba", have)
@@ -759,7 +759,7 @@ func Test_walkReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkReverse(e, cb)
+		walkErrorsReverse(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "gifdhecba", have)
@@ -773,7 +773,7 @@ func Test_walkReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkReverse(e, cb)
+		walkErrorsReverse(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "edbca", have)
@@ -787,7 +787,7 @@ func Test_walkReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkReverse(e, cb)
+		walkErrorsReverse(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "hgedba", have)
@@ -801,7 +801,7 @@ func Test_walkReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return false }
 
 		// --- When ---
-		walkReverse(e, cb)
+		walkErrorsReverse(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "g", have)
@@ -818,7 +818,7 @@ func Test_walkReverse(t *testing.T) {
 		}
 
 		// --- When ---
-		walkReverse(e, cb)
+		walkErrorsReverse(e, cb)
 
 		// --- Then ---
 		assert.Equal(t, "gif", have)

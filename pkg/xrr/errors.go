@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -9,7 +9,7 @@ type Errors []error
 // NewErrors returns a new instance of [Errors].
 func NewErrors() Errors { return Errors{} }
 
-// Add adds error to the collection.
+// Add adds an error to the collection.
 func (ec *Errors) Add(e error) { *ec = append(*(ec), e) }
 
 // Unwrap returns collected errors (MUST be treated as read-only).

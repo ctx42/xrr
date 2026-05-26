@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// IsCode walks the error chain (tree) and returns true if any of the errors
-// has a given error code.
+// IsCode walks the error chain (tree) using [walkErrors] and returns true if
+// any error in the chain has the given code.
 func IsCode(err error, code string) bool {
 	var is bool
 	cb := func(err error) bool {
@@ -18,13 +18,13 @@ func IsCode(err error, code string) bool {
 		}
 		return true
 	}
-	walk(err, cb)
+	walkErrors(err, cb)
 	return is
 }
 
-// GetCode returns error code associated with the provided error. If an error
-// does not implement [Coder] interface, the [ECGeneric] error code is returned.
-// For nil error it will return an empty string.
+// GetCode returns the error code associated with the provided error. If an
+// error does not implement the [Coder] interface, the [ECGeneric] error code
+// is returned. For a nil error it returns an empty string.
 func GetCode(err error) string {
 	if err == nil || isNil(err) {
 		return ""
@@ -36,7 +36,7 @@ func GetCode(err error) string {
 }
 
 // GetCodes recursively retrieves a unique list of error codes from an error
-// and its wrapped errors, ignoring empty error codes.
+// and its wrapped errors (via [walkErrors]), ignoring empty codes.
 func GetCodes(err error) []string {
 	set := make(map[string]struct{})
 	var ret []string
@@ -51,15 +51,13 @@ func GetCodes(err error) []string {
 		}
 		return true
 	}
-	walk(err, cb)
+	walkErrors(err, cb)
 	return ret
 }
 
-// GetMeta recursively retrieves metadata from an error and its wrapped errors.
-//
-// The error chain (tree) is traversed in reverse depth-first order so that
-// errors closer to the root override metadata from deeper or right-hand
-// parts of the tree.
+// GetMeta recursively retrieves metadata from an error and its wrapped errors
+// (using [walkErrorsReverse] so that metadata closer to the root takes
+// precedence).
 func GetMeta(err error) map[string]any {
 	var m map[string]any
 	cb := func(err error) bool {
@@ -75,64 +73,69 @@ func GetMeta(err error) map[string]any {
 		}
 		return true
 	}
-	walkReverse(err, cb)
+	walkErrorsReverse(err, cb)
 	return m
 }
 
 // GetBool recursively walks the error chain (tree) and returns the first bool
 // value associated with the provided key. Returns the key value and true if
-// the key was found. Otherwise, returns a false and false.
+// the key was found. Otherwise, returns false and false.
 func GetBool(err error, key string) (bool, bool) {
-	return getKey[bool](err, key)
+	return getMeta[bool](err, key)
 }
 
 // GetStr recursively walks the error chain (tree) and returns the first string
 // value associated with the provided key. Returns the key value and true if
 // the key was found. Otherwise, returns an empty string and false.
 func GetStr(err error, key string) (string, bool) {
-	return getKey[string](err, key)
+	return getMeta[string](err, key)
 }
 
 // GetInt recursively walks the error chain (tree) and returns the first int
 // value associated with the provided key. Returns the key value and true if
 // the key was found. Otherwise, returns a zero value and false.
 func GetInt(err error, key string) (int, bool) {
-	return getKey[int](err, key)
+	return getMeta[int](err, key)
 }
 
 // GetInt64 recursively walks the error chain (tree) and returns the first
 // int64 value associated with the provided key. Returns the key value and true
 // if the key was found. Otherwise, returns a zero value and false.
 func GetInt64(err error, key string) (int64, bool) {
-	return getKey[int64](err, key)
+	return getMeta[int64](err, key)
 }
 
 // GetFloat64 recursively walks the error chain (tree) and returns the first
 // float64 value associated with the provided key. Returns the key value and
 // true if the key was found. Otherwise, returns a zero value and false.
 func GetFloat64(err error, key string) (float64, bool) {
-	return getKey[float64](err, key)
+	return getMeta[float64](err, key)
 }
 
 // GetTime recursively walks the error chain (tree) and returns the first
 // [time.Time] value associated with the provided key. Returns the key value
 // and true if the key was found. Otherwise, returns a zero value and false.
 func GetTime(err error, key string) (time.Time, bool) {
-	return getKey[time.Time](err, key)
+	return getMeta[time.Time](err, key)
 }
 
 // GetDuration recursively walks the error chain (tree) and returns the first
 // [time.Duration] value associated with the provided key. Returns the key value
 // and true if the key was found. Otherwise, returns a zero value and false.
 func GetDuration(err error, key string) (time.Duration, bool) {
-	return getKey[time.Duration](err, key)
+	return getMeta[time.Duration](err, key)
 }
 
-// getKey recursively walks the error chain (tree) and returns the first value
-// of type T associated with the provided key. Returns the key value and true
-// if the key was found with the correct type. Otherwise, returns a zero value
-// and false.
-func getKey[T MetaType](err error, key string) (T, bool) {
+// getMeta walks the error chain using [walkErrors] and returns the
+// first metadata value of type T associated with the given key.
+//
+// Traversal is breadth-first, so the first match encountered wins.
+// Returns the zero value + false if the key is not found or the stored
+// value has a different type.
+//
+// This is the shared implementation behind the typed Get* functions
+// (GetStr, GetInt, GetBool, GetInt64, GetFloat64, GetTime, GetDuration).
+func getMeta[T MetaType](err error, key string) (T, bool) {
 	var value T
 	var found bool
 	cb := func(err error) bool {
@@ -149,38 +152,52 @@ func getKey[T MetaType](err error, key string) (T, bool) {
 		}
 		return true
 	}
-	walk(err, cb)
+	walkErrors(err, cb)
 	return value, found
 }
 
-// walk walks the error chain (tree) using breadth-first search (BFS) and calls
-// the callback for each error. Return true from the callback if you want to
-// continue walking the tree or false to stop.
-func walk(err error, cb func(err error) bool) bool {
+// walkErrors traverses an error chain/tree in breadth-first order,
+// invoking the provided callback for each visited error.
+//
+// It understands three kinds of error structures:
+//   - Plain wrapped errors (via Unwrap() error)
+//   - Field errors (via [Fielder]), but only those that also implement [Coder]
+//     are visited as nodes (plain field maps are treated as transparent)
+//   - Joined errors (via Unwrap() []error)
+//
+// The callback should return true to continue traversal or false to stop early.
+// This function is used internally to implement the various Get* functions.
+func walkErrors(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true
 	}
+
+	// We handle three shapes of error "trees":
+	//   1. Single-wrapped errors (Unwrap() error)
+	//   2. Field errors (Fielder) — only the ones that also
+	//      implement Coder are visited
+	//   3. Joined errors (Unwrap() []error)
 	switch x := err.(type) { // nolint: errorlint
 	case interface{ Unwrap() error }:
 		if !cb(err) {
 			return false
 		}
 		if e := x.Unwrap(); e != nil {
-			return walk(e, cb)
+			return walkErrors(e, cb)
 		}
 		return true
 
 	case Fielder:
-		// Only visit Fielder nodes that also implement Coder; plain
-		// field-map types (e.g., GenericFields) are transparent containers.
+		// Only visit [Fielder] nodes that also implement [Coder]; plain
+		// field-map types (e.g. [GenericFields]) are transparent containers.
 		if _, ok := err.(Coder); ok {
 			if !cb(err) {
 				return false
 			}
 		}
-		_, ers := sortFields(x.ErrorFields())
+		_, ers := sortFieldErrors(x.ErrorFields())
 		for _, fe := range ers {
-			if !walk(fe, cb) {
+			if !walkErrors(fe, cb) {
 				return false
 			}
 		}
@@ -188,37 +205,53 @@ func walk(err error, cb func(err error) bool) bool {
 
 	case joined:
 		for _, je := range x.Unwrap() {
-			if !walk(je, cb) {
+			if !walkErrors(je, cb) {
 				return false
 			}
 		}
 		return true
 	}
+
+	// Plain error that doesn't implement any of the special interfaces above.
 	return cb(err)
 }
 
-// walkReverse works like [walk] but in the reverse order.
-func walkReverse(err error, cb func(err error) bool) bool {
+// walkErrorsReverse traverses an error chain/tree in reverse depth-first
+// order (children before parents).
+//
+// It is primarily used by [GetMeta] so that metadata attached to errors
+// closer to the root of the chain takes precedence over metadata from deeper
+// errors.
+//
+// The three supported error structures and callback semantics are the same
+// as [walkErrors].
+func walkErrorsReverse(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true
 	}
+
+	// Same three error shapes as walkErrors(), but we always visit children before
+	// the parent (depth-first, reverse order). This ensures metadata from
+	// outer errors wins when GetMeta walks in reverse.
 	switch x := err.(type) { // nolint: errorlint
 	case interface{ Unwrap() error }:
+		// Recurse first (children before parent) so that deeper errors are
+		// visited before this one.
 		if e := x.Unwrap(); e != nil {
-			if !walkReverse(e, cb) {
+			if !walkErrorsReverse(e, cb) {
 				return false
 			}
 		}
 
 	case Fielder:
-		_, ers := sortFields(x.ErrorFields())
+		_, ers := sortFieldErrors(x.ErrorFields())
 		for i := len(ers) - 1; i >= 0; i-- {
-			if !walkReverse(ers[i], cb) {
+			if !walkErrorsReverse(ers[i], cb) {
 				return false
 			}
 		}
-		// Only visit Fielder nodes that also implement Coder; plain
-		// field-map types (e.g. GenericFields) are transparent containers.
+		// Only visit [Fielder] nodes that also implement [Coder]; plain
+		// field-map types (e.g. [GenericFields]) are transparent containers.
 		if _, ok := err.(Coder); ok {
 			return cb(err)
 		}
@@ -227,11 +260,13 @@ func walkReverse(err error, cb func(err error) bool) bool {
 	case joined:
 		ers := x.Unwrap()
 		for i := len(ers) - 1; i >= 0; i-- {
-			if !walkReverse(ers[i], cb) {
+			if !walkErrorsReverse(ers[i], cb) {
 				return false
 			}
 		}
 		return true
 	}
+
+	// Plain error (visited after its children, if any).
 	return cb(err)
 }

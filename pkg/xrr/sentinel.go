@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -8,8 +8,8 @@ const (
 	// ECInvJSON represents invalid JSON error code.
 	ECInvJSON = "ECInvJSON"
 
-	// ECInvJSONError represents error code indicating a JSON string has
-	// invalid syntax or structure to be the [GenericError] representation.
+	// ECInvJSONError represents the error code for a JSON string that has
+	// invalid syntax or structure to serve as a [GenericError] representation.
 	ECInvJSONError = "ECInvJSONError"
 
 	// ECFields represents the [ErrFields] error code.
@@ -22,10 +22,10 @@ var (
 	ErrInvJSON = New("invalid JSON", ECInvJSON)
 
 	// ErrInvJSONError represents an error indicating a JSON string has invalid
-	// syntax or structure to be the [GenericError] representation.
+	// syntax or structure to serve as a [GenericError] representation.
 	ErrInvJSONError = New("invalid JSON error representation", ECInvJSONError)
 
-	// ErrFields is the default lead error used by [Enclose] when the cause
+	// ErrFields is the default lead error used by [Envelop] when the cause
 	// implements [Fielder] and no explicit lead error is provided.
 	ErrFields = New("fields error", ECFields)
 )

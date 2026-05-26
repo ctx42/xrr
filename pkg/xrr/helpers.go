@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr
@@ -16,9 +16,9 @@ import (
 // joined is an interface for an error that was created by [errors.Join].
 type joined interface{ Unwrap() []error }
 
-// Split splits joined errors into a slice of errors. It will return the slice
-// with a single error if the provided error does not implement the
-// `Unwrap []error` interface. It will return nil if the error is nil.
+// Split splits joined errors into a slice of errors. It returns a single-element
+// slice if the error does not implement `Unwrap() []error`. Returns nil if the
+// input error is nil. Joined errors are typically created via [errors.Join].
 func Split(err error) []error {
 	if err == nil {
 		return nil
@@ -29,9 +29,9 @@ func Split(err error) []error {
 	return []error{err}
 }
 
-// Join joins a slice of errors into a single error. It will return nil if the
-// slice is empty. It will return the single error if the slice contains only
-// one error. Otherwise, it will use [errors.Join] to join the errors.
+// Join joins a slice of errors into a single error. Returns nil for an empty
+// slice, or the single error if the slice has exactly one element. Otherwise
+// delegates to [errors.Join].
 func Join(ers ...error) error {
 	ers = join(ers...)
 	switch len(ers) {
@@ -44,10 +44,17 @@ func Join(ers ...error) error {
 	}
 }
 
+// join removes nil errors from the slice and returns the compacted result.
+// It is the internal implementation backing the exported [Join] function.
+//
+// Empty input or all-nil input returns nil.
+// The returned slice shares the backing array with the input (for efficiency),
+// but is truncated to the number of non-nil errors.
 func join(ers ...error) []error {
 	if len(ers) == 0 {
 		return nil
 	}
+
 	var j int
 	for i := 0; i < len(ers); i++ {
 		if err := ers[i]; err != nil {
@@ -57,6 +64,7 @@ func join(ers ...error) []error {
 		}
 	}
 	ers = ers[:j]
+
 	if len(ers) == 0 {
 		return nil
 	}
@@ -92,7 +100,17 @@ func IsDomain[T Domain](err error) bool {
 	return false
 }
 
-// isNil returns true if v is nil or v is a typed nil interface value.
+// isNil reports whether v is nil, including the case of a typed nil
+// (e.g. (*T)(nil), (error)(nil), etc.).
+//
+// This is needed because a nil interface holding a typed nil is not equal
+// to a bare nil interface in Go. It is used as a defensive guard in the
+// common pattern:
+//
+//	if x == nil || isNil(x) { ... }
+//
+// Callers include [GetCode], [walkErrors], [walkErrorsReverse], and
+// [WrapUsing].
 func isNil(v any) bool {
 	if v == nil {
 		return true
@@ -107,8 +125,10 @@ func isNil(v any) bool {
 	}
 }
 
-// prefix adds prefix to the key if the prefix is not empty.
-func prefix(pref, key string) string {
+// joinKey joins a prefix and key with a dot when the prefix is non-empty.
+// It is used internally to build dotted paths when flattening nested
+// [Fielder] structures (see [flattenFieldErrors] and [GenericFields]).
+func joinKey(pref, key string) string {
 	if pref != "" {
 		if key == "" {
 			return pref
@@ -118,8 +138,14 @@ func prefix(pref, key string) string {
 	return key
 }
 
-// isTypeSupported returns true if the type of v is the supported metadata type.
-func isTypeSupported(v any) bool {
+// isValidMetaValue reports whether v has a type that is allowed to be stored
+// as metadata. This is the runtime check that matches the [MetaType]
+// constraint.
+//
+// Supported types: bool, string, int, int64, float64, [time.Time],
+// [time.Duration]. Unsupported values are silently skipped by [WithMeta],
+// [Metadata.MetaSetAll], and [Metadata.MetaSetFrom].
+func isValidMetaValue(v any) bool {
 	switch v.(type) {
 	case bool, string, int, int64, float64, time.Time, time.Duration:
 		return true
@@ -128,11 +154,10 @@ func isTypeSupported(v any) bool {
 	}
 }
 
-// sortFields converts a map of errors to two slices: one for field names and
-// one for errors. The returned slices maintain corresponding indexes, ensuring
-// that each field name aligns with its associated error. Both slices are
-// always of equal length, and the field names are sorted in ascending order.
-func sortFields(ers map[string]error) ([]string, []error) {
+// sortFieldErrors converts a map of field errors to two parallel slices
+// (field names and errors), with the names sorted in ascending order.
+// It is used by [formatFieldErrors] and the [walkErrors] family.
+func sortFieldErrors(ers map[string]error) ([]string, []error) {
 	var errs []error
 	var fields []string
 	for field := range ers {
@@ -145,46 +170,62 @@ func sortFields(ers map[string]error) ([]string, []error) {
 	return fields, errs
 }
 
-// errorMessage formats the error message for the given error. If the error
-// implements the `Unwrap() []error` interface it concatenates the messages of
-// all unwrapped errors with "; " as the separator. For single errors or
-// unwrapped errors with one element, it returns the error's message directly.
-// For non-joined errors, it returns the error's message as is.
+// errorMessage returns the message portion of an error for use in
+// [GenericError.Error] and field error formatting.
+//
+// For joined errors (those implementing `Unwrap() []error`):
+//   - A single error returns its message directly.
+//   - Multiple errors have their messages concatenated with "; ".
+//   - All other errors return err.Error() directly.
+//
+// The unsafe.String optimization avoids an extra allocation when building
+// the concatenated message for joined errors.
 func errorMessage(err error) string {
 	if jes, ok := err.(joined); ok {
 		es := jes.Unwrap()
 		if len(es) == 1 {
 			return es[0].Error()
 		}
+
+		// Build "msg1; msg2; msg3..." efficiently without extra allocations.
 		b := []byte(es[0].Error())
-		for _, err := range es[1:] {
+		for _, e := range es[1:] {
 			b = append(b, ';', ' ')
-			b = append(b, err.Error()...)
+			b = append(b, e.Error()...)
 		}
-		// At this point, b has at least two bytes ';' and ' '.
+		// b is guaranteed to have at least two bytes here.
 		return unsafe.String(&b[0], len(b)) // nolint: gosec
 	}
 	return err.Error()
 }
 
-// marshalError marshals error to JSON with check if the resulting JSON message
-// is an empty object "{}", which means error did not have a [json.Marshaler]
-// interface implemented, in which case the provided error is wrapped in the
-// [GenericError] instance and marshaled again.
-func marshalError(e error) ([]byte, error) {
+// errorToJSON returns the JSON representation of an error according to the
+// library's conventions.
+//
+// It first tries the error's own [json.Marshaler] implementation. If that
+// produces an empty JSON object, it falls back to [errorToMap] to build the
+// standard {"error", "code", "meta"} form. A marshal error is returned
+// directly.
+//
+// This is the function used by [Masked.MarshalJSON].
+func errorToJSON(e error) ([]byte, error) {
 	data, err := json.Marshal(e)
 	if err != nil {
 		return nil, err
 	}
 	if len(data) == 2 {
-		return json.Marshal(errorAsMap(e))
+		return json.Marshal(errorToMap(e))
 	}
 	return data, nil
 }
 
-// errorAsMap returns a map representation of the error. Returns the nil map
-// when the given error is nil.
-func errorAsMap(err error) map[string]any {
+// errorToMap returns the canonical map form used by the library for JSON
+// serialization of errors: {"error", "code", "meta"}.
+//
+// Returns nil if err is nil. This is the fallback used by [errorToJSON]
+// when an error does not have a useful [json.Marshaler] implementation.
+// It is also used directly by [envelopeFieldsToJSON] and [envelopeErrorsToJSON].
+func errorToMap(err error) map[string]any {
 	if err == nil {
 		return nil
 	}
@@ -199,28 +240,40 @@ func errorAsMap(err error) map[string]any {
 }
 
 // newArgs extracts an optional error code and zero or more [Option] values
-// from a mixed argument list. The last string argument wins as the code.
-// Arguments of any other type are silently ignored.
+// from a mixed argument list.
+//
+// Rules:
+//   - The last string argument is treated as the error code (earlier strings
+//     are ignored).
+//   - All [Option] values are collected in order.
+//   - Any other types are ignored.
+//
+// This enables the flexible argument style of [ErrorFunc], [New], etc.
 func newArgs(ags ...any) (string, []Option) {
 	var code string
 	var opts []Option
 	for _, arg := range ags {
 		switch a := arg.(type) {
 		case string:
-			code = a
+			code = a // last one wins
 		case Option:
 			opts = append(opts, a)
 		default:
-			// Skip silently.
+			// Intentionally ignored (see doc comment).
 		}
 	}
 	return code, opts
 }
 
-// newfArgs separates format-style constructor arguments into three groups:
-// wrapsErr is true when msg contains %w; non-[Option] values (including errors)
-// are collected as positional format args; [Option] values form the option
-// slice.
+// newfArgs separates format-style constructor arguments into three groups.
+//
+// It returns:
+//   - wrapsErr: true if the format contains %w (the first non-Option error
+//     arg will be turned into a cause via [WithCause]).
+//   - args: non-[Option] values (including errors) for fmt.Sprintf / fmt.Errorf.
+//   - opts: all [Option] values, collected separately.
+//
+// Used by [ErrorfFunc] and [Newf].
 func newfArgs(format string, ags ...any) (bool, []any, []Option) {
 	var args []any
 	var opts []Option
@@ -229,9 +282,10 @@ func newfArgs(format string, ags ...any) (bool, []any, []Option) {
 		switch a := arg.(type) {
 		case Option:
 			opts = append(opts, a)
-		case error:
-			args = append(args, a)
 		default:
+			// Both errors and everything else are treated as format arguments.
+			// When wrapsErr is true, the first error will later be turned into
+			// a cause by ErrorfFunc.
 			args = append(args, a)
 		}
 	}

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: (c) 2025 Rafal Zajac
+// SPDX-FileCopyrightText: (c) 2026 Rafal Zajac
 // SPDX-License-Identifier: MIT
 
 package xrr_test
@@ -254,11 +254,11 @@ func ExampleGenericFields() {
 	// }
 }
 
-func ExampleEnclose() {
+func ExampleEnvelop() {
 	cause := xrr.New("cause", "EC_CAUSE")
 	lead := xrr.New("lead", "EC_LEAD")
 
-	err := xrr.Enclose(cause, lead)
+	err := xrr.Envelop(cause, lead)
 
 	fmt.Printf("is lead error: %v\n", errors.Is(err, cause))
 	fmt.Printf("id db error: %v\n", errors.Is(err, lead))
@@ -282,11 +282,11 @@ func ExampleEnclose() {
 	// }
 }
 
-func ExampleEnclose_joined_errors() {
+func ExampleEnvelop_joined_errors() {
 	cause := errors.Join(xrr.New("cause A", "EC_A"), xrr.New("cause B", "EC_B"))
 	lead := xrr.New("lead", "EC_LEAD")
 
-	err := xrr.Enclose(cause, lead)
+	err := xrr.Envelop(cause, lead)
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 	// Output:
@@ -306,7 +306,7 @@ func ExampleEnclose_joined_errors() {
 	// }
 }
 
-func ExampleEnclose_fields_error() {
+func ExampleEnvelop_fields_error() {
 	fields := map[string]error{
 		"a": xrr.New("cause A", "EC_A"),
 		"b": xrr.New("cause B", "EC_B"),
@@ -314,7 +314,7 @@ func ExampleEnclose_fields_error() {
 	cause := xrr.NewFieldErrors(fields)
 	lead := xrr.New("lead", "EC_LEAD")
 
-	err := xrr.Enclose(cause, lead)
+	err := xrr.Envelop(cause, lead)
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 	// Output:
@@ -331,6 +331,26 @@ func ExampleEnclose_fields_error() {
 	//       "error": "cause B"
 	//     }
 	//   }
+	// }
+}
+
+func ExampleMask() {
+	cause := xrr.New("db: connection refused", "EC_DB_ERR")
+	lead := xrr.New("service unavailable", "EC_SERVICE_UNAVAILABLE")
+
+	err := xrr.Mask(cause, lead)
+
+	fmt.Printf("is cause: %v\n", errors.Is(err, cause))
+	fmt.Printf("is lead: %v\n", errors.Is(err, lead))
+	fmt.Printf("message: %v\n", err.Error())
+	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+	// Output:
+	// is cause: true
+	// is lead: true
+	// message: service unavailable
+	// {
+	//   "code": "EC_SERVICE_UNAVAILABLE",
+	//   "error": "service unavailable"
 	// }
 }
 
@@ -400,7 +420,7 @@ func ExampleErrFields() {
 	cause := xrr.NewFieldErrors(map[string]error{
 		"email": xrr.New("invalid email", "EC_INVALID_EMAIL"),
 	})
-	err := xrr.Enclose(cause)
+	err := xrr.Envelop(cause)
 
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 	// Output:

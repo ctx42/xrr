@@ -40,8 +40,8 @@ func New(msg string, args ...any) error {
 // Newf creates a new [Error] using a format string. It is the format-style
 // counterpart of [New]: non-[Option] args are passed to the format string,
 // while [Option] values are applied to the error. Unlike [New], a bare string
-// argument is treated as a format argument, not an error code — pass [WithCode]
-// to set the code.
+// argument is treated as a format argument, not an error code — pass
+// [WithCode] to set the code.
 //
 // When the format string contains %w, the error is created via [fmt.Errorf]
 // and stored as the cause; [GenericError.Error] delegates to it. Without %w,
