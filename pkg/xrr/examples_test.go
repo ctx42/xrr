@@ -334,6 +334,26 @@ func ExampleEnclose_fields_error() {
 	// }
 }
 
+func ExampleEncloseMasked() {
+	cause := xrr.New("db: connection refused", "EC_DB_ERR")
+	lead := xrr.New("service unavailable", "EC_SERVICE_UNAVAILABLE")
+
+	err := xrr.EncloseMasked(cause, lead)
+
+	fmt.Printf("is cause: %v\n", errors.Is(err, cause))
+	fmt.Printf("is lead: %v\n", errors.Is(err, lead))
+	fmt.Printf("message: %v\n", err.Error())
+	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+	// Output:
+	// is cause: true
+	// is lead: true
+	// message: service unavailable
+	// {
+	//   "code": "EC_SERVICE_UNAVAILABLE",
+	//   "error": "service unavailable"
+	// }
+}
+
 func ExampleSplit() {
 	joined := errors.Join(
 		xrr.New("first", "EC_FIRST"),

@@ -31,6 +31,7 @@ Plain Go errors are just strings. In real production applications you quickly ru
 - ✅ **Production-ready outputs** — automatic JSON marshaling, slog maps, custom ` %+v` formatting
 - ✅ **Validation support** — first-class field errors with clean JSON serialization
 - ✅ **Envelope pattern** — ideal for API responses (lead error + full cause chain)
+- ✅ **Masked envelope** — expose a safe public-facing error while keeping the cause in the chain
 - ✅ **Rich testing helpers** — `xrrtest` package with domain-aware assertions
 - ✅ **Zero surprises** — no reflection, minimal allocations, Go 1.26+
 
@@ -116,6 +117,7 @@ See full documentation in the [Domain-Specific Errors](#domain-specific-errors) 
 - [Field Errors for Validation](#field-errors-for-validation)
 - [Domain-Specific Errors](#domain-specific-errors)
 - [API Envelope Pattern](#api-envelope-pattern)
+  - [Masked Envelope](#masked-envelope)
 - [Error Inspection Utilities](#error-inspection-utilities)
 - [Testing with xrrtest](#testing-with-xrrtest)
 - [Comparison with Alternatives](#comparison-with-alternatives)
@@ -360,6 +362,33 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 //       "error": "cause"
 //     }
 //   ]
+// }
+```
+
+### Masked Envelope
+
+`MaskedEnvelope` exposes the `lead` to callers while keeping `cause` accessible
+in the Go error chain. Use it to present a clean public-facing error without
+leaking internal details.
+
+<!-- gmdoceg:pkg/xrr/ExampleEncloseMasked -->
+```go
+cause := xrr.New("db: connection refused", "EC_DB_ERR")
+lead := xrr.New("service unavailable", "EC_SERVICE_UNAVAILABLE")
+
+err := xrr.EncloseMasked(cause, lead)
+
+fmt.Printf("is cause: %v\n", errors.Is(err, cause))
+fmt.Printf("is lead: %v\n", errors.Is(err, lead))
+fmt.Printf("message: %v\n", err.Error())
+fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
+// Output:
+// is cause: true
+// is lead: true
+// message: service unavailable
+// {
+//   "code": "EC_SERVICE_UNAVAILABLE",
+//   "error": "service unavailable"
 // }
 ```
 
