@@ -1,3 +1,8 @@
+## v0.16.0 (Fri, 29 May 2026 09:20:34 UTC)
+- style: improve code style.
+- doc: improve README.md.
+- feat(xrr): honour WithCause in WrapUsing.
+
 ## v0.15.0 (Sat, 09 May 2026 10:35:34 UTC)
 - feat(xrr)!: relax constructor signatures; add Newf and ErrorfFunc.
 
