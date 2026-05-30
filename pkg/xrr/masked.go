@@ -5,6 +5,9 @@ package xrr
 
 import "encoding/json"
 
+// Compile time checks.
+var _ json.Marshaler = Masked{}
+
 // Masked is an error that exposes the lead to callers while keeping the cause
 // accessible in the Go error chain. `Error` and `ErrorCode` delegate to the
 // lead; `MarshalJSON` renders only the lead. Both errors are reachable via
@@ -35,6 +38,3 @@ func (e Masked) MarshalJSON() ([]byte, error) { return errorToJSON(e.lead) }
 func (e Masked) Unwrap() []error {
 	return []error{e.cause, e.lead}
 }
-
-// Compile time checks.
-var _ json.Marshaler = Masked{}

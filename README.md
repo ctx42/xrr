@@ -5,7 +5,7 @@
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev/doc/devel/release)
 [![License](https://img.shields.io/github/license/ctx42/xrr)](LICENSE.md)
 [![pkg.go.dev](https://img.shields.io/badge/pkg.go.dev-reference-blue?logo=go)](https://pkg.go.dev/github.com/ctx42/xrr)
-[![Changelog](https://img.shields.io/badge/changelog-v0.14.1-green)](CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v0.16.0-green)](CHANGELOG.md)
 
 ---
 
@@ -389,14 +389,14 @@ lead := xrr.New("lead", "EC_LEAD")
 
 err := xrr.Envelop(cause, lead)
 
-fmt.Printf("is lead error: %v\n", errors.Is(err, cause))
-fmt.Printf("id db error: %v\n", errors.Is(err, lead))
+fmt.Printf("is cause: %v\n", errors.Is(err, cause))
+fmt.Printf("is lead: %v\n", errors.Is(err, lead))
 fmt.Printf("unwrap: %v\n", errors.Unwrap(err))
 fmt.Printf("message: %v\n", err.Error())
 fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // Output:
-// is lead error: true
-// id db error: true
+// is cause: true
+// is lead: true
 // unwrap: cause
 // message: cause
 // {
@@ -477,7 +477,7 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 in the Go error chain. Use it to present a clean public-facing error without
 leaking internal details.
 
-<!-- gmdoceg:pkg/xrr/ExampleMasked -->
+<!-- gmdoceg:pkg/xrr/ExampleMask -->
 ```go
 cause := xrr.New("db: connection refused", "EC_DB_ERR")
 lead := xrr.New("service unavailable", "EC_SERVICE_UNAVAILABLE")

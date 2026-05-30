@@ -1202,7 +1202,7 @@ func Test_AssertHasField(t *testing.T) {
 }
 
 func Test_AssertFieldEqual(t *testing.T) {
-	t.Run("susses - field exists and with a given message", func(t *testing.T) {
+	t.Run("success - field exists and with a given message", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
@@ -1265,7 +1265,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - filed exists but has a different message", func(t *testing.T) {
+	t.Run("error - field exists but has a different message", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()

@@ -27,6 +27,9 @@ type GenericFields[T Domain] struct {
 
 // NewFields creates a new [GenericFields][T] from the given map. The map
 // is stored directly without copying.
+//
+// The caller must not modify the map after passing it to NewFields.
+// Use the type's Set and Merge methods for subsequent modifications.
 func NewFields[T Domain](fields map[string]error) *GenericFields[T] {
 	return &GenericFields[T]{fields: fields}
 }

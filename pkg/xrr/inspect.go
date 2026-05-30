@@ -167,6 +167,8 @@ func getMeta[T MetaType](err error, key string) (T, bool) {
 //
 // The callback should return true to continue traversal or false to stop early.
 // This function is used internally to implement the various Get* functions.
+//
+// nolint: cyclop
 func walkErrors(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true

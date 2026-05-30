@@ -260,14 +260,14 @@ func ExampleEnvelop() {
 
 	err := xrr.Envelop(cause, lead)
 
-	fmt.Printf("is lead error: %v\n", errors.Is(err, cause))
-	fmt.Printf("id db error: %v\n", errors.Is(err, lead))
+	fmt.Printf("is cause: %v\n", errors.Is(err, cause))
+	fmt.Printf("is lead: %v\n", errors.Is(err, lead))
 	fmt.Printf("unwrap: %v\n", errors.Unwrap(err))
 	fmt.Printf("message: %v\n", err.Error())
 	fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 	// Output:
-	// is lead error: true
-	// id db error: true
+	// is cause: true
+	// is lead: true
 	// unwrap: cause
 	// message: cause
 	// {

@@ -68,6 +68,9 @@ func NewFieldError(field string, err error) *FieldErrors {
 
 // NewFieldErrors creates a new [FieldErrors] from the given map.
 // The map is stored directly without copying.
+//
+// The caller must not modify the map after passing it in.
+// Use Set and Merge on the result for later changes.
 func NewFieldErrors(fields map[string]error) *FieldErrors {
 	return NewFields[EDXrr](fields)
 }

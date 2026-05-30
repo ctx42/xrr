@@ -276,7 +276,7 @@ func Test_MergeFields(t *testing.T) {
 		assert.Equal(t, want, have)
 	})
 
-	t.Run("dop not override errors with later nil errors", func(t *testing.T) {
+	t.Run("do not override errors with later nil errors", func(t *testing.T) {
 		// --- Given ---
 		fs0 := &GenericFields[EDXrr]{
 			fields: map[string]error{

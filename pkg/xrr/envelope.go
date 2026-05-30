@@ -8,6 +8,11 @@ import (
 	"errors"
 )
 
+// Compile time checks.
+var _ error = Envelope{}
+var _ Coder = Envelope{}
+var _ json.Marshaler = Envelope{}
+
 // Envelope provides a JSON envelope for errors.
 //
 // An [Envelope] has two fields: `cause` (the error encountered during

@@ -110,34 +110,6 @@ func Test_WithMeta(t *testing.T) {
 	})
 }
 
-func Test_WithCause(t *testing.T) {
-	t.Run("sets err and inherits code when ops.code is empty", func(t *testing.T) {
-		// --- Given ---
-		cause := New("cause", "ECCause")
-		ops := &Options{}
-
-		// --- When ---
-		WithCause(cause)(ops)
-
-		// --- Then ---
-		assert.Equal(t, cause, ops.err)
-		assert.Equal(t, "ECCause", ops.code)
-	})
-
-	t.Run("it does not override existing code", func(t *testing.T) {
-		// --- Given ---
-		cause := New("cause", "ECCause")
-		ops := &Options{code: "ECExisting"}
-
-		// --- When ---
-		WithCause(cause)(ops)
-
-		// --- Then ---
-		assert.Equal(t, cause, ops.err)
-		assert.Equal(t, "ECExisting", ops.code)
-	})
-}
-
 func Test_WithMetaFrom(t *testing.T) {
 	t.Run("set", func(t *testing.T) {
 		// --- Given ---
@@ -178,5 +150,33 @@ func Test_WithMetaFrom(t *testing.T) {
 
 		// --- Then ---
 		assert.Equal(t, map[string]any{"A": 1}, ops.meta)
+	})
+}
+
+func Test_WithCause(t *testing.T) {
+	t.Run("sets err and inherits code when ops.code is empty", func(t *testing.T) {
+		// --- Given ---
+		cause := New("cause", "ECCause")
+		ops := &Options{}
+
+		// --- When ---
+		WithCause(cause)(ops)
+
+		// --- Then ---
+		assert.Equal(t, cause, ops.err)
+		assert.Equal(t, "ECCause", ops.code)
+	})
+
+	t.Run("it does not override existing code", func(t *testing.T) {
+		// --- Given ---
+		cause := New("cause", "ECCause")
+		ops := &Options{code: "ECExisting"}
+
+		// --- When ---
+		WithCause(cause)(ops)
+
+		// --- Then ---
+		assert.Equal(t, cause, ops.err)
+		assert.Equal(t, "ECExisting", ops.code)
 	})
 }
