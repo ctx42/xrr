@@ -1,3 +1,8 @@
+## v0.17.0 (Mon, 01 Jun 2026 20:27:28 UTC)
+- feat!: rename Enclose to Envelop + introduce Masked.
+- docs: add project guidelines and bring codebase into full compliance.
+- bump: update dependency github.com/ctx42/testing to v0.49.0.
+
 ## v0.16.0 (Fri, 29 May 2026 09:20:34 UTC)
 - style: improve code style.
 - doc: improve README.md.
