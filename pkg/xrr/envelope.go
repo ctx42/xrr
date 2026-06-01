@@ -9,9 +9,11 @@ import (
 )
 
 // Compile time checks.
-var _ error = Envelope{}
-var _ Coder = Envelope{}
-var _ json.Marshaler = Envelope{}
+var (
+	_ error          = Envelope{}
+	_ Coder          = Envelope{}
+	_ json.Marshaler = Envelope{}
+)
 
 // Envelope provides a JSON envelope for errors.
 //

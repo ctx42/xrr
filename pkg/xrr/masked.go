@@ -6,7 +6,11 @@ package xrr
 import "encoding/json"
 
 // Compile time checks.
-var _ json.Marshaler = Masked{}
+var (
+	_ error          = Masked{}
+	_ Coder          = Masked{}
+	_ json.Marshaler = Masked{}
+)
 
 // Masked is an error that exposes the lead to callers while keeping the cause
 // accessible in the Go error chain. `Error` and `ErrorCode` delegate to the
