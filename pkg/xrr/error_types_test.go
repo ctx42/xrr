@@ -16,10 +16,10 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode")
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", e.Error())
-		assert.Equal(t, "ECode", e.code)
-		assert.Nil(t, e.meta)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", gen.Error())
+		assert.Equal(t, "ECode", gen.code)
+		assert.Nil(t, gen.meta)
 	})
 
 	t.Run("with options", func(t *testing.T) {
@@ -30,10 +30,10 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode", opt)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", e.Error())
-		assert.Equal(t, "ECode", e.code)
-		assert.Equal(t, map[string]any{"A": 1, "B": 2}, e.meta)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", gen.Error())
+		assert.Equal(t, "ECode", gen.code)
+		assert.Equal(t, map[string]any{"A": 1, "B": 2}, gen.meta)
 	})
 
 	t.Run("WithCode overrides code argument", func(t *testing.T) {
@@ -44,9 +44,9 @@ func Test_New(t *testing.T) {
 		err := New("msg", "ECode", opt)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", e.Error())
-		assert.Equal(t, "MyCode", e.code)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", gen.Error())
+		assert.Equal(t, "MyCode", gen.code)
 	})
 }
 
@@ -56,11 +56,11 @@ func Test_Newf(t *testing.T) {
 		err := Newf("msg")
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.ErrorEqual(t, "msg", err)
-		assert.Equal(t, "", e.code)
-		assert.Nil(t, e.meta)
-		assert.Nil(t, e.err)
+		assert.Equal(t, "", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.Nil(t, gen.err)
 	})
 
 	t.Run("format with args", func(t *testing.T) {
@@ -68,11 +68,11 @@ func Test_Newf(t *testing.T) {
 		err := Newf("value: %d", 42)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.ErrorEqual(t, "value: 42", err)
-		assert.Equal(t, "", e.code)
-		assert.Nil(t, e.meta)
-		assert.Nil(t, e.err)
+		assert.Equal(t, "", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.Nil(t, gen.err)
 	})
 
 	t.Run("with code", func(t *testing.T) {
@@ -83,11 +83,11 @@ func Test_Newf(t *testing.T) {
 		err := Newf("msg %d", 42, opt)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.ErrorEqual(t, "msg 42", err)
-		assert.Equal(t, "ECode", e.code)
-		assert.Nil(t, e.meta)
-		assert.Nil(t, e.err)
+		assert.Equal(t, "ECode", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.Nil(t, gen.err)
 	})
 
 	t.Run("wraps error via w verb", func(t *testing.T) {
@@ -98,12 +98,12 @@ func Test_Newf(t *testing.T) {
 		err := Newf("connect failed: %w", cause)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.ErrorEqual(t, "connect failed: original", err)
 		assert.True(t, errors.Is(err, cause))
-		assert.Equal(t, ECGeneric, e.code)
-		assert.Nil(t, e.meta)
-		assert.NotNil(t, e.err)
+		assert.Equal(t, ECGeneric, gen.code)
+		assert.Nil(t, gen.meta)
+		assert.NotNil(t, gen.err)
 	})
 
 	t.Run("wraps error via indexed verb", func(t *testing.T) {
@@ -126,10 +126,10 @@ func Test_Newf(t *testing.T) {
 		err := Newf("at %d%%w", arg)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.ErrorEqual(t, "at 100%w", err)
-		assert.Equal(t, "at 100%w", e.msg)
-		assert.Nil(t, e.err)
+		assert.Equal(t, "at 100%w", gen.msg)
+		assert.Nil(t, gen.err)
 	})
 
 	t.Run("wraps error with code", func(t *testing.T) {
@@ -141,12 +141,12 @@ func Test_Newf(t *testing.T) {
 		err := Newf("connect failed: %w", cause, opt)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
 		assert.ErrorEqual(t, "connect failed: original", err)
 		assert.True(t, errors.Is(err, cause))
-		assert.Equal(t, "ECode", e.code)
-		assert.Nil(t, e.meta)
-		assert.NotNil(t, e.err)
+		assert.Equal(t, "ECode", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.NotNil(t, gen.err)
 	})
 }
 

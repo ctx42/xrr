@@ -585,10 +585,10 @@ func Test_errorToJSON(t *testing.T) {
 
 	t.Run("typed nil error", func(t *testing.T) {
 		// --- Given ---
-		var e *GenericError[EDXrr]
+		var gen *GenericError[EDXrr]
 
 		// --- When ---
-		have, err := errorToJSON(e)
+		have, err := errorToJSON(gen)
 
 		// --- Then ---
 		assert.NoError(t, err)

@@ -21,11 +21,11 @@ func Test_ErrorFunc(t *testing.T) {
 		err := have("msg", "ECode")
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", e.msg)
-		assert.Equal(t, "ECode", e.code)
-		assert.Nil(t, e.meta)
-		assert.Nil(t, e.err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", gen.msg)
+		assert.Equal(t, "ECode", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.Nil(t, gen.err)
 	})
 
 	t.Run("with options", func(t *testing.T) {
@@ -38,12 +38,12 @@ func Test_ErrorFunc(t *testing.T) {
 		err := have("msg", "ECode", opt)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", e.msg)
-		assert.Equal(t, "ECode", e.code)
-		assert.NotSame(t, m, e.meta)
-		assert.Equal(t, map[string]any{"A": 1}, e.meta)
-		assert.Nil(t, e.err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", gen.msg)
+		assert.Equal(t, "ECode", gen.code)
+		assert.NotSame(t, m, gen.meta)
+		assert.Equal(t, map[string]any{"A": 1}, gen.meta)
+		assert.Nil(t, gen.err)
 	})
 }
 
@@ -56,11 +56,11 @@ func Test_ErrorfFunc(t *testing.T) {
 		err := have("msg")
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", e.msg)
-		assert.Equal(t, "", e.code)
-		assert.Nil(t, e.meta)
-		assert.Nil(t, e.err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", gen.msg)
+		assert.Equal(t, "", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.Nil(t, gen.err)
 		assert.ErrorEqual(t, "msg", err)
 	})
 
@@ -72,11 +72,11 @@ func Test_ErrorfFunc(t *testing.T) {
 		err := have("value: %d", 42)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "value: 42", e.msg)
-		assert.Equal(t, "", e.code)
-		assert.Nil(t, e.meta)
-		assert.Nil(t, e.err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "value: 42", gen.msg)
+		assert.Equal(t, "", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.Nil(t, gen.err)
 		assert.ErrorEqual(t, "value: 42", err)
 	})
 
@@ -89,11 +89,11 @@ func Test_ErrorfFunc(t *testing.T) {
 		err := have("msg", opt)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", e.msg)
-		assert.Equal(t, "ECode", e.code)
-		assert.Nil(t, e.meta)
-		assert.Nil(t, e.err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", gen.msg)
+		assert.Equal(t, "ECode", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.Nil(t, gen.err)
 		assert.ErrorEqual(t, "msg", err)
 	})
 
@@ -107,12 +107,12 @@ func Test_ErrorfFunc(t *testing.T) {
 		err := have("msg", opt)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "msg", e.msg)
-		assert.Equal(t, "", e.code)
-		assert.NotSame(t, m, e.meta)
-		assert.Equal(t, map[string]any{"A": 1}, e.meta)
-		assert.Nil(t, e.err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "msg", gen.msg)
+		assert.Equal(t, "", gen.code)
+		assert.NotSame(t, m, gen.meta)
+		assert.Equal(t, map[string]any{"A": 1}, gen.meta)
+		assert.Nil(t, gen.err)
 		assert.ErrorEqual(t, "msg", err)
 	})
 
@@ -125,11 +125,11 @@ func Test_ErrorfFunc(t *testing.T) {
 		err := have("wrap: %w", cause)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "", e.msg)
-		assert.Equal(t, ECGeneric, e.code)
-		assert.Nil(t, e.meta)
-		assert.NotNil(t, e.err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "", gen.msg)
+		assert.Equal(t, ECGeneric, gen.code)
+		assert.Nil(t, gen.meta)
+		assert.NotNil(t, gen.err)
 		assert.True(t, errors.Is(err, cause))
 		assert.ErrorEqual(t, "wrap: original", err)
 	})
@@ -144,11 +144,11 @@ func Test_ErrorfFunc(t *testing.T) {
 		err := have("wrap: %w", cause, opt)
 
 		// --- Then ---
-		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
-		assert.Equal(t, "", e.msg)
-		assert.Equal(t, "ECode", e.code)
-		assert.Nil(t, e.meta)
-		assert.NotNil(t, e.err)
+		gen, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.Equal(t, "", gen.msg)
+		assert.Equal(t, "ECode", gen.code)
+		assert.Nil(t, gen.meta)
+		assert.NotNil(t, gen.err)
 		assert.True(t, errors.Is(err, cause))
 		assert.ErrorEqual(t, "wrap: original", err)
 	})
@@ -310,10 +310,10 @@ func Test_GenericError_Unwrap(t *testing.T) {
 
 	t.Run("returns nil for nil instance", func(t *testing.T) {
 		// --- Given ---
-		var e *GenericError[string]
+		var gen *GenericError[string]
 
 		// --- When ---
-		have := e.Unwrap()
+		have := gen.Unwrap()
 
 		// --- Then ---
 		assert.Nil(t, have)
@@ -399,31 +399,31 @@ func Test_GenericError_UnmarshalJSON(t *testing.T) {
 	t.Run("without code and metadata", func(t *testing.T) {
 		// --- Given ---
 		data := []byte(`{"error": "msg"}`)
-		var e *GenericError[string]
+		var gen *GenericError[string]
 
 		// --- When ---
-		err := json.Unmarshal(data, &e)
+		err := json.Unmarshal(data, &gen)
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.Equal(t, "msg", e.Error())
-		assert.Equal(t, ECGeneric, e.code)
-		assert.Nil(t, e.meta)
+		assert.Equal(t, "msg", gen.Error())
+		assert.Equal(t, ECGeneric, gen.code)
+		assert.Nil(t, gen.meta)
 	})
 
 	t.Run("with code and without metadata", func(t *testing.T) {
 		// --- Given ---
 		data := []byte(`{"error": "msg", "code":"ECode"}`)
-		var e *GenericError[string]
+		var gen *GenericError[string]
 
 		// --- When ---
-		err := json.Unmarshal(data, &e)
+		err := json.Unmarshal(data, &gen)
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.Equal(t, "msg", e.Error())
-		assert.Equal(t, "ECode", e.code)
-		assert.Nil(t, e.meta)
+		assert.Equal(t, "msg", gen.Error())
+		assert.Equal(t, "ECode", gen.code)
+		assert.Nil(t, gen.meta)
 	})
 
 	t.Run("into existing error with a cause", func(t *testing.T) {
@@ -450,27 +450,27 @@ func Test_GenericError_UnmarshalJSON(t *testing.T) {
 				"tim": "2022-01-18T13:57:00Z"
 			}
 		}`)
-		var e *GenericError[string]
+		var gen *GenericError[string]
 
 		// --- When ---
-		err := json.Unmarshal(data, &e)
+		err := json.Unmarshal(data, &gen)
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.Equal(t, "msg", e.Error())
-		assert.Equal(t, "ECode", e.code)
-		assert.Len(t, 2, e.meta)
-		assert.Equal(t, float64(123), e.meta["num"])
-		assert.Equal(t, "2022-01-18T13:57:00Z", e.meta["tim"])
+		assert.Equal(t, "msg", gen.Error())
+		assert.Equal(t, "ECode", gen.code)
+		assert.Len(t, 2, gen.meta)
+		assert.Equal(t, float64(123), gen.meta["num"])
+		assert.Equal(t, "2022-01-18T13:57:00Z", gen.meta["tim"])
 	})
 
 	t.Run("error - without the error key", func(t *testing.T) {
 		// --- Given ---
 		data := []byte(`{"code":"code"}`)
-		var e *GenericError[string]
+		var gen *GenericError[string]
 
 		// --- When ---
-		err := json.Unmarshal(data, &e)
+		err := json.Unmarshal(data, &gen)
 
 		// --- Then ---
 		assert.ErrorIs(t, ErrInvJSONError, err)
@@ -479,10 +479,10 @@ func Test_GenericError_UnmarshalJSON(t *testing.T) {
 	t.Run("error - invalid format", func(t *testing.T) {
 		// --- Given ---
 		data := []byte(`[1, 2, 3]`)
-		var e *GenericError[string]
+		var gen *GenericError[string]
 
 		// --- When ---
-		err := json.Unmarshal(data, &e)
+		err := json.Unmarshal(data, &gen)
 
 		// --- Then ---
 		var target *json.UnmarshalTypeError
@@ -492,10 +492,10 @@ func Test_GenericError_UnmarshalJSON(t *testing.T) {
 	t.Run("error - invalid JSON", func(t *testing.T) {
 		// --- Given ---
 		data := []byte(`{!!!}`)
-		var e *GenericError[string]
+		var gen *GenericError[string]
 
 		// --- When ---
-		err := json.Unmarshal(data, &e)
+		err := json.Unmarshal(data, &gen)
 
 		// --- Then ---
 		var target *json.SyntaxError

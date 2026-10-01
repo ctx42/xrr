@@ -22,10 +22,10 @@ func Test_WrapUsing(t *testing.T) {
 
 	t.Run("wrapping typed nil returns nil", func(t *testing.T) {
 		// --- Given ---
-		var e *GenericError[EDXrr]
+		var gen *GenericError[EDXrr]
 
 		// --- When ---
-		err := WrapUsing[string](e)
+		err := WrapUsing[string](gen)
 
 		// --- Then ---
 		assert.Nil(t, err)
@@ -66,11 +66,11 @@ func Test_WrapUsing(t *testing.T) {
 
 		// --- Then ---
 		assert.NotSame(t, e, err)
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Same(t, e, x.Unwrap())
-		assert.Equal(t, ECGeneric, x.code)
-		assert.Equal(t, map[string]any{"A": 1, "B": 2}, x.meta)
+		var gen *GenericError[string]
+		assert.Type(t, &gen, err)
+		assert.Same(t, e, gen.Unwrap())
+		assert.Equal(t, ECGeneric, gen.code)
+		assert.Equal(t, map[string]any{"A": 1, "B": 2}, gen.meta)
 	})
 
 	t.Run("wrap std error and add error code metadata", func(t *testing.T) {
@@ -86,11 +86,11 @@ func Test_WrapUsing(t *testing.T) {
 
 		// --- Then ---
 		assert.NotSame(t, e, err)
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Same(t, e, x.Unwrap())
-		assert.Equal(t, "ECode", x.code)
-		assert.Equal(t, map[string]any{"A": 1, "B": 2}, x.meta)
+		var gen *GenericError[string]
+		assert.Type(t, &gen, err)
+		assert.Same(t, e, gen.Unwrap())
+		assert.Equal(t, "ECode", gen.code)
+		assert.Equal(t, map[string]any{"A": 1, "B": 2}, gen.meta)
 	})
 
 	t.Run("wrap std error and cause error", func(t *testing.T) {
@@ -106,10 +106,10 @@ func Test_WrapUsing(t *testing.T) {
 
 		// --- Then ---
 		assert.NotSame(t, e, err)
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Equal(t, "msg; cause", x.Error())
-		assert.Equal(t, "ECGeneric", x.code)
+		var gen *GenericError[string]
+		assert.Type(t, &gen, err)
+		assert.Equal(t, "msg; cause", gen.Error())
+		assert.Equal(t, "ECGeneric", gen.code)
 		assert.ErrorIs(t, e, err)
 		assert.ErrorIs(t, cause, err)
 	})
@@ -129,10 +129,10 @@ func Test_WrapUsing(t *testing.T) {
 
 		// --- Then ---
 		assert.NotSame(t, e, err)
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Equal(t, "msg; cause2: cause1: cause0", x.Error())
-		assert.Equal(t, "ECGeneric", x.code)
+		var gen *GenericError[string]
+		assert.Type(t, &gen, err)
+		assert.Equal(t, "msg; cause2: cause1: cause0", gen.Error())
+		assert.Equal(t, "ECGeneric", gen.code)
 		assert.ErrorIs(t, e, err)
 		assert.ErrorIs(t, cause0, err)
 		assert.ErrorIs(t, cause1, err)
@@ -149,10 +149,10 @@ func Test_WrapUsing(t *testing.T) {
 		err := WrapUsing[string](e, withCause)
 
 		// --- Then ---
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Equal(t, "ECMsg", x.code)
-		assert.Equal(t, "msg; cause", x.Error())
+		var gen *GenericError[string]
+		assert.Type(t, &gen, err)
+		assert.Equal(t, "ECMsg", gen.code)
+		assert.Equal(t, "msg; cause", gen.Error())
 		assert.ErrorIs(t, e, err)
 		assert.ErrorIs(t, cause, err)
 	})
@@ -168,9 +168,9 @@ func Test_WrapUsing(t *testing.T) {
 			err := WrapUsing[string](e, withCause)
 
 			// --- Then ---
-			var x *GenericError[string]
-			assert.Type(t, &x, err)
-			assert.Equal(t, "ECGeneric", x.code)
+			var gen *GenericError[string]
+			assert.Type(t, &gen, err)
+			assert.Equal(t, "ECGeneric", gen.code)
 			assert.ErrorIs(t, cause, err)
 		})
 
@@ -185,9 +185,9 @@ func Test_WrapUsing(t *testing.T) {
 		err := WrapUsing[string](e, withCause, withCode)
 
 		// --- Then ---
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Equal(t, "ECOverride", x.code)
+		var gen *GenericError[string]
+		assert.Type(t, &gen, err)
+		assert.Equal(t, "ECOverride", gen.code)
 		assert.ErrorIs(t, e, err)
 		assert.ErrorIs(t, cause, err)
 	})
@@ -203,10 +203,10 @@ func Test_WrapUsing(t *testing.T) {
 		err := WrapUsing[string](e, withCause, meta)
 
 		// --- Then ---
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Equal(t, map[string]any{"A": 42}, x.meta)
-		assert.Equal(t, "msg; cause", x.Error())
+		var gen *GenericError[string]
+		assert.Type(t, &gen, err)
+		assert.Equal(t, map[string]any{"A": 42}, gen.meta)
+		assert.Equal(t, "msg; cause", gen.Error())
 		assert.ErrorIs(t, e, err)
 		assert.ErrorIs(t, cause, err)
 	})
@@ -222,9 +222,9 @@ func Test_WrapUsing(t *testing.T) {
 		err := WrapUsing[string](e, withCause)
 
 		// --- Then ---
-		var x *GenericError[string]
-		assert.Type(t, &x, err)
-		assert.Nil(t, x.meta)
+		var gen *GenericError[string]
+		assert.Type(t, &gen, err)
+		assert.Nil(t, gen.meta)
 		assert.Equal(t, map[string]any{"B": 10}, GetMeta(err))
 	})
 
@@ -253,10 +253,10 @@ func Test_SetCode(t *testing.T) {
 		err := SetCode[EDXrr](e, "ECode")
 
 		// --- Then ---
-		var xe *GenericError[EDXrr]
-		assert.Type(t, &xe, err)
-		assert.Same(t, e, xe.Unwrap())
-		assert.Equal(t, "ECode", xe.ErrorCode())
+		var gen *GenericError[EDXrr]
+		assert.Type(t, &gen, err)
+		assert.Same(t, e, gen.Unwrap())
+		assert.Equal(t, "ECode", gen.ErrorCode())
 	})
 
 	t.Run("nil error", func(t *testing.T) {
