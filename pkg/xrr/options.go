@@ -31,7 +31,7 @@ func WithCode(code string) Option {
 // value types that are not supported will be skipped.
 //
 // See [MetaType] for supported metadata types. Unsupported values are
-// filtered using [isValidMetaValue].
+// filtered using isValidMetaValue.
 func WithMeta(meta map[string]any) Option {
 	return func(ops *Options) {
 		for key, value := range meta {
@@ -48,7 +48,7 @@ func WithMeta(meta map[string]any) Option {
 
 // WithMetaFrom is an option for [New] and [WrapUsing] setting the metadata
 // from a [Metadater] instance. Only types supported by [MetaType] (filtered
-// via [isValidMetaValue]) are added.
+// via isValidMetaValue) are added.
 func WithMetaFrom(src Metadater) Option {
 	return WithMeta(src.MetaAll())
 }

@@ -91,7 +91,7 @@ func ErrorfFunc[T Domain]() func(format string, args ...any) *GenericError[T] {
 }
 
 // Error returns the error message. For errors with a cause or joined errors
-// it delegates to [errorMessage] (which produces "; "-separated messages for
+// it delegates to errorMessage (which produces "; "-separated messages for
 // joined errors).
 func (gen *GenericError[T]) Error() string {
 	if gen.err != nil {

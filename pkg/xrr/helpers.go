@@ -99,7 +99,7 @@ func IsDomain[T Domain](err error) bool {
 //
 //	if x == nil || isNil(x) { ... }
 //
-// Callers include [GetCode], [walkErrors], [walkErrorsReverse], and
+// Callers include [GetCode], walkErrors, walkErrorsReverse, and
 // [WrapUsing].
 func isNil(v any) bool {
 	if v == nil {
@@ -117,7 +117,7 @@ func isNil(v any) bool {
 
 // joinKey joins a prefix and key with a dot when the prefix is non-empty.
 // It is used internally to build dotted paths when flattening nested
-// [Fielder] structures (see [flattenFieldErrors] and [GenericFields]).
+// [Fielder] structures (see flattenFieldErrors and [GenericFields]).
 func joinKey(pref, key string) string {
 	if pref != "" {
 		if key == "" {
@@ -146,7 +146,7 @@ func isValidMetaValue(v any) bool {
 
 // sortFieldErrors converts a map of field errors to two parallel slices
 // (field names and errors), with the names sorted in ascending order.
-// It is used by [formatFieldErrors] and the [walkErrors] family.
+// It is used by formatFieldErrors and the walkErrors family.
 func sortFieldErrors(ers map[string]error) ([]string, []error) {
 	var errs []error
 	var fields []string
@@ -207,7 +207,7 @@ func errorMessage(err error) string {
 // library's conventions.
 //
 // It first marshals the error as is. If that produces an empty JSON object or
-// a non-object value such as a string, it falls back to [errorToMap] to build
+// a non-object value such as a string, it falls back to errorToMap to build
 // the standard {"error", "code", "meta"} form. A typed nil error marshals to
 // null and is returned as is. A marshal error is returned directly.
 //
@@ -229,10 +229,10 @@ func errorToJSON(e error) ([]byte, error) {
 // errorToMap returns the canonical map form used by the library for JSON
 // serialization of errors: {"error", "code", "meta"}.
 //
-// Returns nil if err is nil. This is the fallback used by [errorToJSON]
+// Returns nil if err is nil. This is the fallback used by errorToJSON
 // when an error does not have a useful [json.Marshaler] implementation.
-// It is also used directly by [envelopeFieldsToJSON] and
-// [envelopeErrorsToJSON].
+// It is also used directly by envelopeFieldsToJSON and
+// envelopeErrorsToJSON.
 func errorToMap(err error) map[string]any {
 	if err == nil {
 		return nil

@@ -73,7 +73,7 @@ func (m Metadata) Duration(key string, value time.Duration) Metadata {
 }
 
 // MetaSetAll copies all metadata from the given map. Only types supported by
-// [MetaType] (see [isValidMetaValue]) will be copied.
+// [MetaType] (see isValidMetaValue) will be copied.
 func (m Metadata) MetaSetAll(meta map[string]any) Metadata {
 	for key, value := range meta {
 		if !isValidMetaValue(value) {
@@ -88,7 +88,7 @@ func (m Metadata) MetaSetAll(meta map[string]any) Metadata {
 }
 
 // MetaSetFrom copies all metadata from the given [Metadater] instance. Only
-// types supported by [MetaType] (see [isValidMetaValue]) will be copied.
+// types supported by [MetaType] (see isValidMetaValue) will be copied.
 func (m Metadata) MetaSetFrom(meta Metadater) Metadata {
 	all := meta.MetaAll()
 	for key, value := range all {

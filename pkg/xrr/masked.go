@@ -39,7 +39,7 @@ func (msk Masked) Cause() error { return msk.cause }
 // Lead returns the error exposed to callers.
 func (msk Masked) Lead() error { return msk.lead }
 
-// MarshalJSON returns the JSON form of the lead error (using [errorToJSON]).
+// MarshalJSON returns the JSON form of the lead error (using errorToJSON).
 // The cause is intentionally not included in the output.
 func (msk Masked) MarshalJSON() ([]byte, error) { return errorToJSON(msk.lead) }
 

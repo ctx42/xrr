@@ -58,7 +58,7 @@ func GetFields(err error) map[string]error {
 // GetFieldError returns an error for the given field name. It expects the
 // error to implement [Fielder]. Returns nil when err is nil, does not
 // implement [Fielder], or has no error for the given field name.
-// (Delegates to the internal [getFieldError] for dotted-path support.)
+// (Delegates to the internal getFieldError for dotted-path support.)
 func GetFieldError(err error, field string) error {
 	if fs := GetFields(err); fs != nil {
 		return getFieldError(fs, field)
@@ -325,7 +325,7 @@ func (fs *GenericFields[T]) Len() int {
 
 // MarshalJSON returns the fields as a JSON object, with each field name
 // as a key. Nested field errors are flattened to dotted keys using
-// [flattenFieldErrors] (and filtered via [filterFieldErrors]).
+// flattenFieldErrors (and filtered via filterFieldErrors).
 // If there are no fields, it returns "{}".
 func (fs *GenericFields[T]) MarshalJSON() ([]byte, error) {
 	fields := fs.ErrorFields()
@@ -399,7 +399,7 @@ func Flatten[T Domain](err ...error) error {
 // every leaf error into the visitor map using dotted keys (e.g. "user.email").
 //
 // Non-[Fielder] errors are stored directly. Nested [Fielder] errors cause
-// recursion with an extended prefix (via [joinKey]).
+// recursion with an extended prefix (via joinKey).
 func flattenFieldErrors(
 	visitor map[string]error,
 	pref string,
@@ -419,7 +419,7 @@ func flattenFieldErrors(
 //
 // When codes is true, it includes the error code for each field
 // (used by %+v formatting of [GenericFields]). Otherwise it uses the plain
-// error message via [errorMessage] (used by the default Error() string).
+// error message via errorMessage (used by the default Error() string).
 func formatFieldErrors(fs map[string]error, codes bool) string {
 	if len(fs) == 0 {
 		return ""

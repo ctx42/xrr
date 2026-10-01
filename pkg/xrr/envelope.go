@@ -128,10 +128,10 @@ func (env Envelope) Is(target error) bool {
 // MarshalJSON returns the JSON representation of the envelope.
 //
 // The exact shape depends on the contents:
-//   - If the cause is a [Fielder], it delegates to [envelopeFieldsToJSON].
-//   - If the cause is a joined error, it delegates to [envelopeErrorsToJSON].
+//   - If the cause is a [Fielder], it delegates to envelopeFieldsToJSON.
+//   - If the cause is a joined error, it delegates to envelopeErrorsToJSON.
 //   - Otherwise it uses the lead (if present) + cause via
-//     [envelopeErrorsToJSON].
+//     envelopeErrorsToJSON.
 //
 // A [Masked] cause is replaced by its lead first, so the masked cause never
 // reaches the output.

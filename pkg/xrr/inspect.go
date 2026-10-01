@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// IsCode walks the error chain (tree) using [walkErrors] and returns true if
+// IsCode walks the error chain (tree) using walkErrors and returns true if
 // any error in the chain has the given code.
 func IsCode(err error, code string) bool {
 	var is bool
@@ -36,7 +36,7 @@ func GetCode(err error) string {
 }
 
 // GetCodes recursively retrieves a unique list of error codes from an error
-// and its wrapped errors (via [walkErrors]), ignoring empty codes.
+// and its wrapped errors (via walkErrors), ignoring empty codes.
 func GetCodes(err error) []string {
 	set := make(map[string]struct{})
 	var ret []string
@@ -56,7 +56,7 @@ func GetCodes(err error) []string {
 }
 
 // GetMeta recursively retrieves metadata from an error and its wrapped errors
-// (using [walkErrorsReverse] so that metadata closer to the root takes
+// (using walkErrorsReverse so that metadata closer to the root takes
 // precedence).
 func GetMeta(err error) map[string]any {
 	var m map[string]any
@@ -126,7 +126,7 @@ func GetDuration(err error, key string) (time.Duration, bool) {
 	return getMeta[time.Duration](err, key)
 }
 
-// getMeta walks the error chain using [walkErrors] and returns the
+// getMeta walks the error chain using walkErrors and returns the
 // first metadata value of type T associated with the given key.
 //
 // Traversal is depth-first in pre-order, so the first match encountered
@@ -227,7 +227,7 @@ func walkErrors(err error, cb func(err error) bool) bool {
 // errors.
 //
 // The three supported error structures and callback semantics are the same
-// as [walkErrors].
+// as walkErrors.
 func walkErrorsReverse(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true

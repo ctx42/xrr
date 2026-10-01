@@ -6,7 +6,7 @@ package xrr
 // EDXrr is the marker type for the package's error domain.
 type EDXrr struct{}
 
-// Error constructor functions for the xrr package [edXrr] domain.
+// Error constructor functions for the xrr package [EDXrr] domain.
 var (
 	newError       = ErrorFunc[EDXrr]()
 	newErrorf      = ErrorfFunc[EDXrr]()
