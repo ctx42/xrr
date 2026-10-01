@@ -58,10 +58,10 @@ func WithMetaFrom(src Metadater) Option {
 // [errors.As] chain traversal.
 //
 // Special behavior with [WrapUsing]:
-// When passed to [WrapUsing], the resulting error's Error() string becomes
-// "original; cause". The original error remains the primary Unwrap target,
-// while the cause is still discoverable via [errors.Is] and [errors.As].
-// See [WrapUsing] for details.
+// When passed to [WrapUsing], the original error and the cause are wrapped
+// together, so the resulting error's Error() string becomes "original; cause"
+// and both are discoverable via [errors.Is] and [errors.As]. See [WrapUsing]
+// for details.
 //
 // If the code field is empty at the time this option is applied, it is
 // inherited from cause via [GetCode]. Because options are applied in order,

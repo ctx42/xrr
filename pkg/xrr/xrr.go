@@ -90,10 +90,10 @@ type Metadater interface {
 // The original err is preserved as the primary value in the error chain for
 // [errors.Is] and [errors.As].
 //
-// When [WithCause] is supplied, the resulting error's Error() string becomes
-// "original; cause". The original err remains the direct target of
-// [errors.Unwrap]; both the original and the cause remain discoverable via
-// [errors.Is] and [errors.As].
+// When [WithCause] is supplied, err and the cause are wrapped together with
+// fmt.Errorf("%w; %w"), so the resulting error's Error() string becomes
+// "original; cause" and both remain discoverable via [errors.Is] and
+// [errors.As]. [errors.Unwrap] then yields that combined error, not err.
 //
 // Returns nil if err is nil. The code defaults to the code of err (via
 // [GetCode]); pass [WithCode] to override it.
@@ -126,7 +126,7 @@ func WrapUsing[T Domain](err error, opts ...Option) error {
 	ops := Options{code: GetCode(err)}.Set(opts...)
 
 	if ops.err != nil {
-		err = withAdditionalCause(err, ops.err)
+		err = fmt.Errorf("%w; %w", err, ops.err)
 	}
 
 	return &GenericError[T]{
@@ -134,25 +134,6 @@ func WrapUsing[T Domain](err error, opts ...Option) error {
 		meta: ops.meta,
 		err:  err,
 	}
-}
-
-// withAdditionalCause attaches an additional cause while keeping the
-// original error as the direct target of [errors.Unwrap].
-//
-// The returned error's [errors.Unwrap] yields the original err (not the
-// cause). Both the original and the cause remain discoverable via
-// [errors.Is] and [errors.As]. The Error() string becomes "original; cause".
-//
-// This internal helper exists only to support the special [WithCause]
-// behavior inside [WrapUsing].
-func withAdditionalCause(err, cause error) error {
-	if cause == nil {
-		return err
-	}
-	if err == nil {
-		return cause
-	}
-	return fmt.Errorf("%w; %w", err, cause)
 }
 
 // SetCode assigns a code to err by wrapping it with [WrapUsing].

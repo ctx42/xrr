@@ -34,7 +34,7 @@ var (
 //	  "error": "lead",
 //	  "code": "ECLead",
 //	  "errors": [
-//	    {"code": "ECCause", "error": "cause"},
+//	    {"code": "ECCause", "error": "cause"}
 //	  ]
 //	}
 //
@@ -44,7 +44,7 @@ var (
 //	  "error": "lead",
 //	  "code": "ECLead",
 //	  "fields": {
-//	    "field": {"code": "ECCause", "error": "cause"},
+//	    "field": {"code": "ECCause", "error": "cause"}
 //	  }
 //	}
 //
@@ -54,7 +54,7 @@ var (
 //	  "error": "fields error",
 //	  "code": "ECFields",
 //	  "fields": {
-//	    "field": {"code": "ECCause", "error": "cause"},
+//	    "field": {"code": "ECCause", "error": "cause"}
 //	  }
 //	}
 //
@@ -168,9 +168,6 @@ func (env Envelope) MarshalJSON() ([]byte, error) {
 func envelopeFieldsToJSON(lead error, ef Fielder) ([]byte, error) {
 	ret := errorToMap(lead)
 	ret["fields"] = &GenericFields[EDXrr]{fields: ef.ErrorFields()}
-	if meta := GetMeta(lead); len(meta) > 0 {
-		ret["meta"] = meta
-	}
 	return json.Marshal(ret)
 }
 
