@@ -24,8 +24,10 @@ import (
 // Unlike [errors.As], it directly checks if the error is of the type
 // [xrr.GenericError[T]] without unwrapping.
 func AssertError[T xrr.Domain](
-	t tester.T, err error,
+	t tester.T,
+	err error,
 ) (*xrr.GenericError[T], bool) {
+
 	t.Helper()
 	if e := check.NotNil(err); e != nil {
 		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
