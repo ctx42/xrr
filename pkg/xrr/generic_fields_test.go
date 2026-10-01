@@ -1614,7 +1614,8 @@ func Test_GenericFields_UnmarshalJSON(t *testing.T) {
 		err := json.Unmarshal([]byte(`not-json`), &got)
 
 		// --- Then ---
-		assert.Error(t, err)
+		var se *json.SyntaxError
+		assert.ErrorAs(t, &se, err)
 	})
 }
 
