@@ -430,7 +430,7 @@ func Test_MergeFields(t *testing.T) {
 		assert.Nil(t, have)
 	})
 
-	t.Run("not Field instances get fake indexed field names", func(t *testing.T) {
+	t.Run("non-Fielder errors get indexed field names", func(t *testing.T) {
 		// --- Given ---
 		e0 := errors.New("abc")
 		fs0 := &GenericFields[EDXrr]{
@@ -1427,7 +1427,8 @@ func Test_GenericFields_Set(t *testing.T) {
 
 	t.Run("overwrite existing field", func(t *testing.T) {
 		// --- Given ---
-		fs := &GenericFields[EDXrr]{fields: map[string]error{"f0": errors.New("old")}}
+		fields := map[string]error{"f0": errors.New("old")}
+		fs := &GenericFields[EDXrr]{fields: fields}
 
 		// --- When ---
 		fs.Set("f0", ErrTst)
@@ -1632,7 +1633,8 @@ func Test_GenericFields_UnmarshalJSON(t *testing.T) {
 
 		// --- Then ---
 		assert.ErrorIs(t, ErrInvJSONError, err)
-		assert.ErrorEqual(t, `field "f0": invalid JSON error representation`, err)
+		want := `field "f0": invalid JSON error representation`
+		assert.ErrorEqual(t, want, err)
 		assert.Equal(t, ECInvJSONError, GetCode(err))
 	})
 }

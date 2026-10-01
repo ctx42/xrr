@@ -22,7 +22,8 @@ type TFielderCoder struct {
 	fields map[string]error
 }
 
-func (tfc TFielderCoder) Error() string                 { return "fielder coder" }
+func (tfc TFielderCoder) Error() string { return "fielder coder" }
+
 func (tfc TFielderCoder) ErrorCode() string             { return tfc.code }
 func (tfc TFielderCoder) ErrorFields() map[string]error { return tfc.fields }
 
@@ -257,9 +258,21 @@ func TstTreeCase5() error {
 func TstTreeMeta() error {
 	// Long declarations extracted so the tree construction below stays
 	// readable while keeping individual lines under the 80-column limit.
-	ma3 := &GenericError[EDXrr]{msg: "ma3", code: "a3", meta: map[string]any{"A": 3, "F": "f"}}
-	ma2 := &GenericError[EDXrr]{msg: "ma2", code: "a2", meta: map[string]any{"A": 2, "G": "g"}}
-	ma1 := &GenericError[EDXrr]{msg: "ma1", code: "a1", meta: map[string]any{"A": 1, "D": "h"}}
+	ma3 := &GenericError[EDXrr]{
+		msg:  "ma3",
+		code: "a3",
+		meta: map[string]any{"A": 3, "F": "f"},
+	}
+	ma2 := &GenericError[EDXrr]{
+		msg:  "ma2",
+		code: "a2",
+		meta: map[string]any{"A": 2, "G": "g"},
+	}
+	ma1 := &GenericError[EDXrr]{
+		msg:  "ma1",
+		code: "a1",
+		meta: map[string]any{"A": 1, "D": "h"},
+	}
 
 	return &GenericError[EDXrr]{
 		err: &GenericError[EDXrr]{

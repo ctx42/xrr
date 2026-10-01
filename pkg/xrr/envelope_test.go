@@ -383,8 +383,10 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		data, err := json.Marshal(have)
 		var jme *json.MarshalerError
 		assert.ErrorAs(t, &jme, err)
-		want := "json: error calling MarshalJSON for type xrr.Envelope: " +
-			"json: error calling MarshalJSON for type *xrr.TErrMarshalJSON: msg a"
+		want := "" +
+			"json: error calling MarshalJSON for type xrr.Envelope: " +
+			"json: error calling MarshalJSON for type " +
+			"*xrr.TErrMarshalJSON: msg a"
 		assert.Equal(t, want, jme.Error())
 		assert.Nil(t, data)
 	})

@@ -233,9 +233,9 @@ func walkErrorsReverse(err error, cb func(err error) bool) bool {
 		return true
 	}
 
-	// Same three error shapes as walkErrors(), but we always visit children before
-	// the parent (depth-first, reverse order). This ensures metadata from
-	// outer errors wins when GetMeta walks in reverse.
+	// Same three error shapes as walkErrors(), but we always visit children
+	// before the parent (depth-first, reverse order). This ensures metadata
+	// from outer errors wins when GetMeta walks in reverse.
 	switch x := err.(type) { // nolint: errorlint
 	case interface{ Unwrap() error }:
 		// Recurse first (children before parent) so that deeper errors are

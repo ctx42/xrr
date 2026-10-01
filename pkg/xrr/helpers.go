@@ -15,9 +15,10 @@ import (
 // joined is an interface for an error that was created by [errors.Join].
 type joined interface{ Unwrap() []error }
 
-// Split splits joined errors into a slice of errors. It returns a single-element
-// slice if the error does not implement `Unwrap() []error`. Returns nil if the
-// input error is nil. Joined errors are typically created via [errors.Join].
+// Split splits joined errors into a slice of errors. It returns a
+// single-element slice if the error does not implement `Unwrap() []error`.
+// Returns nil if the input error is nil. Joined errors are typically created
+// via [errors.Join].
 func Split(err error) []error {
 	if err == nil {
 		return nil
@@ -230,7 +231,8 @@ func errorToJSON(e error) ([]byte, error) {
 //
 // Returns nil if err is nil. This is the fallback used by [errorToJSON]
 // when an error does not have a useful [json.Marshaler] implementation.
-// It is also used directly by [envelopeFieldsToJSON] and [envelopeErrorsToJSON].
+// It is also used directly by [envelopeFieldsToJSON] and
+// [envelopeErrorsToJSON].
 func errorToMap(err error) map[string]any {
 	if err == nil {
 		return nil

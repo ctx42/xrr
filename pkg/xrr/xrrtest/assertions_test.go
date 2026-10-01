@@ -38,7 +38,8 @@ func Test_AssertError(t *testing.T) {
 		tspy.ExpectError()
 		wMsg := "" +
 			"[xrr] expected *xrr.Error instance:\n" +
-			"  target: *xrr.GenericError[github.com/ctx42/xrr/pkg/xrr/xrrtest.edXrrTest]\n" +
+			"  target: *xrr.GenericError[github.com/ctx42/xrr/" +
+			"pkg/xrr/xrrtest.edXrrTest]\n" +
 			"   error: *errors.errorString"
 		tspy.ExpectLogEqual(wMsg)
 		tspy.Close()
@@ -1069,7 +1070,8 @@ func Test_AssertFieldCnt(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDXrr] length:\n" +
+			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/" +
+			"pkg/xrr.EDXrr] length:\n" +
 			"    want: 3\n" +
 			"    have: 2\n" +
 			"  fields:\n" +
@@ -1202,7 +1204,7 @@ func Test_AssertHasField(t *testing.T) {
 }
 
 func Test_AssertFieldEqual(t *testing.T) {
-	t.Run("success - field exists and with a given message", func(t *testing.T) {
+	t.Run("field exists with the given message", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
@@ -1265,7 +1267,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - field exists but has a different message", func(t *testing.T) {
+	t.Run("error - field has a different message", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
@@ -1484,8 +1486,10 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy.ExpectError()
 		wMsg := "" +
 			"[xrr] expected error to have a target in its tree:\n" +
-			"    want: (*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDXrr]) m1\n" +
-			"    have: (*xrr.GenericError[github.com/ctx42/xrr/pkg/xrr.EDXrr]) m1\n" +
+			"    want: (*xrr.GenericError[github.com/ctx42/xrr/" +
+			"pkg/xrr.EDXrr]) m1\n" +
+			"    have: (*xrr.GenericError[github.com/ctx42/xrr/" +
+			"pkg/xrr.EDXrr]) m1\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
 			"            \"f1\": \"m1\",\n" +

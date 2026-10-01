@@ -113,7 +113,9 @@ func (gen *GenericError[T]) ErrorCode() string {
 }
 
 // MetaAll returns a clone of the error's metadata.
-func (gen *GenericError[T]) MetaAll() map[string]any { return maps.Clone(gen.meta) }
+func (gen *GenericError[T]) MetaAll() map[string]any {
+	return maps.Clone(gen.meta)
+}
 
 // Unwrap returns the wrapped error.
 func (gen *GenericError[T]) Unwrap() error {

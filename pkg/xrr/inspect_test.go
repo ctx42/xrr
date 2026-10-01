@@ -248,7 +248,11 @@ func Test_GetMeta_tabular(t *testing.T) {
 				"second: %w",
 				fmt.Errorf(
 					"first: %w",
-					New("msg a", "a", Meta().Int("A", 1).Bool("B", true).Option()),
+					New(
+						"msg a",
+						"a",
+						Meta().Int("A", 1).Bool("B", true).Option(),
+					),
 				),
 			),
 			map[string]any{"A": 1, "B": true},
@@ -287,13 +291,19 @@ func Test_GetMeta_tabular(t *testing.T) {
 				err: &GenericError[EDXrr]{
 					err: errors.Join(
 						&GenericError[EDXrr]{
-							err:  &GenericError[EDXrr]{meta: map[string]any{"A": 3, "F": 3}},
+							err: &GenericError[EDXrr]{
+								meta: map[string]any{"A": 3, "F": 3},
+							},
 							meta: map[string]any{"A": 4, "D": 2},
 						},
 						&GenericError[EDXrr]{
 							err: errors.Join(
-								&GenericError[EDXrr]{meta: map[string]any{"A": 2, "G": 3}},
-								&GenericError[EDXrr]{meta: map[string]any{"A": 1, "H": 3}},
+								&GenericError[EDXrr]{
+									meta: map[string]any{"A": 2, "G": 3},
+								},
+								&GenericError[EDXrr]{
+									meta: map[string]any{"A": 1, "H": 3},
+								},
 							),
 							meta: map[string]any{"A": 5, "E": 2},
 						},
@@ -317,8 +327,16 @@ func Test_GetMeta_tabular(t *testing.T) {
 			"fields",
 			&GenericFields[EDXrr]{
 				fields: map[string]error{
-					"a": New("msg a", "a", Meta().Int("A", 1).Int("B", 1).Option()),
-					"b": New("msg b", "b", Meta().Int("A", 1).Int("B", 2).Option()),
+					"a": New(
+						"msg a",
+						"a",
+						Meta().Int("A", 1).Int("B", 1).Option(),
+					),
+					"b": New(
+						"msg b",
+						"b",
+						Meta().Int("A", 1).Int("B", 2).Option(),
+					),
 				},
 			},
 			map[string]any{"A": 1, "B": 1},

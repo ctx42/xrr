@@ -105,8 +105,8 @@ func MergeFields[T Domain](ers ...error) error {
 	return nil
 }
 
-// mergeFieldErrors combines multiple errors that may implement [Fielder] into one
-// flat map of field → error.
+// mergeFieldErrors combines multiple errors that may implement [Fielder] into
+// one flat map of field → error.
 //
 // Non-Fielder errors (plain errors) are given synthetic keys of the form
 // "__field__N" so they still appear in the resulting [GenericFields].
@@ -236,8 +236,9 @@ func (fs *GenericFields[T]) Filter() error {
 	return nil
 }
 
-// filterFieldErrors creates a new [GenericFields][T] containing only the non-nil entries
-// from the input map. Any nested [Fielder] values are filtered recursively.
+// filterFieldErrors creates a new [GenericFields][T] containing only the
+// non-nil entries from the input map. Any nested [Fielder] values are filtered
+// recursively.
 //
 // Returns nil if the resulting map would be empty.
 func filterFieldErrors[T Domain](fs map[string]error) *GenericFields[T] {
@@ -247,7 +248,8 @@ func filterFieldErrors[T Domain](fs map[string]error) *GenericFields[T] {
 			continue
 		}
 		if fls, ok := value.(Fielder); ok {
-			if filtered := filterFieldErrors[T](fls.ErrorFields()); filtered != nil {
+			filtered := filterFieldErrors[T](fls.ErrorFields())
+			if filtered != nil {
 				ret[key] = filtered
 			}
 			continue
@@ -393,12 +395,17 @@ func Flatten[T Domain](err ...error) error {
 	return &GenericFields[T]{fields: visitor}
 }
 
-// flattenFieldErrors recursively walks a nested [Fielder] structure and writes every
-// leaf error into the visitor map using dotted keys (e.g. "user.email").
+// flattenFieldErrors recursively walks a nested [Fielder] structure and writes
+// every leaf error into the visitor map using dotted keys (e.g. "user.email").
 //
-// Non-[Fielder] errors are stored directly.
-// Nested [Fielder] errors cause recursion with an extended prefix (via [joinKey]).
-func flattenFieldErrors(visitor map[string]error, pref string, fields map[string]error) {
+// Non-[Fielder] errors are stored directly. Nested [Fielder] errors cause
+// recursion with an extended prefix (via [joinKey]).
+func flattenFieldErrors(
+	visitor map[string]error,
+	pref string,
+	fields map[string]error,
+) {
+
 	for field, err := range fields {
 		if fls, ok := err.(Fielder); ok {
 			flattenFieldErrors(visitor, joinKey(pref, field), fls.ErrorFields())
@@ -439,20 +446,10 @@ func formatFieldErrors(fs map[string]error, codes bool) string {
 			s.WriteString("; ")
 		}
 		if codes {
-			_, _ = fmt.Fprintf(
-				&s,
-				"%v: %v (%s)",
-				key,
-				err.Error(),
-				GetCode(err),
-			)
+			const format = "%v: %v (%s)"
+			_, _ = fmt.Fprintf(&s, format, key, err.Error(), GetCode(err))
 		} else {
-			_, _ = fmt.Fprintf(
-				&s,
-				"%v: %v",
-				key,
-				errorMessage(err),
-			)
+			_, _ = fmt.Fprintf(&s, "%v: %v", key, errorMessage(err))
 		}
 	}
 	return s.String()
