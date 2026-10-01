@@ -74,8 +74,8 @@ func Test_Envelop(t *testing.T) {
 		err := Envelop(env)
 
 		// --- Then ---
-		assert.Same(t, env.cause, err.(Envelope).cause) // nolint: errorlint
-		assert.Same(t, env.lead, err.(Envelope).lead)   // nolint: errorlint
+		assert.Same(t, env.cause, err.(Envelope).cause) //nolint:errorlint
+		assert.Same(t, env.lead, err.(Envelope).lead)   //nolint:errorlint
 	})
 
 	t.Run("use passed Envelope - override leading", func(t *testing.T) {
@@ -87,8 +87,8 @@ func Test_Envelop(t *testing.T) {
 		err := Envelop(env, other)
 
 		// --- Then ---
-		assert.Same(t, env.cause, err.(Envelope).cause) // nolint: errorlint
-		assert.Same(t, other, err.(Envelope).lead)      // nolint: errorlint
+		assert.Same(t, env.cause, err.(Envelope).cause) //nolint:errorlint
+		assert.Same(t, other, err.(Envelope).lead)      //nolint:errorlint
 	})
 }
 

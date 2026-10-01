@@ -29,7 +29,7 @@ func AssertError[T xrr.Domain](
 	t.Helper()
 	if e := check.NotNil(err); e != nil {
 		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
-		return nil, false // nolint: nilerr
+		return nil, false //nolint:nilerr
 	}
 	// Target variable for the type assertion into *xrr.GenericError[T].
 	var xe *xrr.GenericError[T]
@@ -39,7 +39,7 @@ func AssertError[T xrr.Domain](
 			Remove("src").
 			Append("error", "%T", err)
 		t.Error(msg)
-		return nil, false // nolint: nilerr
+		return nil, false //nolint:nilerr
 	}
 	return xe, true
 }
@@ -278,7 +278,7 @@ func AssertFields(t tester.T, err error) (xrr.Fielder, bool) {
 	t.Helper()
 	if e := check.NotNil(err); e != nil {
 		t.Error(notice.From(e).SetHeader("[xrr] expected error not to be nil"))
-		return nil, false // nolint: nilerr
+		return nil, false //nolint:nilerr
 	}
 	// Target variable for the type assertion into xrr.Fielder.
 	var xe xrr.Fielder
@@ -288,7 +288,7 @@ func AssertFields(t tester.T, err error) (xrr.Fielder, bool) {
 			Remove("src").
 			Append("error", "%T", err)
 		t.Error(msg)
-		return nil, false // nolint: nilerr
+		return nil, false //nolint:nilerr
 	}
 	return xe, true
 }

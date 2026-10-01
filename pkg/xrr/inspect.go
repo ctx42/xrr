@@ -169,7 +169,7 @@ func getMeta[T MetaType](err error, key string) (T, bool) {
 // The callback should return true to continue traversal or false to stop early.
 // This function is used internally to implement the various Get* functions.
 //
-// nolint: cyclop
+//nolint:cyclop
 func walkErrors(err error, cb func(err error) bool) bool {
 	if err == nil || isNil(err) {
 		return true
@@ -180,7 +180,7 @@ func walkErrors(err error, cb func(err error) bool) bool {
 	//   2. Field errors (Fielder) — only the ones that also
 	//      implement Coder are visited
 	//   3. Joined errors (Unwrap() []error)
-	switch x := err.(type) { // nolint: errorlint
+	switch x := err.(type) { //nolint:errorlint
 	case interface{ Unwrap() error }:
 		if !cb(err) {
 			return false
@@ -236,7 +236,7 @@ func walkErrorsReverse(err error, cb func(err error) bool) bool {
 	// Same three error shapes as walkErrors(), but we always visit children
 	// before the parent (depth-first, reverse order). This ensures metadata
 	// from outer errors wins when GetMeta walks in reverse.
-	switch x := err.(type) { // nolint: errorlint
+	switch x := err.(type) { //nolint:errorlint
 	case interface{ Unwrap() error }:
 		// Recurse first (children before parent) so that deeper errors are
 		// visited before this one.

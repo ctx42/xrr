@@ -79,12 +79,10 @@ func DefaultCode(otherwise string, codes ...string) string {
 // IsDomain returns true if err is a [GenericError] or [GenericFields] of
 // domain T.
 func IsDomain[T Domain](err error) bool {
-	// nolint: errorlint
-	if _, ok := err.(*GenericError[T]); ok {
+	if _, ok := err.(*GenericError[T]); ok { //nolint:errorlint
 		return true
 	}
-	// nolint: errorlint
-	if _, ok := err.(*GenericFields[T]); ok {
+	if _, ok := err.(*GenericFields[T]); ok { //nolint:errorlint
 		return true
 	}
 	return false
@@ -107,7 +105,7 @@ func isNil(v any) bool {
 	}
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
-	case reflect.Ptr, reflect.Interface, reflect.Func, // nolint:govet
+	case reflect.Ptr, reflect.Interface, reflect.Func, //nolint:govet
 		reflect.Slice, reflect.Map, reflect.Chan:
 		return rv.IsNil()
 	default:

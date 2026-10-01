@@ -337,7 +337,7 @@ func (fs *GenericFields[T]) MarshalJSON() ([]byte, error) {
 		return []byte(`{}`), nil
 	}
 	for k, v := range fls.fields {
-		if e, ok := v.(json.Marshaler); ok { // nolint: errorlint
+		if e, ok := v.(json.Marshaler); ok { //nolint:errorlint
 			data, err := e.MarshalJSON()
 			if err != nil {
 				return nil, err

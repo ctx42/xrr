@@ -94,9 +94,8 @@ func Envelop(cause error, lead ...error) error {
 	// If cause is already an instance of Envelope,
 	// use it and override the leading error if provided.
 	//
-	// nolint: errorlint
 	//goland:noinspection ALL
-	if env, ok := cause.(Envelope); ok {
+	if env, ok := cause.(Envelope); ok { //nolint:errorlint
 		if len(lead) > 0 {
 			env.lead = lead[0]
 		}
