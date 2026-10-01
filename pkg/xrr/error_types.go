@@ -23,7 +23,7 @@ type Error = GenericError[EDXrr]
 //
 //	xrr.New("message")
 //	xrr.New("message", "ECode")
-//	xrr.New("message", "ECode", xrr.Option())
+//	xrr.New("message", "ECode", xrr.Meta().Str("key", "val").Option())
 //
 // When [WithCause] is provided:
 //   - If msg is empty, Error() returns the cause's message directly.

@@ -35,7 +35,7 @@ type GenericError[T Domain] struct {
 //	newErr := xrr.ErrorFunc[MyDomain]()
 //	newErr("message")
 //	newErr("message", "ECode")
-//	newErr("message", "ECode", xrr.Option())
+//	newErr("message", "ECode", xrr.Meta().Str("key", "val").Option())
 func ErrorFunc[T Domain]() func(msg string, args ...any) *GenericError[T] {
 	return func(msg string, args ...any) *GenericError[T] {
 		code, opts := newArgs(args...)
