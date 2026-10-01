@@ -61,9 +61,10 @@ func Test_SyncErrors_Add(t *testing.T) {
 	t.Run("add when nil", func(t *testing.T) {
 		// --- Given ---
 		var se *SyncErrors
+		err := errors.New("msg")
 
 		// --- When ---
-		se.Add(errors.New("msg"))
+		se.Add(err)
 
 		// --- Then ---
 		assert.Nil(t, se)
@@ -72,9 +73,10 @@ func Test_SyncErrors_Add(t *testing.T) {
 	t.Run("nil errors not added", func(t *testing.T) {
 		// --- Given ---
 		se := NewSyncErrors()
+		err := errors.New("msg")
 
 		// --- When ---
-		se.Add(nil, errors.New("msg"), nil)
+		se.Add(nil, err, nil)
 
 		// --- Then ---
 		assert.Len(t, 1, se.Collect())

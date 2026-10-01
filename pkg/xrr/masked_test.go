@@ -13,16 +13,22 @@ import (
 
 func Test_Mask(t *testing.T) {
 	t.Run("nil cause returns nil", func(t *testing.T) {
+		// --- Given ---
+		lead := New("lead", "ECL")
+
 		// --- When ---
-		err := Mask(nil, New("lead", "ECL"))
+		err := Mask(nil, lead)
 
 		// --- Then ---
 		assert.Nil(t, err)
 	})
 
 	t.Run("nil lead returns nil", func(t *testing.T) {
+		// --- Given ---
+		cause := New("cause", "ECC")
+
 		// --- When ---
-		err := Mask(New("cause", "ECC"), nil)
+		err := Mask(cause, nil)
 
 		// --- Then ---
 		assert.Nil(t, err)

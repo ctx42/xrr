@@ -76,8 +76,11 @@ func Test_Newf(t *testing.T) {
 	})
 
 	t.Run("with code", func(t *testing.T) {
+		// --- Given ---
+		opt := WithCode("ECode")
+
 		// --- When ---
-		err := Newf("msg %d", 42, WithCode("ECode"))
+		err := Newf("msg %d", 42, opt)
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
@@ -132,9 +135,10 @@ func Test_Newf(t *testing.T) {
 	t.Run("wraps error with code", func(t *testing.T) {
 		// --- Given ---
 		cause := errors.New("original")
+		opt := WithCode("ECode")
 
 		// --- When ---
-		err := Newf("connect failed: %w", cause, WithCode("ECode"))
+		err := Newf("connect failed: %w", cause, opt)
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)

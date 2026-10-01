@@ -143,9 +143,10 @@ func Test_WrapUsing(t *testing.T) {
 		// --- Given ---
 		e := New("msg", "ECMsg")
 		cause := New("cause", "ECCause")
+		withCause := WithCause(cause)
 
 		// --- When ---
-		err := WrapUsing[string](e, WithCause(cause))
+		err := WrapUsing[string](e, withCause)
 
 		// --- Then ---
 		var x *GenericError[string]
@@ -161,9 +162,10 @@ func Test_WrapUsing(t *testing.T) {
 			// --- Given ---
 			e := errors.New("msg")
 			cause := New("cause", "ECCause")
+			withCause := WithCause(cause)
 
 			// --- When ---
-			err := WrapUsing[string](e, WithCause(cause))
+			err := WrapUsing[string](e, withCause)
 
 			// --- Then ---
 			var x *GenericError[string]
@@ -176,9 +178,11 @@ func Test_WrapUsing(t *testing.T) {
 		// --- Given ---
 		e := New("msg", "ECMsg")
 		cause := New("cause", "ECCause")
+		withCause := WithCause(cause)
+		withCode := WithCode("ECOverride")
 
 		// --- When ---
-		err := WrapUsing[string](e, WithCause(cause), WithCode("ECOverride"))
+		err := WrapUsing[string](e, withCause, withCode)
 
 		// --- Then ---
 		var x *GenericError[string]
@@ -192,10 +196,11 @@ func Test_WrapUsing(t *testing.T) {
 		// --- Given ---
 		e := errors.New("msg")
 		cause := errors.New("cause")
+		withCause := WithCause(cause)
 		meta := Meta().Int("A", 42).Option()
 
 		// --- When ---
-		err := WrapUsing[string](e, WithCause(cause), meta)
+		err := WrapUsing[string](e, withCause, meta)
 
 		// --- Then ---
 		var x *GenericError[string]
@@ -211,9 +216,10 @@ func Test_WrapUsing(t *testing.T) {
 		e := errors.New("msg")
 		meta := Meta().Int("B", 10).Option()
 		cause := New("cause", "ECCause", meta)
+		withCause := WithCause(cause)
 
 		// --- When ---
-		err := WrapUsing[string](e, WithCause(cause))
+		err := WrapUsing[string](e, withCause)
 
 		// --- Then ---
 		var x *GenericError[string]
@@ -227,10 +233,11 @@ func Test_WrapUsing(t *testing.T) {
 		e := errors.New("msg")
 		meta0 := Meta().Int("A", 1).Int("B", 10).Option()
 		cause := New("cause", "ECCause", meta0)
+		withCause := WithCause(cause)
+		meta1 := Meta().Int("A", 99).Option()
 
 		// --- When ---
-		meta1 := Meta().Int("A", 99).Option()
-		err := WrapUsing[string](e, WithCause(cause), meta1)
+		err := WrapUsing[string](e, withCause, meta1)
 
 		// --- Then ---
 		assert.Equal(t, map[string]any{"A": 99, "B": 10}, GetMeta(err))

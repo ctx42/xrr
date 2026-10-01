@@ -1195,9 +1195,13 @@ func Test_GenericFields_Merge(t *testing.T) {
 	t.Run("nil receiver is no-op", func(t *testing.T) {
 		// --- Given ---
 		var fs *GenericFields[EDXrr]
+		errs := map[string]error{"f1": errors.New("msg1")}
 
-		// --- When --- Then --- (must not panic)
-		fs.Merge(map[string]error{"f1": errors.New("msg1")})
+		// --- When ---
+		fs.Merge(errs)
+
+		// --- Then ---
+		assert.Nil(t, fs)
 	})
 
 	t.Run("nil receiver with nil errs is no-op", func(t *testing.T) {

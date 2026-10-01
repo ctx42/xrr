@@ -32,9 +32,10 @@ func Test_ErrorFactory(t *testing.T) {
 		// --- Given ---
 		m := map[string]any{"A": 1, "B": func() {}}
 		have := ErrorFunc[EDXrr]()
+		opt := WithMeta(m)
 
 		// --- When ---
-		err := have("msg", "ECode", WithMeta(m))
+		err := have("msg", "ECode", opt)
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
@@ -82,9 +83,10 @@ func Test_ErrorfFunc(t *testing.T) {
 	t.Run("with code", func(t *testing.T) {
 		// --- Given ---
 		have := ErrorfFunc[EDXrr]()
+		opt := WithCode("ECode")
 
 		// --- When ---
-		err := have("msg", WithCode("ECode"))
+		err := have("msg", opt)
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
@@ -99,9 +101,10 @@ func Test_ErrorfFunc(t *testing.T) {
 		// --- Given ---
 		m := map[string]any{"A": 1, "B": func() {}}
 		have := ErrorfFunc[EDXrr]()
+		opt := WithMeta(m)
 
 		// --- When ---
-		err := have("msg", WithMeta(m))
+		err := have("msg", opt)
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
@@ -133,11 +136,12 @@ func Test_ErrorfFunc(t *testing.T) {
 
 	t.Run("wraps error with code", func(t *testing.T) {
 		// --- Given ---
-		cause := errors.New("original")
 		have := ErrorfFunc[EDXrr]()
+		cause := errors.New("original")
+		opt := WithCode("ECode")
 
 		// --- When ---
-		err := have("wrap: %w", cause, WithCode("ECode"))
+		err := have("wrap: %w", cause, opt)
 
 		// --- Then ---
 		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
