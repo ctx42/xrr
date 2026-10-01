@@ -26,9 +26,9 @@ func WithCode(code string) Option {
 	return func(ops *Options) { ops.code = code }
 }
 
-// WithMeta is an option for setting the metadata. The provided map must not be
-// modified or reused by the caller after passing it to this function. The
-// value types that are not supported will be skipped.
+// WithMeta is an option for setting the metadata. The map is read when the
+// option is applied, and its entries are copied; values of unsupported types
+// are skipped.
 //
 // See [MetaType] for supported metadata types. Unsupported values are
 // filtered using isValidMetaValue.

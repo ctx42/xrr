@@ -3,7 +3,7 @@
 
 package xrr
 
-// Errors represent a collection of errors.
+// Errors represents a collection of errors.
 type Errors []error
 
 // NewErrors returns a new instance of [Errors].

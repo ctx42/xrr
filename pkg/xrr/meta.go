@@ -30,44 +30,38 @@ type Metadata struct {
 // Meta returns a new instance of [Metadata].
 func Meta() Metadata { return Metadata{} }
 
-// Bool adds the key with val as a boolean to the metadata collection. Key will
-// be overridden with the new value if it already exists.
+// Bool sets key to the bool value. An existing key is overwritten.
 func (m Metadata) Bool(key string, value bool) Metadata {
 	return m.set(key, value)
 }
 
-// Str adds the key with string val to the metadata collection. Key will be
-// overridden with the new value if it already exists.
+// Str sets key to the string value. An existing key is overwritten.
 func (m Metadata) Str(key, value string) Metadata {
 	return m.set(key, value)
 }
 
-// Int adds the key with integer val to the metadata collection. Key will be
-// overridden with the new value if it already exists.
+// Int sets key to the int value. An existing key is overwritten.
 func (m Metadata) Int(key string, value int) Metadata {
 	return m.set(key, value)
 }
 
-// Int64 adds the key with int64 val to the metadata collection. Key will be
-// overridden with a new value if it already exists.
+// Int64 sets key to the int64 value. An existing key is overwritten.
 func (m Metadata) Int64(key string, value int64) Metadata {
 	return m.set(key, value)
 }
 
-// Float64 adds the key with float64 val to the metadata collection. Key will
-// be overridden with the new value if it already exists.
+// Float64 sets key to the float64 value. An existing key is overwritten.
 func (m Metadata) Float64(key string, value float64) Metadata {
 	return m.set(key, value)
 }
 
-// Time adds the key with val as a time to the metadata collection. Key will be
-// overridden with the new value if it already exists.
+// Time sets key to the [time.Time] value. An existing key is overwritten.
 func (m Metadata) Time(key string, value time.Time) Metadata {
 	return m.set(key, value)
 }
 
-// Duration adds the key with val as a duration to the metadata collection.
-// Key will be overridden with the new value if it already exists.
+// Duration sets key to the [time.Duration] value. An existing key is
+// overwritten.
 func (m Metadata) Duration(key string, value time.Duration) Metadata {
 	return m.set(key, value)
 }
@@ -106,8 +100,7 @@ func (m Metadata) MetaSetFrom(meta Metadater) Metadata {
 // Option returns a [WithMeta] [Option].
 func (m Metadata) Option() Option { return WithMeta(m.m) }
 
-// set sets instance metadata key/value if the metadata map is nil, it will
-// allocate it.
+// set sets key to value, allocating the metadata map if it is nil.
 func (m Metadata) set(key string, value any) Metadata {
 	if m.m == nil {
 		m.m = make(map[string]any)

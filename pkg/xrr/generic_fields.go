@@ -195,9 +195,8 @@ func (fs *GenericFields[T]) Format(state fmt.State, verb rune) {
 	}
 }
 
-// Flatten flattens a nested map of errors to single one level map. The fields
-// for nested errors are prefixed with the field name of the parent separated
-// by dots (.).
+// Flatten flattens a nested map of errors into a single-level map. The fields
+// of nested errors are prefixed with the parent field name and a dot (.).
 //
 // Flatten example:
 //
@@ -224,8 +223,8 @@ func (fs *GenericFields[T]) Flatten() *GenericFields[T] {
 	return &GenericFields[T]{fields: visitor}
 }
 
-// Filter removes all keys with nil values from Fields and returns it as an
-// error. If the length of Fields becomes 0, it will return nil.
+// Filter returns the fields without nil values, filtering nested fields
+// recursively, as an error. Returns nil when no fields remain.
 func (fs *GenericFields[T]) Filter() error {
 	if fs == nil {
 		return nil
@@ -373,9 +372,9 @@ func (fs *GenericFields[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Flatten first merges all the provided errors, then it flattens a nested map
-// of errors to single one level map. The fields for nested errors are prefixed
-// with the field name of the parent separated by dots (.).
+// Flatten merges the provided errors and flattens the result into a
+// single-level map. The fields of nested errors are prefixed with the parent
+// field name and a dot (.).
 //
 // Flatten example:
 //

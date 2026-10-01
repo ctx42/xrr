@@ -28,11 +28,11 @@ import (
 
 // Error codes.
 const (
-	// ECGeneric represents generic error code used for non-nil errors which
-	// have no error code assigned.
+	// ECGeneric is the error code of non-nil errors that have no code
+	// assigned.
 	ECGeneric = "ECGeneric"
 
-	// ECInvJSON represents invalid JSON error code.
+	// ECInvJSON is the error code of [ErrInvJSON].
 	ECInvJSON = "ECInvJSON"
 
 	// ECInvJSONError represents the error code for a JSON string that has
@@ -45,7 +45,7 @@ const (
 
 // Sentinel errors.
 var (
-	// ErrInvJSON represents an error indicating JSON structure or format error.
+	// ErrInvJSON indicates invalid JSON syntax or structure.
 	ErrInvJSON = New("invalid JSON", ECInvJSON)
 
 	// ErrInvJSONError represents an error indicating a JSON string has invalid

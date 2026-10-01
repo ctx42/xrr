@@ -13,9 +13,9 @@
 // Primary groups of helpers:
 //   - AssertError, AssertEqual, AssertCode, AssertKeyCnt, AssertNoKey
 //   - AssertStr, AssertInt, AssertInt64, AssertFloat64, AssertBool,
-//     AssertTime, AssertDuration (metadata assertions)
+//     AssertTime (metadata assertions)
 //   - AssertFields, AssertFieldsEqual, AssertFieldCnt, AssertHasField,
 //     AssertFieldEqual, AssertFieldCode, AssertFieldIs (field error helpers)
 //
-// See assertions.go for the complete set and usage examples.
+// See the package index for the complete set.
 package xrrtest
