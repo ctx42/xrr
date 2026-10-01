@@ -357,7 +357,9 @@ func AssertHasField(t tester.T, field string, err error) (error, bool) {
 	ve, e := check.HasKey(field, fls)
 	if e != nil {
 		msg := notice.From(e).
-			SetHeader("[xrr] expected %T length", xe).
+			SetHeader("[xrr] expected field to exist").
+			Remove("key").
+			Prepend("field", "%s", field).
 			Remove("map").
 			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
@@ -384,7 +386,9 @@ func AssertFieldEqual(t tester.T, field, want string, err error) bool {
 	ve, e := check.HasKey(field, fls)
 	if e != nil {
 		msg := notice.From(e).
-			SetHeader("[xrr] expected %T length", xe).
+			SetHeader("[xrr] expected field to exist").
+			Remove("key").
+			Prepend("field", "%s", field).
 			Remove("map").
 			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)
@@ -458,7 +462,9 @@ func AssertFieldIs(t tester.T, field string, want, err error) bool {
 	ve, e := check.HasKey(field, fls)
 	if e != nil {
 		msg := notice.From(e).
-			SetHeader("[xrr] expected %T length", xe).
+			SetHeader("[xrr] expected field to exist").
+			Remove("key").
+			Prepend("field", "%s", field).
 			Remove("map").
 			Append("fields", "%s", dump.New().Any(fls))
 		t.Error(msg)

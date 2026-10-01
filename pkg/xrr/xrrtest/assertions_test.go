@@ -1158,8 +1158,8 @@ func Test_AssertHasField(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDXrr] length:\n" +
-			"     key: \"f1\"\n" +
+			"[xrr] expected field to exist:\n" +
+			"   field: f1\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
 			"            \"f0\": \"m0\",\n" +
@@ -1241,8 +1241,8 @@ func Test_AssertFieldEqual(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDXrr] length:\n" +
-			"     key: \"f2\"\n" +
+			"[xrr] expected field to exist:\n" +
+			"   field: f2\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
 			"            \"f0\": \"m0\",\n" +
@@ -1455,8 +1455,8 @@ func Test_AssertFieldIs(t *testing.T) {
 		tspy := tester.New(t)
 		tspy.ExpectError()
 		wMsg := "" +
-			"[xrr] expected *xrr.GenericFields[github.com/ctx42/xrr/pkg/xrr.EDXrr] length:\n" +
-			"     key: \"other\"\n" +
+			"[xrr] expected field to exist:\n" +
+			"   field: other\n" +
 			"  fields:\n" +
 			"          map[string]error{\n" +
 			"            \"f0\": \"m1\",\n" +
