@@ -1588,34 +1588,34 @@ func Test_GenericFields_UnmarshalJSON(t *testing.T) {
 		data := must.Value(fs.MarshalJSON())
 
 		// --- When ---
-		var got GenericFields[EDXrr]
-		err := json.Unmarshal(data, &got)
+		var have GenericFields[EDXrr]
+		err := json.Unmarshal(data, &have)
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.Len(t, 2, got.fields)
-		assert.ErrorEqual(t, "em0", got.fields["f0"])
-		assert.ErrorEqual(t, "em1", got.fields["f1"])
+		assert.Len(t, 2, have.fields)
+		assert.ErrorEqual(t, "em0", have.fields["f0"])
+		assert.ErrorEqual(t, "em1", have.fields["f1"])
 	})
 
 	t.Run("empty object yields empty fields", func(t *testing.T) {
 		// --- Given ---
-		var got GenericFields[EDXrr]
+		var have GenericFields[EDXrr]
 
 		// --- When ---
-		err := json.Unmarshal([]byte(`{}`), &got)
+		err := json.Unmarshal([]byte(`{}`), &have)
 
 		// --- Then ---
 		assert.NoError(t, err)
-		assert.Len(t, 0, got.fields)
+		assert.Len(t, 0, have.fields)
 	})
 
 	t.Run("invalid JSON returns error", func(t *testing.T) {
 		// --- Given ---
-		var got GenericFields[EDXrr]
+		var have GenericFields[EDXrr]
 
 		// --- When ---
-		err := json.Unmarshal([]byte(`not-json`), &got)
+		err := json.Unmarshal([]byte(`not-json`), &have)
 
 		// --- Then ---
 		var se *json.SyntaxError
