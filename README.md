@@ -43,7 +43,7 @@ Plain Go errors are just strings. In real production applications you quickly ru
 go get github.com/ctx42/xrr
 ```
 
-<!-- gmdoceg:pkg/xrr/Example -->
+<!-- gmmce:pkg/xrr/Example -->
 ```go
 err := xrr.New("user not found", "EC_USER_NOT_FOUND",
 	xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Option(),
@@ -88,7 +88,7 @@ err := NewPaymentError("insufficient funds",
 
 Now you get full compile-time safety:
 
-<!-- gmdoceg:pkg/xrr/ExampleIsDomain -->
+<!-- gmmce:pkg/xrr/ExampleIsDomain -->
 ```go
 type edPayment struct{}
 type PaymentError = xrr.GenericError[edPayment]
@@ -137,7 +137,7 @@ Minimum Go version: **1.26+**
 
 ## Error Codes & Metadata
 
-<!-- gmdoceg:pkg/xrr/ExampleGetMeta -->
+<!-- gmmce:pkg/xrr/ExampleGetMeta -->
 ```go
 err := xrr.New("payment failed", "EC_PAYMENT_FAILED",
 	xrr.Meta().
@@ -163,7 +163,7 @@ fmt.Println(orderID, amount, retryable)
 
 ## Wrapping & Cause Chains
 
-<!-- gmdoceg:pkg/xrr/ExampleWrap -->
+<!-- gmmce:pkg/xrr/ExampleWrap -->
 ```go
 err := fmt.Errorf("connection refused")
 wrapped := xrr.Wrap(err, xrr.WithCode("EC_CONN"))
@@ -177,7 +177,7 @@ fmt.Println(wrapped.Error())
 // connection refused
 ```
 
-<!-- gmdoceg:pkg/xrr/ExampleNew_withCauseAndMsg -->
+<!-- gmmce:pkg/xrr/ExampleNew_withCauseAndMsg -->
 ```go
 err := fmt.Errorf("connection refused")
 wrapped := xrr.New("dial failed", "EC_CONN", xrr.WithCause(err))
@@ -199,7 +199,7 @@ Full support for `errors.Is`, `errors.As`, and `%w`.
 
 ### Working with Joined Errors
 
-<!-- gmdoceg:pkg/xrr/ExampleSplit -->
+<!-- gmmce:pkg/xrr/ExampleSplit -->
 ```go
 joined := errors.Join(
 	xrr.New("first", "EC_FIRST"),
@@ -214,7 +214,7 @@ for _, p := range xrr.Split(joined) {
 // second
 ```
 
-<!-- gmdoceg:pkg/xrr/ExampleJoin -->
+<!-- gmmce:pkg/xrr/ExampleJoin -->
 ```go
 combined := xrr.Join(
 	xrr.New("first", "EC_FIRST"),
@@ -232,7 +232,7 @@ for _, p := range xrr.Split(combined) {
 // second
 ```
 
-<!-- gmdoceg:pkg/xrr/ExampleIsJoined -->
+<!-- gmmce:pkg/xrr/ExampleIsJoined -->
 ```go
 single := xrr.New("single error", "EC_SINGLE")
 joined := errors.Join(
@@ -251,7 +251,7 @@ fmt.Println(xrr.IsJoined(joined))
 
 `DefaultCode` is useful when you have multiple possible codes and want a fallback.
 
-<!-- gmdoceg:pkg/xrr/ExampleDefaultCode -->
+<!-- gmmce:pkg/xrr/ExampleDefaultCode -->
 ```go
 code := xrr.DefaultCode("ECFallback", "", "EC_FOUND", "EC_IGNORED")
 
@@ -266,7 +266,7 @@ fmt.Println(code)
 
 All errors implement `json.Marshaler` and provide `GetMeta()` for `slog`.
 
-<!-- gmdoceg:pkg/xrr/ExampleNew_marshal_with_metadata -->
+<!-- gmmce:pkg/xrr/ExampleNew_marshal_with_metadata -->
 ```go
 meta := xrr.Meta().Int("attempt", 3).Str("user_id", "u-123")
 err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
@@ -283,7 +283,7 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 // }
 ```
 
-<!-- gmdoceg:pkg/xrr/ExampleNew_with_slog -->
+<!-- gmmce:pkg/xrr/ExampleNew_with_slog -->
 ```go
 meta := xrr.Meta().Int("attempt", 3).Str("user_id", "u-123")
 err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
@@ -306,7 +306,7 @@ slog.New(handler).Error(
 // {"level":"ERROR","msg":"user not found","code":"EC_USER_NOT_FOUND","meta":{"attempt":3,"user_id":"u-123"}}
 ```
 
-<!-- gmdoceg:pkg/xrr/ExampleNew_slog_and_json -->
+<!-- gmmce:pkg/xrr/ExampleNew_slog_and_json -->
 ```go
 ts := time.Date(2026, 5, 9, 11, 23, 0, 0, time.UTC)
 meta := xrr.Meta().
@@ -349,7 +349,7 @@ Perfect for REST APIs and observability platforms.
 
 ## Field Errors for Validation
 
-<!-- gmdoceg:pkg/xrr/ExampleGenericFields -->
+<!-- gmmce:pkg/xrr/ExampleGenericFields -->
 ```go
 fields := map[string]error{
 	"username": errors.New("username not found"),
@@ -384,7 +384,7 @@ Serializes cleanly to JSON arrays/objects for frontend consumption.
 
 ## API Envelope Pattern
 
-<!-- gmdoceg:pkg/xrr/ExampleEnvelop -->
+<!-- gmmce:pkg/xrr/ExampleEnvelop -->
 ```go
 cause := xrr.New("cause", "EC_CAUSE")
 lead := xrr.New("lead", "EC_LEAD")
@@ -417,7 +417,7 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 
 When the cause is a joined error:
 
-<!-- gmdoceg:pkg/xrr/ExampleEnvelop_joined_errors -->
+<!-- gmmce:pkg/xrr/ExampleEnvelop_joined_errors -->
 ```go
 cause := errors.Join(xrr.New("cause A", "EC_A"), xrr.New("cause B", "EC_B"))
 lead := xrr.New("lead", "EC_LEAD")
@@ -444,7 +444,7 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 
 When the cause contains field errors:
 
-<!-- gmdoceg:pkg/xrr/ExampleEnvelop_fields_error -->
+<!-- gmmce:pkg/xrr/ExampleEnvelop_fields_error -->
 ```go
 fields := map[string]error{
 	"a": xrr.New("cause A", "EC_A"),
@@ -479,7 +479,7 @@ fmt.Printf("%s\n", must.Value(json.MarshalIndent(err, "", "  ")))
 in the Go error chain. Use it to present a clean public-facing error without
 leaking internal details.
 
-<!-- gmdoceg:pkg/xrr/ExampleMask -->
+<!-- gmmce:pkg/xrr/ExampleMask -->
 ```go
 cause := xrr.New("db: connection refused", "EC_DB_ERR")
 lead := xrr.New("service unavailable", "EC_SERVICE_UNAVAILABLE")

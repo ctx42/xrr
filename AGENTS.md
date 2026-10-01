@@ -8,7 +8,7 @@ Instructions for AI coding assistants.
 - Single: `go test -v -race -run TestName ./pkg/xrr/`
 - Subpackage: `go test -v -race ./pkg/xrr/xrrtest/`
 - Lint: `golangci-lint run ./...`
-- Regenerate README doc examples: `gomake :project:doc-eg`
+- Regenerate README doc examples: `gomake :doc:mce`
 
 CI runs full suite on master. Min Go 1.26+.
 
@@ -140,8 +140,8 @@ default domain `EDXrr` is exported for internal aliases.
 
 ## Documentation
 
-- Run `gomake :project:doc-eg` to sync README examples with `Example*` funcs
-  in examples_test.go (uses gmdoceg markers).
+- Run `gomake :doc:mce` to sync README examples with `Example*` funcs
+  in examples_test.go (uses `<!-- gmmce:path/Func -->` markers).
 - Update CHANGELOG.md for every user-visible change.
 
 ## Editing This File
