@@ -468,19 +468,32 @@ func Test_MergeFields(t *testing.T) {
 }
 
 func Test_GenericFields_ErrorFields(t *testing.T) {
-	// --- Given ---
-	fields := map[string]error{
-		"f0": errors.New("em0"),
-		"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
-		"f2": New("em2", "ECode2"),
-	}
-	fe := &GenericFields[EDXrr]{fields: fields}
+	t.Run("with fields", func(t *testing.T) {
+		// --- Given ---
+		fields := map[string]error{
+			"f0": errors.New("em0"),
+			"f1": New("em1", "ECode1", Meta().Str("key", "val").Option()),
+			"f2": New("em2", "ECode2"),
+		}
+		fe := &GenericFields[EDXrr]{fields: fields}
 
-	// --- When ---
-	have := fe.ErrorFields()
+		// --- When ---
+		have := fe.ErrorFields()
 
-	// --- Then ---
-	assert.Equal(t, fields, have)
+		// --- Then ---
+		assert.Equal(t, fields, have)
+	})
+
+	t.Run("nil receiver", func(t *testing.T) {
+		// --- Given ---
+		var fs *GenericFields[EDXrr]
+
+		// --- When ---
+		have := fs.ErrorFields()
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
 }
 
 func Test_GenericFields_Error(t *testing.T) {
@@ -568,6 +581,17 @@ func Test_GenericFields_Error(t *testing.T) {
 		// --- Then ---
 		assert.Equal(t, "b: em0", have)
 	})
+
+	t.Run("nil receiver", func(t *testing.T) {
+		// --- Given ---
+		var fs *GenericFields[EDXrr]
+
+		// --- When ---
+		have := fs.Error()
+
+		// --- Then ---
+		assert.Equal(t, "", have)
+	})
 }
 
 func Test_GenericFields_Unwrap(t *testing.T) {
@@ -618,6 +642,17 @@ func Test_GenericFields_Unwrap(t *testing.T) {
 		assert.ErrorEqual(t, "f1.s0: em10", have[1])
 		assert.ErrorEqual(t, "f1.s1: em11", have[2])
 		assert.ErrorEqual(t, "f2: em2", have[3])
+	})
+
+	t.Run("nil receiver", func(t *testing.T) {
+		// --- Given ---
+		var fs *GenericFields[EDXrr]
+
+		// --- When ---
+		have := fs.Unwrap()
+
+		// --- Then ---
+		assert.Len(t, 0, have)
 	})
 }
 
@@ -690,6 +725,17 @@ func Test_GenericFields_Is(t *testing.T) {
 
 		// --- When ---
 		have := fs.Is(nil)
+
+		// --- Then ---
+		assert.False(t, have)
+	})
+
+	t.Run("nil receiver", func(t *testing.T) {
+		// --- Given ---
+		var fs *GenericFields[EDXrr]
+
+		// --- When ---
+		have := fs.Is(ErrTst)
 
 		// --- Then ---
 		assert.False(t, have)
@@ -901,6 +947,17 @@ func Test_GenericFields_Format(t *testing.T) {
 			"f2: em2 (ECode2)"
 		assert.Equal(t, want, have)
 	})
+
+	t.Run("nil receiver", func(t *testing.T) {
+		// --- Given ---
+		var fs *GenericFields[EDXrr]
+
+		// --- When ---
+		have := fmt.Sprintf("%+v", fs)
+
+		// --- Then ---
+		assert.Equal(t, "", have)
+	})
 }
 
 func Test_GenericFields_Flatten(t *testing.T) {
@@ -938,6 +995,17 @@ func Test_GenericFields_Flatten(t *testing.T) {
 			},
 		}
 		assert.Equal(t, want, have)
+	})
+
+	t.Run("nil receiver", func(t *testing.T) {
+		// --- Given ---
+		var fs *GenericFields[EDXrr]
+
+		// --- When ---
+		have := fs.Flatten()
+
+		// --- Then ---
+		assert.Equal(t, 0, have.Len())
 	})
 }
 
@@ -1317,6 +1385,17 @@ func Test_GenericFields_Get(t *testing.T) {
 		// --- Then ---
 		assert.Nil(t, have)
 	})
+
+	t.Run("nil receiver", func(t *testing.T) {
+		// --- Given ---
+		var fs *GenericFields[EDXrr]
+
+		// --- When ---
+		have := fs.Get("f0")
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
 }
 
 func Test_GenericFields_Set(t *testing.T) {
@@ -1478,6 +1557,18 @@ func Test_GenericFields_MarshalJSON(t *testing.T) {
 		// --- Then ---
 		assert.ErrorEqual(t, "abc", err)
 		assert.Nil(t, have)
+	})
+
+	t.Run("nil receiver", func(t *testing.T) {
+		// --- Given ---
+		var fs *GenericFields[EDXrr]
+
+		// --- When ---
+		have, err := fs.MarshalJSON()
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.JSON(t, "{}", string(have))
 	})
 }
 

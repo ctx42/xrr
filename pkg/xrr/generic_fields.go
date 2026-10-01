@@ -138,7 +138,13 @@ func mergeFieldErrors(ers ...error) map[string]error {
 	return ret
 }
 
-func (fs *GenericFields[T]) ErrorFields() map[string]error { return fs.fields }
+// ErrorFields returns nil if fs is nil.
+func (fs *GenericFields[T]) ErrorFields() map[string]error {
+	if fs == nil {
+		return nil
+	}
+	return fs.fields
+}
 
 func (fs *GenericFields[T]) Error() string {
 	return formatFieldErrors(fs.ErrorFields(), false)
@@ -162,7 +168,7 @@ func (fs *GenericFields[T]) Is(other error) bool {
 	if other == nil {
 		return false
 	}
-	for _, e := range fs.fields {
+	for _, e := range fs.ErrorFields() {
 		if errors.Is(e, other) {
 			return true
 		}
@@ -212,8 +218,9 @@ func (fs *GenericFields[T]) Format(state fmt.State, verb rune) {
 //
 //	err := fields.Flatten().Filter() // nil when all fields are nil/absent
 func (fs *GenericFields[T]) Flatten() *GenericFields[T] {
-	visitor := make(map[string]error, len(fs.fields))
-	flattenFieldErrors(visitor, "", fs.fields)
+	fields := fs.ErrorFields()
+	visitor := make(map[string]error, len(fields))
+	flattenFieldErrors(visitor, "", fields)
 	return &GenericFields[T]{fields: visitor}
 }
 
@@ -271,7 +278,7 @@ func (fs *GenericFields[T]) Merge(errs map[string]error) {
 
 // Get returns an error for the given field, or nil if the field does not exist.
 func (fs *GenericFields[T]) Get(field string) error {
-	return getFieldError(fs.fields, field)
+	return getFieldError(fs.ErrorFields(), field)
 }
 
 // getFieldError looks up a field by exact name or by dotted prefix (supporting
@@ -319,8 +326,9 @@ func (fs *GenericFields[T]) Len() int {
 // [flattenFieldErrors] (and filtered via [filterFieldErrors]).
 // If there are no fields, it returns "{}".
 func (fs *GenericFields[T]) MarshalJSON() ([]byte, error) {
-	visitor := make(map[string]error, len(fs.fields))
-	flattenFieldErrors(visitor, "", fs.fields)
+	fields := fs.ErrorFields()
+	visitor := make(map[string]error, len(fields))
+	flattenFieldErrors(visitor, "", fields)
 	ret := make(map[string]json.RawMessage, len(visitor))
 	fls := filterFieldErrors[T](visitor)
 	if fls == nil {
