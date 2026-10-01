@@ -335,6 +335,42 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		assert.JSON(t, want, string(data))
 	})
 
+	t.Run("masked cause without lead", func(t *testing.T) {
+		// --- Given ---
+		cause := New("internal", "ECI", Meta().Int("I", 1).Option())
+		masked := Mask(cause, New("public", "ECP"))
+		env := Envelop(masked)
+
+		// --- When ---
+		have, err := json.Marshal(env)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.JSON(t, `{"error": "public", "code": "ECP"}`, string(have))
+	})
+
+	t.Run("masked cause with lead", func(t *testing.T) {
+		// --- Given ---
+		cause := New("internal", "ECI", Meta().Int("I", 1).Option())
+		masked := Mask(cause, New("public", "ECP"))
+		env := Envelop(masked, New("lead", "ECL"))
+
+		// --- When ---
+		have, err := json.Marshal(env)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		want := `
+		{
+			"error": "lead",
+			"code": "ECL",
+			"errors": [
+				{"error": "public", "code": "ECP"}
+			]
+		}`
+		assert.JSON(t, want, string(have))
+	})
+
 	t.Run("marshal error", func(t *testing.T) {
 		// --- Given ---
 		e1 := &TErrMarshalJSON{New("msg a", "a")}

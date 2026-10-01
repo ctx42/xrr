@@ -180,9 +180,15 @@ func sortFieldErrors(ers map[string]error) ([]string, []error) {
 //   - Multiple errors have their messages concatenated with "; ".
 //   - All other errors return err.Error() directly.
 //
+// A [Masked] error is not treated as joined, so its cause message never
+// appears in the result.
+//
 // The unsafe.String optimization avoids an extra allocation when building
 // the concatenated message for joined errors.
 func errorMessage(err error) string {
+	if _, ok := err.(Masked); ok { //nolint:errorlint
+		return err.Error()
+	}
 	if jes, ok := err.(joined); ok {
 		es := jes.Unwrap()
 		if len(es) == 1 {

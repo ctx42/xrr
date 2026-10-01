@@ -131,7 +131,13 @@ func (e Envelope) Is(target error) bool {
 //   - If the cause is a [Fielder], it delegates to [envelopeFieldsToJSON].
 //   - If the cause is a joined error, it delegates to [envelopeErrorsToJSON].
 //   - Otherwise it uses the lead (if present) + cause via [envelopeErrorsToJSON].
+//
+// A [Masked] cause is replaced by its lead first, so the masked cause never
+// reaches the output.
 func (e Envelope) MarshalJSON() ([]byte, error) {
+	if msk, ok := e.cause.(Masked); ok { //nolint:errorlint
+		e.cause = msk.lead
+	}
 	if ef, ok := e.cause.(Fielder); ok {
 		if e.lead == nil {
 			e.lead = ErrFields

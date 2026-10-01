@@ -173,6 +173,18 @@ func Test_GenericError_Error(t *testing.T) {
 		assert.Equal(t, "msg", have)
 	})
 
+	t.Run("masked cause shows only the lead", func(t *testing.T) {
+		// --- Given ---
+		cause := Mask(New("internal", "ECI"), New("public", "ECP"))
+		e := New("msg", WithCause(cause))
+
+		// --- When ---
+		have := e.Error()
+
+		// --- Then ---
+		assert.Equal(t, "msg: public", have)
+	})
+
 	t.Run("case 1", func(t *testing.T) {
 		// --- Given ---
 		e := TstTreeCase1()
