@@ -1208,8 +1208,11 @@ func Test_GenericFields_Merge(t *testing.T) {
 		// --- Given ---
 		var fs *GenericFields[EDXrr]
 
-		// --- When --- Then --- (must not panic)
+		// --- When ---
 		fs.Merge(nil)
+
+		// --- Then ---
+		assert.Nil(t, fs)
 	})
 }
 
@@ -1452,8 +1455,11 @@ func Test_GenericFields_Set(t *testing.T) {
 		// --- Given ---
 		var fs *GenericFields[EDXrr]
 
-		// --- When --- Then --- (must not panic)
+		// --- When ---
 		fs.Set("f0", ErrTst)
+
+		// --- Then ---
+		assert.Nil(t, fs)
 	})
 }
 
