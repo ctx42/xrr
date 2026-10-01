@@ -181,8 +181,9 @@ func (gen *GenericError[T]) Format(state fmt.State, verb rune) {
 	Format(gen.Error(), gen.ErrorCode(), state, verb)
 }
 
-// Format is the implementation backing [GenericError.Format] (and used by
-// field error formatting).
+// Format writes msg to state for the %s, %v, and %q verbs (quoted for %q);
+// %+v also appends the code in parentheses. Other verbs write nothing. It
+// backs [GenericError.Format] and lets other error types format the same way.
 func Format(msg, code string, state fmt.State, verb rune) {
 	switch verb {
 	case 's', 'q':
