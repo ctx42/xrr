@@ -108,56 +108,32 @@ func MergeFields[T Domain](ers ...error) error {
 //
 // Non-Fielder errors (plain errors) are given synthetic keys of the form
 // "__field__N" so they still appear in the resulting [GenericFields].
+//
+// The result is always a new map; the inputs are never modified. Returns nil
+// when the merged map would be empty.
 func mergeFieldErrors(ers ...error) map[string]error {
-	if len(ers) == 0 {
-		return nil
-	}
-
-	var i int
-	var k string
-	var e error
-	var ok bool
-	var fe Fielder
-	var first map[string]error
-
-	// Find first non-nil error.
-	for i, e = range ers {
-		if e == nil {
-			continue
-		}
-		if fe, ok = e.(Fielder); ok {
-			first = fe.ErrorFields()
-		} else {
-			key := fmt.Sprintf("__field__%d", i)
-			first = map[string]error{key: e}
-		}
-		break
-	}
-
-	// All errors were nil.
-	if first == nil {
-		return nil
-	}
-
-	for j, err := range ers[i:] {
+	ret := make(map[string]error)
+	for i, err := range ers {
 		if err == nil {
 			continue
 		}
-		if fe, ok = err.(Fielder); ok {
-			for k, e = range fe.ErrorFields() {
-				// Don't overwrite existing non-nil field with nil errors.
-				if existing := first[k]; existing != nil && e == nil {
-					continue
-				}
-				first[k] = e
+		fe, ok := err.(Fielder)
+		if !ok {
+			ret[fmt.Sprintf("__field__%d", i)] = err
+			continue
+		}
+		for k, e := range fe.ErrorFields() {
+			// Don't overwrite existing non-nil field with nil errors.
+			if e == nil && ret[k] != nil {
+				continue
 			}
-		} else {
-			key := fmt.Sprintf("__field__%d", i+j)
-			first[key] = err
+			ret[k] = e
 		}
 	}
-
-	return first
+	if len(ret) == 0 {
+		return nil
+	}
+	return ret
 }
 
 func (fs *GenericFields[T]) ErrorFields() map[string]error { return fs.fields }

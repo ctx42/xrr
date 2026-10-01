@@ -367,6 +367,45 @@ func Test_MergeFields(t *testing.T) {
 		assert.Equal(t, want, have)
 	})
 
+	t.Run("does not modify the inputs", func(t *testing.T) {
+		// --- Given ---
+		fs0 := NewFieldError("f0", errors.New("m0"))
+		fs1 := NewFieldError("f1", errors.New("m1"))
+
+		// --- When ---
+		have := MergeFields[EDXrr](fs0, fs1)
+
+		// --- Then ---
+		assert.Equal(t, []string{"f0", "f1"}, FieldNames(have))
+
+		assert.Equal(t, []string{"f0"}, FieldNames(fs0))
+		assert.Equal(t, []string{"f1"}, FieldNames(fs1))
+	})
+
+	t.Run("first input without fields", func(t *testing.T) {
+		// --- Given ---
+		fs0 := &GenericFields[EDXrr]{}
+		fs1 := NewFieldError("f1", errors.New("m1"))
+
+		// --- When ---
+		have := MergeFields[EDXrr](fs0, fs1)
+
+		// --- Then ---
+		assert.Equal(t, []string{"f1"}, FieldNames(have))
+	})
+
+	t.Run("only inputs without fields", func(t *testing.T) {
+		// --- Given ---
+		fs0 := &GenericFields[EDXrr]{}
+		fs1 := &GenericFields[EDXrr]{fields: map[string]error{}}
+
+		// --- When ---
+		have := MergeFields[EDXrr](fs0, fs1)
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
+
 	t.Run("call with an empty slice returns nil", func(t *testing.T) {
 		// --- When ---
 		have := MergeFields[EDXrr]()
