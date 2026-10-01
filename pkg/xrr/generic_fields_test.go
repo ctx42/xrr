@@ -1617,6 +1617,20 @@ func Test_GenericFields_UnmarshalJSON(t *testing.T) {
 		var se *json.SyntaxError
 		assert.ErrorAs(t, &se, err)
 	})
+
+	t.Run("error - invalid field error", func(t *testing.T) {
+		// --- Given ---
+		data := []byte(`{"f0": {"code": "ECode"}}`)
+		var fs GenericFields[EDXrr]
+
+		// --- When ---
+		err := json.Unmarshal(data, &fs)
+
+		// --- Then ---
+		assert.ErrorIs(t, ErrInvJSONError, err)
+		assert.ErrorEqual(t, `field "f0": invalid JSON error representation`, err)
+		assert.Equal(t, ECInvJSONError, GetCode(err))
+	})
 }
 
 func Test_Flatten(t *testing.T) {

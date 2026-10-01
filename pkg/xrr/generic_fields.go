@@ -353,6 +353,8 @@ func (fs *GenericFields[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ret)
 }
 
+// UnmarshalJSON decodes each field as a [GenericError]. A field that fails to
+// decode yields an error naming the field and wrapping the decode error.
 func (fs *GenericFields[T]) UnmarshalJSON(data []byte) error {
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -362,7 +364,7 @@ func (fs *GenericFields[T]) UnmarshalJSON(data []byte) error {
 	for k, v := range raw {
 		var e GenericError[T]
 		if err := json.Unmarshal(v, &e); err != nil {
-			return err
+			return New(fmt.Sprintf("field %q", k), WithCause(err))
 		}
 		fs.fields[k] = &e
 	}
