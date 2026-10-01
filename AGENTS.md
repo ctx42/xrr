@@ -41,8 +41,9 @@ compile-time isolation. The package default `EDXrr` is exported.
 
 ### Traversal
 
-`inspect.go` provides `walk`/`walkReverse` (BFS) over chains, Fielder fields,
-and joined errors. `Get*` helpers use them. GetMeta walks reverse (root wins).
+`inspect.go` provides `walkErrors`/`walkErrorsReverse` (DFS) over chains,
+Fielder fields, and joined errors. `Get*` helpers use them. GetMeta walks
+reverse (root wins).
 
 ### Key Files
 

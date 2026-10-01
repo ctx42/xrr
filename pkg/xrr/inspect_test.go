@@ -591,6 +591,12 @@ func Test_GetDuration(t *testing.T) {
 }
 
 func Test_getMeta(t *testing.T) {
+	// The deep key in the first branch is found before the shallow key in the
+	// second, because traversal is depth-first.
+	deep := Wrap(New("deep", Meta().Str("K", "deep").Option()))
+	shallow := New("shallow", Meta().Str("K", "shallow").Option())
+	depthFirst := errors.Join(deep, shallow)
+
 	tt := []struct {
 		testN string
 
@@ -605,6 +611,7 @@ func Test_getMeta(t *testing.T) {
 		{"key fund but type mismatch", TstTreeMeta(), "A", "", false},
 		{"returns the first found key", TstTreeMeta(), "D", "d", true},
 		{"leaf node key", TstTreeMeta(), "G", "g", true},
+		{"depth-first order", depthFirst, "K", "deep", true},
 	}
 
 	for _, tc := range tt {

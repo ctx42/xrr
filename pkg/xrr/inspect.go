@@ -129,7 +129,8 @@ func GetDuration(err error, key string) (time.Duration, bool) {
 // getMeta walks the error chain using [walkErrors] and returns the
 // first metadata value of type T associated with the given key.
 //
-// Traversal is breadth-first, so the first match encountered wins.
+// Traversal is depth-first in pre-order, so the first match encountered
+// wins: a key deep in an earlier branch beats one shallow in a later branch.
 // Returns the zero value + false if the key is not found or the stored
 // value has a different type.
 //
@@ -156,7 +157,7 @@ func getMeta[T MetaType](err error, key string) (T, bool) {
 	return value, found
 }
 
-// walkErrors traverses an error chain/tree in breadth-first order,
+// walkErrors traverses an error chain/tree in depth-first pre-order,
 // invoking the provided callback for each visited error.
 //
 // It understands three kinds of error structures:
