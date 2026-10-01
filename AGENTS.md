@@ -57,7 +57,7 @@ reverse (root wins).
 
 ### Sentinels
 
-`sentinel.go`: ErrInvJSON (ECInvJSON), ErrInvJSONError, ErrFields (ECFields).
+`xrr.go`: ErrInvJSON (ECInvJSON), ErrInvJSONError, ErrFields (ECFields).
 ECGeneric is the default for errors without an explicit code.
 
 ### Test Support
