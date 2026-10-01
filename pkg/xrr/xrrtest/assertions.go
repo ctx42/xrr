@@ -457,7 +457,7 @@ func AssertFieldIs(t tester.T, field string, want, err error) bool {
 	// Verify the field exists and retrieve its error value.
 	ve, e := check.HasKey(field, fls)
 	if e != nil {
-		msg := notice.From(e, "xrr").
+		msg := notice.From(e).
 			SetHeader("[xrr] expected %T length", xe).
 			Remove("map").
 			Append("fields", "%s", dump.New().Any(fls))
