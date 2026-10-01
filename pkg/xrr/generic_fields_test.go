@@ -39,7 +39,7 @@ func Test_NewFields(t *testing.T) {
 	})
 }
 
-func Test_FieldsFactory(t *testing.T) {
+func Test_FieldsFunc(t *testing.T) {
 	t.Run("create error", func(t *testing.T) {
 		// --- Given ---
 		have := FieldsFunc[EDXrr]()

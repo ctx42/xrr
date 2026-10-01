@@ -10,7 +10,7 @@ import (
 	"github.com/ctx42/testing/pkg/assert"
 )
 
-func Test_NewMeta(t *testing.T) {
+func Test_Meta(t *testing.T) {
 	// --- When ---
 	have := Meta()
 

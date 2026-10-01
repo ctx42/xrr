@@ -12,7 +12,7 @@ import (
 	"github.com/ctx42/testing/pkg/assert"
 )
 
-func Test_ErrorFactory(t *testing.T) {
+func Test_ErrorFunc(t *testing.T) {
 	t.Run("without options", func(t *testing.T) {
 		// --- Given ---
 		have := ErrorFunc[EDXrr]()
