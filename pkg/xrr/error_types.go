@@ -61,8 +61,8 @@ func Newf(format string, args ...any) error {
 type FieldErrors = GenericFields[EDXrr]
 
 // NewFieldError returns a new [FieldErrors] containing the given field and
-// error. Returns nil when the error is nil.
-func NewFieldError(field string, err error) *FieldErrors {
+// error. Returns a nil error when err is nil.
+func NewFieldError(field string, err error) error {
 	return newFieldsError(field, err)
 }
 

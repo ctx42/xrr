@@ -61,7 +61,7 @@ func Test_FieldsFactory(t *testing.T) {
 		err := have("field", nil)
 
 		// --- Then ---
-		assert.Nil(t, err)
+		assert.True(t, err == nil)
 	})
 }
 

@@ -35,8 +35,10 @@ func NewFields[T Domain](fields map[string]error) *GenericFields[T] {
 }
 
 // FieldsFunc returns a function for creating domain-specific field errors.
-func FieldsFunc[T Domain]() func(field string, err error) *GenericFields[T] {
-	return func(field string, err error) *GenericFields[T] {
+// The returned function returns a [GenericFields] holding the single field,
+// or a nil error when err is nil.
+func FieldsFunc[T Domain]() func(field string, err error) error {
+	return func(field string, err error) error {
 		if err == nil {
 			return nil
 		}

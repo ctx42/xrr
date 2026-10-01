@@ -139,7 +139,7 @@ func Test_NewFieldError(t *testing.T) {
 		have := NewFieldError("name", nil)
 
 		// --- Then ---
-		assert.Nil(t, have)
+		assert.True(t, have == nil)
 	})
 }
 
