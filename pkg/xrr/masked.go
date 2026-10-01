@@ -32,8 +32,12 @@ func Mask(cause, lead error) error {
 
 func (e Masked) Error() string     { return e.lead.Error() }
 func (e Masked) ErrorCode() string { return GetCode(e.lead) }
-func (e Masked) Cause() error      { return e.cause }
-func (e Masked) Lead() error       { return e.lead }
+
+// Cause returns the masked cause error, kept out of messages and JSON.
+func (e Masked) Cause() error { return e.cause }
+
+// Lead returns the error exposed to callers.
+func (e Masked) Lead() error { return e.lead }
 
 // MarshalJSON returns the JSON form of the lead error (using [errorToJSON]).
 // The cause is intentionally not included in the output.
