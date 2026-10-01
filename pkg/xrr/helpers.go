@@ -164,9 +164,11 @@ func sortFieldErrors(ers map[string]error) ([]string, []error) {
 // [GenericError.Error] and field error formatting.
 //
 // For joined errors (those implementing `Unwrap() []error`):
-//   - A single error returns its message directly.
-//   - Multiple errors have their messages concatenated with "; ".
-//   - All other errors return err.Error() directly.
+//   - Non-nil errors have their messages concatenated with "; ".
+//   - Nil errors are skipped.
+//   - With no non-nil errors, err.Error() is returned.
+//
+// All other errors return err.Error() directly.
 //
 // A [Masked] error is not treated as joined, so its cause message never
 // appears in the result.
@@ -177,22 +179,28 @@ func errorMessage(err error) string {
 	if _, ok := err.(Masked); ok { //nolint:errorlint
 		return err.Error()
 	}
-	if jes, ok := err.(joined); ok {
-		es := jes.Unwrap()
-		if len(es) == 1 {
-			return es[0].Error()
-		}
-
-		// Build "msg1; msg2; msg3..." efficiently without extra allocations.
-		b := []byte(es[0].Error())
-		for _, e := range es[1:] {
-			b = append(b, ';', ' ')
-			b = append(b, e.Error()...)
-		}
-		// b is guaranteed to have at least two bytes here.
-		return unsafe.String(&b[0], len(b)) // nolint: gosec
+	jes, ok := err.(joined)
+	if !ok {
+		return err.Error()
 	}
-	return err.Error()
+
+	// Build "msg1; msg2; msg3..." efficiently without extra allocations.
+	var b []byte
+	var cnt int
+	for _, e := range jes.Unwrap() {
+		if e == nil {
+			continue
+		}
+		if cnt > 0 {
+			b = append(b, ';', ' ')
+		}
+		b = append(b, e.Error()...)
+		cnt++
+	}
+	if cnt == 0 {
+		return err.Error()
+	}
+	return unsafe.String(unsafe.SliceData(b), len(b)) //nolint:gosec
 }
 
 // errorToJSON returns the JSON representation of an error according to the

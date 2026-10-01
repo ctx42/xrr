@@ -33,6 +33,13 @@ type TErrMarshalJSON struct{ err error }
 func (tm *TErrMarshalJSON) Error() string                { return "test error" }
 func (tm *TErrMarshalJSON) MarshalJSON() ([]byte, error) { return nil, tm.err }
 
+// TJoined represents a joined error whose Unwrap returns the slice as is,
+// including empty slices and nil elements.
+type TJoined []error
+
+func (tj TJoined) Error() string   { return "joined error" }
+func (tj TJoined) Unwrap() []error { return tj }
+
 // TMetaAll represents a struct implementing [Metadater] interface.
 type TMetaAll map[string]any
 

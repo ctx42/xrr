@@ -500,6 +500,52 @@ func Test_sortFieldErrors(t *testing.T) {
 	assert.Nil(t, hErs[5])
 }
 
+func Test_errorMessage(t *testing.T) {
+	t.Run("plain error", func(t *testing.T) {
+		// --- Given ---
+		err := errors.New("m0")
+
+		// --- When ---
+		have := errorMessage(err)
+
+		// --- Then ---
+		assert.Equal(t, "m0", have)
+	})
+
+	t.Run("joined errors", func(t *testing.T) {
+		// --- Given ---
+		err := errors.Join(errors.New("m0"), errors.New("m1"))
+
+		// --- When ---
+		have := errorMessage(err)
+
+		// --- Then ---
+		assert.Equal(t, "m0; m1", have)
+	})
+
+	t.Run("joined without elements", func(t *testing.T) {
+		// --- Given ---
+		err := TJoined{}
+
+		// --- When ---
+		have := errorMessage(err)
+
+		// --- Then ---
+		assert.Equal(t, "joined error", have)
+	})
+
+	t.Run("joined with nil elements", func(t *testing.T) {
+		// --- Given ---
+		err := TJoined{nil, errors.New("m0"), nil, errors.New("m1")}
+
+		// --- When ---
+		have := errorMessage(err)
+
+		// --- Then ---
+		assert.Equal(t, "m0; m1", have)
+	})
+}
+
 func Test_errorToJSON(t *testing.T) {
 	t.Run("std error", func(t *testing.T) {
 		// --- Given ---
