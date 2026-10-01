@@ -44,31 +44,19 @@ func Join(ers ...error) error {
 	}
 }
 
-// join removes nil errors from the slice and returns the compacted result.
-// It is the internal implementation backing the exported [Join] function.
+// join returns the non-nil errors from ers in a new slice, leaving ers
+// unchanged. It is the internal implementation backing the exported [Join]
+// function.
 //
 // Empty input or all-nil input returns nil.
-// The returned slice shares the backing array with the input (for efficiency),
-// but is truncated to the number of non-nil errors.
 func join(ers ...error) []error {
-	if len(ers) == 0 {
-		return nil
-	}
-
-	var j int
-	for i := 0; i < len(ers); i++ {
-		if err := ers[i]; err != nil {
-			ers[j] = err
-			j++
-			continue
+	var ret []error
+	for _, err := range ers {
+		if err != nil {
+			ret = append(ret, err)
 		}
 	}
-	ers = ers[:j]
-
-	if len(ers) == 0 {
-		return nil
-	}
-	return ers
+	return ret
 }
 
 // IsJoined returns true if the provided error is not nil and implements

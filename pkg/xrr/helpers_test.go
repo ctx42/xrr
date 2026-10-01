@@ -114,6 +114,21 @@ func Test_Join(t *testing.T) {
 		// --- Then ---
 		assert.ErrorEqual(t, "m0\nm1\nm2", have)
 	})
+
+	t.Run("does not modify the input slice", func(t *testing.T) {
+		// --- Given ---
+		e1 := errors.New("m1")
+		e2 := errors.New("m2")
+		ers := []error{nil, e1, nil, e2}
+
+		// --- When ---
+		have := Join(ers...)
+
+		// --- Then ---
+		assert.ErrorEqual(t, "m1\nm2", have)
+
+		assert.Equal(t, []error{nil, e1, nil, e2}, ers)
+	})
 }
 
 func Test_join(t *testing.T) {
