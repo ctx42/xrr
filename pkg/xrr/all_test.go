@@ -13,8 +13,8 @@ var ErrTst = errors.New("std tst msg")
 // TErrorFields represents an error implementing [Fielder] interface.
 type TErrorFields map[string]error
 
-func (f TErrorFields) Error() string                 { return "fields error" }
-func (f TErrorFields) ErrorFields() map[string]error { return f }
+func (tef TErrorFields) Error() string                 { return "fields error" }
+func (tef TErrorFields) ErrorFields() map[string]error { return tef }
 
 // TFielderCoder represents an error implementing both [Fielder] and [Coder].
 type TFielderCoder struct {
@@ -22,9 +22,9 @@ type TFielderCoder struct {
 	fields map[string]error
 }
 
-func (t TFielderCoder) Error() string                 { return "fielder coder" }
-func (t TFielderCoder) ErrorCode() string             { return t.code }
-func (t TFielderCoder) ErrorFields() map[string]error { return t.fields }
+func (tfc TFielderCoder) Error() string                 { return "fielder coder" }
+func (tfc TFielderCoder) ErrorCode() string             { return tfc.code }
+func (tfc TFielderCoder) ErrorFields() map[string]error { return tfc.fields }
 
 // TErrMarshalJSON represents a test error struct implementing [json.Marshaler]
 // interface which returns 'err' error.
@@ -48,7 +48,7 @@ func (te TStrErr) Error() string { return string(te) }
 // TMetaAll represents a struct implementing [Metadater] interface.
 type TMetaAll map[string]any
 
-func (T TMetaAll) MetaAll() map[string]any { return T }
+func (tma TMetaAll) MetaAll() map[string]any { return tma }
 
 // TstMetaTree returns a test error tree.
 //

@@ -30,19 +30,19 @@ func Mask(cause, lead error) error {
 	return Masked{cause: cause, lead: lead}
 }
 
-func (e Masked) Error() string     { return e.lead.Error() }
-func (e Masked) ErrorCode() string { return GetCode(e.lead) }
+func (msk Masked) Error() string     { return msk.lead.Error() }
+func (msk Masked) ErrorCode() string { return GetCode(msk.lead) }
 
 // Cause returns the masked cause error, kept out of messages and JSON.
-func (e Masked) Cause() error { return e.cause }
+func (msk Masked) Cause() error { return msk.cause }
 
 // Lead returns the error exposed to callers.
-func (e Masked) Lead() error { return e.lead }
+func (msk Masked) Lead() error { return msk.lead }
 
 // MarshalJSON returns the JSON form of the lead error (using [errorToJSON]).
 // The cause is intentionally not included in the output.
-func (e Masked) MarshalJSON() ([]byte, error) { return errorToJSON(e.lead) }
+func (msk Masked) MarshalJSON() ([]byte, error) { return errorToJSON(msk.lead) }
 
-func (e Masked) Unwrap() []error {
-	return []error{e.cause, e.lead}
+func (msk Masked) Unwrap() []error {
+	return []error{msk.cause, msk.lead}
 }

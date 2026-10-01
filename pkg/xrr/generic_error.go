@@ -93,42 +93,42 @@ func ErrorfFunc[T Domain]() func(format string, args ...any) *GenericError[T] {
 // Error returns the error message. For errors with a cause or joined errors
 // it delegates to [errorMessage] (which produces "; "-separated messages for
 // joined errors).
-func (e *GenericError[T]) Error() string {
-	if e.err != nil {
-		em := errorMessage(e.err)
-		if e.msg != "" {
-			return e.msg + ": " + em
+func (gen *GenericError[T]) Error() string {
+	if gen.err != nil {
+		em := errorMessage(gen.err)
+		if gen.msg != "" {
+			return gen.msg + ": " + em
 		}
 		return em
 	}
-	return e.msg
+	return gen.msg
 }
 
 // ErrorCode returns error code. Returns [ECGeneric] when no code is set.
-func (e *GenericError[T]) ErrorCode() string {
-	if e.code == "" {
+func (gen *GenericError[T]) ErrorCode() string {
+	if gen.code == "" {
 		return ECGeneric
 	}
-	return e.code
+	return gen.code
 }
 
 // MetaAll returns a clone of the error's metadata.
-func (e *GenericError[T]) MetaAll() map[string]any { return maps.Clone(e.meta) }
+func (gen *GenericError[T]) MetaAll() map[string]any { return maps.Clone(gen.meta) }
 
 // Unwrap returns the wrapped error.
-func (e *GenericError[T]) Unwrap() error {
-	if e == nil {
+func (gen *GenericError[T]) Unwrap() error {
+	if gen == nil {
 		return nil
 	}
-	return e.err
+	return gen.err
 }
 
-func (e *GenericError[T]) MarshalJSON() ([]byte, error) {
+func (gen *GenericError[T]) MarshalJSON() ([]byte, error) {
 	m := map[string]any{
-		"error": e.Error(),
-		"code":  e.ErrorCode(),
+		"error": gen.Error(),
+		"code":  gen.ErrorCode(),
 	}
-	if meta := GetMeta(e); len(meta) > 0 {
+	if meta := GetMeta(gen); len(meta) > 0 {
 		m["meta"] = meta
 	}
 	return json.Marshal(m)
@@ -143,7 +143,7 @@ func (e *GenericError[T]) MarshalJSON() ([]byte, error) {
 // before is cleared.
 //
 // Note: Numeric metadata values are unmarshaled as float64.
-func (e *GenericError[T]) UnmarshalJSON(data []byte) error {
+func (gen *GenericError[T]) UnmarshalJSON(data []byte) error {
 	m := make(map[string]any, 3)
 	if err := json.Unmarshal(data, &m); err != nil {
 		return err
@@ -167,16 +167,16 @@ func (e *GenericError[T]) UnmarshalJSON(data []byte) error {
 		meta, _ = metaI.(map[string]any)
 	}
 
-	e.msg = msg
-	e.code = code
-	e.meta = meta
-	e.err = nil
+	gen.msg = msg
+	gen.code = code
+	gen.meta = meta
+	gen.err = nil
 	return nil
 }
 
 // Format implements [fmt.Formatter] for [GenericError].
-func (e *GenericError[T]) Format(state fmt.State, verb rune) {
-	Format(e.Error(), e.ErrorCode(), state, verb)
+func (gen *GenericError[T]) Format(state fmt.State, verb rune) {
+	Format(gen.Error(), gen.ErrorCode(), state, verb)
 }
 
 // Format is the implementation backing [GenericError.Format] (and used by

@@ -110,19 +110,19 @@ func Envelop(cause error, lead ...error) error {
 	return enc
 }
 
-func (e Envelope) Error() string { return e.cause.Error() }
+func (env Envelope) Error() string { return env.cause.Error() }
 
-func (e Envelope) ErrorCode() string { return GetCode(e.cause) }
+func (env Envelope) ErrorCode() string { return GetCode(env.cause) }
 
 // Unwrap returns the cause of the error.
-func (e Envelope) Unwrap() error { return e.cause }
+func (env Envelope) Unwrap() error { return env.cause }
 
 // Lead returns the leading error.
-func (e Envelope) Lead() error { return e.lead }
+func (env Envelope) Lead() error { return env.lead }
 
 // Is returns true if target matches the lead or cause error.
-func (e Envelope) Is(target error) bool {
-	return errors.Is(e.lead, target) || errors.Is(e.cause, target)
+func (env Envelope) Is(target error) bool {
+	return errors.Is(env.lead, target) || errors.Is(env.cause, target)
 }
 
 // MarshalJSON returns the JSON representation of the envelope.
@@ -134,30 +134,30 @@ func (e Envelope) Is(target error) bool {
 //
 // A [Masked] cause is replaced by its lead first, so the masked cause never
 // reaches the output.
-func (e Envelope) MarshalJSON() ([]byte, error) {
-	if msk, ok := e.cause.(Masked); ok { //nolint:errorlint
-		e.cause = msk.lead
+func (env Envelope) MarshalJSON() ([]byte, error) {
+	if msk, ok := env.cause.(Masked); ok { //nolint:errorlint
+		env.cause = msk.lead
 	}
-	if ef, ok := e.cause.(Fielder); ok {
-		if e.lead == nil {
-			e.lead = ErrFields
+	if ef, ok := env.cause.(Fielder); ok {
+		if env.lead == nil {
+			env.lead = ErrFields
 		}
-		return envelopeFieldsToJSON(e.lead, ef)
+		return envelopeFieldsToJSON(env.lead, ef)
 	}
 
-	if IsJoined(e.cause) {
-		ers := Split(e.cause)
-		if e.lead == nil && len(ers) > 0 {
-			e.lead = ers[0]
+	if IsJoined(env.cause) {
+		ers := Split(env.cause)
+		if env.lead == nil && len(ers) > 0 {
+			env.lead = ers[0]
 			ers = ers[1:]
 		}
-		return envelopeErrorsToJSON(e.lead, ers...)
+		return envelopeErrorsToJSON(env.lead, ers...)
 	}
 
-	if e.lead != nil {
-		return envelopeErrorsToJSON(e.lead, e.cause)
+	if env.lead != nil {
+		return envelopeErrorsToJSON(env.lead, env.cause)
 	}
-	return envelopeErrorsToJSON(e.cause)
+	return envelopeErrorsToJSON(env.cause)
 }
 
 // envelopeFieldsToJSON returns the JSON representation of an
