@@ -422,6 +422,20 @@ func Test_GenericError_UnmarshalJSON(t *testing.T) {
 		assert.Nil(t, e.meta)
 	})
 
+	t.Run("into existing error with a cause", func(t *testing.T) {
+		// --- Given ---
+		data := []byte(`{"error": "msg", "code":"ECode"}`)
+		e := New("old", "ECOld", WithCause(errors.New("old cause")))
+
+		// --- When ---
+		err := json.Unmarshal(data, e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.Equal(t, "msg", e.Error())
+		assert.Nil(t, errors.Unwrap(e))
+	})
+
 	t.Run("with code and metadata", func(t *testing.T) {
 		// --- Given ---
 		data := []byte(`{

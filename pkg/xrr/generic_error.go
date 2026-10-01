@@ -139,6 +139,9 @@ func (e *GenericError[T]) MarshalJSON() ([]byte, error) {
 // The minimal valid form is {"error": "message"}; in that case the code
 // defaults to [ECGeneric].
 //
+// The JSON form carries no cause, so any wrapped error the receiver held
+// before is cleared.
+//
 // Note: Numeric metadata values are unmarshaled as float64.
 func (e *GenericError[T]) UnmarshalJSON(data []byte) error {
 	m := make(map[string]any, 3)
@@ -167,6 +170,7 @@ func (e *GenericError[T]) UnmarshalJSON(data []byte) error {
 	e.msg = msg
 	e.code = code
 	e.meta = meta
+	e.err = nil
 	return nil
 }
 
