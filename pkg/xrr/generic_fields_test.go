@@ -1696,4 +1696,20 @@ func Test_Flatten(t *testing.T) {
 		}
 		assert.Equal(t, want, err)
 	})
+
+	t.Run("all inputs nil", func(t *testing.T) {
+		// --- When ---
+		have := Flatten[EDXrr](nil, nil)
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
+
+	t.Run("no inputs", func(t *testing.T) {
+		// --- When ---
+		have := Flatten[EDXrr]()
+
+		// --- Then ---
+		assert.Nil(t, have)
+	})
 }

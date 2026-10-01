@@ -379,9 +379,14 @@ func (fs *GenericFields[T]) UnmarshalJSON(data []byte) error {
 //	  "a": errors.New("a"),
 //	  "a.b": errors.New("b"),
 //	}
+//
+// Returns nil when there are no inputs or all inputs are nil.
 func Flatten[T Domain](err ...error) error {
-	visitor := make(map[string]error)
 	fls := mergeFieldErrors(err...)
+	if fls == nil {
+		return nil
+	}
+	visitor := make(map[string]error, len(fls))
 	flattenFieldErrors(visitor, "", fls)
 	return &GenericFields[T]{fields: visitor}
 }
