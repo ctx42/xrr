@@ -571,6 +571,30 @@ func Test_errorToJSON(t *testing.T) {
 		assert.JSON(t, `{"error": "msg a", "code": "a"}`, string(data))
 	})
 
+	t.Run("error marshaling to a non-object", func(t *testing.T) {
+		// --- Given ---
+		e := TStrErr("msg")
+
+		// --- When ---
+		have, err := errorToJSON(e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.JSON(t, `{"error": "msg", "code": "ECGeneric"}`, string(have))
+	})
+
+	t.Run("typed nil error", func(t *testing.T) {
+		// --- Given ---
+		var e *GenericError[EDXrr]
+
+		// --- When ---
+		have, err := errorToJSON(e)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.Equal(t, "null", string(have))
+	})
+
 	t.Run("marshal error", func(t *testing.T) {
 		// --- Given ---
 		e := &TErrMarshalJSON{errors.New("e")}

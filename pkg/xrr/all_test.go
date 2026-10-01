@@ -40,6 +40,11 @@ type TJoined []error
 func (tj TJoined) Error() string   { return "joined error" }
 func (tj TJoined) Unwrap() []error { return tj }
 
+// TStrErr represents an error whose JSON form is a string, not an object.
+type TStrErr string
+
+func (te TStrErr) Error() string { return string(te) }
+
 // TMetaAll represents a struct implementing [Metadater] interface.
 type TMetaAll map[string]any
 

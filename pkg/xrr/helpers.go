@@ -205,10 +205,10 @@ func errorMessage(err error) string {
 // errorToJSON returns the JSON representation of an error according to the
 // library's conventions.
 //
-// It first tries the error's own [json.Marshaler] implementation. If that
-// produces an empty JSON object, it falls back to [errorToMap] to build the
-// standard {"error", "code", "meta"} form. A marshal error is returned
-// directly.
+// It first marshals the error as is. If that produces an empty JSON object or
+// a non-object value such as a string, it falls back to [errorToMap] to build
+// the standard {"error", "code", "meta"} form. A typed nil error marshals to
+// null and is returned as is. A marshal error is returned directly.
 //
 // This is the function used by [Masked.MarshalJSON].
 func errorToJSON(e error) ([]byte, error) {
@@ -216,7 +216,10 @@ func errorToJSON(e error) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(data) == 2 {
+	if string(data) == "null" {
+		return data, nil
+	}
+	if data[0] != '{' || string(data) == "{}" {
 		return json.Marshal(errorToMap(e))
 	}
 	return data, nil
