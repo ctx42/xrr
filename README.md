@@ -309,9 +309,11 @@ slog.New(handler).Error(
 <!-- gmdoceg:pkg/xrr/ExampleNew_slog_and_json -->
 ```go
 ts := time.Date(2026, 5, 9, 11, 23, 0, 0, time.UTC)
-err := xrr.New("user not found", "EC_USER_NOT_FOUND",
-	xrr.Meta().Int("attempt", 3).Str("user_id", "u-123").Time("timestamp", ts).Option(),
-)
+meta := xrr.Meta().
+	Int("attempt", 3).
+	Str("user_id", "u-123").
+	Time("timestamp", ts)
+err := xrr.New("user not found", "EC_USER_NOT_FOUND", meta.Option())
 
 handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 	ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
