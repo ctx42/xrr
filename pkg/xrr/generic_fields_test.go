@@ -1610,7 +1610,7 @@ func Test_GenericFields_UnmarshalJSON(t *testing.T) {
 		assert.Len(t, 0, have.fields)
 	})
 
-	t.Run("invalid JSON returns error", func(t *testing.T) {
+	t.Run("error - invalid JSON", func(t *testing.T) {
 		// --- Given ---
 		var have GenericFields[EDXrr]
 
