@@ -103,6 +103,32 @@ func Test_Newf(t *testing.T) {
 		assert.NotNil(t, e.err)
 	})
 
+	t.Run("wraps error via indexed verb", func(t *testing.T) {
+		// --- Given ---
+		cause := errors.New("original")
+
+		// --- When ---
+		err := Newf("connect failed: %[1]w", cause)
+
+		// --- Then ---
+		assert.ErrorEqual(t, "connect failed: original", err)
+		assert.True(t, errors.Is(err, cause))
+	})
+
+	t.Run("escaped percent before w does not wrap", func(t *testing.T) {
+		// --- Given ---
+		arg := 100
+
+		// --- When ---
+		err := Newf("at %d%%w", arg)
+
+		// --- Then ---
+		e, _ := assert.SameType(t, &GenericError[EDXrr]{}, err)
+		assert.ErrorEqual(t, "at 100%w", err)
+		assert.Equal(t, "at 100%w", e.msg)
+		assert.Nil(t, e.err)
+	})
+
 	t.Run("wraps error with code", func(t *testing.T) {
 		// --- Given ---
 		cause := errors.New("original")

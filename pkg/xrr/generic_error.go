@@ -53,10 +53,11 @@ func ErrorFunc[T Domain]() func(msg string, args ...any) *GenericError[T] {
 // returned function behaves like [fmt.Sprintf]: non-[Option] args are passed
 // as format arguments, and [Option] values are applied to the error.
 //
-// When the format string contains %w, the constructor uses [fmt.Errorf] to
-// build the cause (preserving the error chain for [errors.Is] / [errors.As])
-// and leaves the message empty so [GenericError.Error] delegates to the cause.
-// Without %w, the message is set to fmt.Sprintf(format, args...).
+// The message is built with [fmt.Errorf]. When it wraps an error through a %w
+// verb (including indexed forms such as %[1]w), the result becomes the cause
+// (preserving the error chain for [errors.Is] / [errors.As]) and the message
+// is left empty so [GenericError.Error] delegates to it. Otherwise the
+// formatted text becomes the message.
 //
 // The error code must be passed via [WithCode]; unlike [ErrorFunc], a bare
 // string argument is treated as a format argument, not a code.
@@ -70,14 +71,13 @@ func ErrorFunc[T Domain]() func(msg string, args ...any) *GenericError[T] {
 //	newErrf("connect failed: %w", err, xrr.WithCode("ECode"))
 func ErrorfFunc[T Domain]() func(format string, args ...any) *GenericError[T] {
 	return func(format string, args ...any) *GenericError[T] {
-		wraps, args, opts := newfArgs(format, args...)
+		args, opts := newfArgs(args...)
 
 		var msg string
-		if wraps {
-			err := fmt.Errorf(format, args...)
+		if err := fmt.Errorf(format, args...); wrapsError(err) {
 			opts = append(opts, WithCause(err))
 		} else {
-			msg = fmt.Sprintf(format, args...)
+			msg = err.Error()
 		}
 
 		ops := Options{}.Set(opts...)

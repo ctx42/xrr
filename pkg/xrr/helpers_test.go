@@ -664,60 +664,55 @@ func Test_newfArgs_tabular(t *testing.T) {
 	tt := []struct {
 		testN string
 
-		msg       string
-		ags       []any
-		wWrapsErr bool
-		wArgs     []any
-		wOpts     []Option
+		ags   []any
+		wArgs []any
+		wOpts []Option
 	}{
-		{"no args", "", nil, false, nil, nil},
-		{"string only", "", []any{"str"}, false, []any{"str"}, nil},
-		{"error only", "", []any{e0}, false, []any{e0}, nil},
-		{"option only", "", []any{opt0}, false, nil, []Option{opt0}},
-		{"msg with %w", "wrapping: %w", nil, true, nil, nil},
-		{
-			"two options",
-			"",
-			[]any{opt0, opt1},
-			false,
-			nil,
-			[]Option{opt0, opt1},
-		},
-		{
-			"msg and error arg",
-			"fmt %v",
-			[]any{e0},
-			false,
-			[]any{e0},
-			nil,
-		},
-		{
-			"error and option",
-			"",
-			[]any{e0, opt0},
-			false,
-			[]any{e0},
-			[]Option{opt0},
-		},
-		{
-			"msg, error, and option",
-			"fmt %v",
-			[]any{e0, opt0},
-			false,
-			[]any{e0},
-			[]Option{opt0},
-		},
+		{"no args", nil, nil, nil},
+		{"string only", []any{"str"}, []any{"str"}, nil},
+		{"error only", []any{e0}, []any{e0}, nil},
+		{"option only", []any{opt0}, nil, []Option{opt0}},
+		{"two options", []any{opt0, opt1}, nil, []Option{opt0, opt1}},
+		{"error and option", []any{e0, opt0}, []any{e0}, []Option{opt0}},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.testN, func(t *testing.T) {
 			// --- When ---
-			hWrapsErr, hArgs, hOpts := newfArgs(tc.msg, tc.ags...)
+			hArgs, hOpts := newfArgs(tc.ags...)
 
 			// --- Then ---
-			assert.Equal(t, tc.wWrapsErr, hWrapsErr)
 			assert.Equal(t, tc.wArgs, hArgs)
 			assert.Equal(t, tc.wOpts, hOpts)
+		})
+	}
+}
+
+func Test_wrapsError_tabular(t *testing.T) {
+	e0 := errors.New("e0")
+	e1 := errors.New("e1")
+
+	tt := []struct {
+		testN string
+
+		err  error
+		want bool
+	}{
+		{"plain message", fmt.Errorf("msg"), false},
+		{"error formatted with v", fmt.Errorf("msg: %v", e0), false},
+		{"escaped percent before w", fmt.Errorf("100%%w"), false},
+		{"single w", fmt.Errorf("msg: %w", e0), true},
+		{"indexed w", fmt.Errorf("msg: %[1]w", e0), true},
+		{"multiple w", fmt.Errorf("%w; %w", e0, e1), true},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.testN, func(t *testing.T) {
+			// --- When ---
+			have := wrapsError(tc.err)
+
+			// --- Then ---
+			assert.Equal(t, tc.want, have)
 		})
 	}
 }

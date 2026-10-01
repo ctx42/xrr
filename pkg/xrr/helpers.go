@@ -8,7 +8,6 @@ import (
 	"errors"
 	"reflect"
 	"slices"
-	"strings"
 	"time"
 	"unsafe"
 )
@@ -269,29 +268,35 @@ func newArgs(ags ...any) (string, []Option) {
 	return code, opts
 }
 
-// newfArgs separates format-style constructor arguments into three groups.
+// newfArgs separates format-style constructor arguments into two groups.
 //
 // It returns:
-//   - wrapsErr: true if the format contains %w (the first non-Option error
-//     arg will be turned into a cause via [WithCause]).
-//   - args: non-[Option] values (including errors) for fmt.Sprintf / fmt.Errorf.
+//   - args: non-[Option] values (including errors) for fmt.Errorf.
 //   - opts: all [Option] values, collected separately.
 //
 // Used by [ErrorfFunc] and [Newf].
-func newfArgs(format string, ags ...any) (bool, []any, []Option) {
+func newfArgs(ags ...any) ([]any, []Option) {
 	var args []any
 	var opts []Option
-	wrapsErr := strings.Contains(format, "%w")
 	for _, arg := range ags {
 		switch a := arg.(type) {
 		case Option:
 			opts = append(opts, a)
 		default:
 			// Both errors and everything else are treated as format arguments.
-			// When wrapsErr is true, the first error will later be turned into
-			// a cause by ErrorfFunc.
 			args = append(args, a)
 		}
 	}
-	return wrapsErr, args, opts
+	return args, opts
+}
+
+// wrapsError reports whether err, as returned by [fmt.Errorf], wraps at
+// least one error through a %w verb.
+func wrapsError(err error) bool {
+	switch err.(type) { //nolint:errorlint
+	case interface{ Unwrap() error }, interface{ Unwrap() []error }:
+		return true
+	default:
+		return false
+	}
 }

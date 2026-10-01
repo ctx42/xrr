@@ -43,9 +43,10 @@ func New(msg string, args ...any) error {
 // argument is treated as a format argument, not an error code — pass
 // [WithCode] to set the code.
 //
-// When the format string contains %w, the error is created via [fmt.Errorf]
-// and stored as the cause; [GenericError.Error] delegates to it. Without %w,
-// the message is set to fmt.Sprintf(format, args...).
+// When the format wraps an error through a %w verb (including indexed forms
+// such as %[1]w), the [fmt.Errorf] result is stored as the cause and
+// [GenericError.Error] delegates to it. Otherwise the formatted text becomes
+// the message.
 //
 // Examples:
 //
