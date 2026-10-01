@@ -130,7 +130,7 @@ func (gen *GenericError[T]) MarshalJSON() ([]byte, error) {
 		"error": gen.Error(),
 		"code":  gen.ErrorCode(),
 	}
-	if meta := GetMeta(gen); len(meta) > 0 {
+	if meta := collectMeta(gen, true); len(meta) > 0 {
 		m["meta"] = meta
 	}
 	return json.Marshal(m)

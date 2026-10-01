@@ -16,6 +16,9 @@ var (
 // accessible in the Go error chain. `Error` and `ErrorCode` delegate to the
 // lead; `MarshalJSON` renders only the lead. Both errors are reachable via
 // [errors.Is], [errors.As], and the walk-based helpers ([GetMeta], etc.).
+//
+// The cause never reaches serialized output: messages, JSON of wrapping
+// errors, and [Envelope] JSON use only the lead, including its metadata.
 type Masked struct {
 	cause error
 	lead  error

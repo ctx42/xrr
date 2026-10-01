@@ -239,7 +239,7 @@ func errorToMap(err error) map[string]any {
 		"error": err.Error(),
 		"code":  GetCode(err),
 	}
-	if meta := GetMeta(err); len(meta) > 0 {
+	if meta := collectMeta(err, true); len(meta) > 0 {
 		m["meta"] = meta
 	}
 	return m

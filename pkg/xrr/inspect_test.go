@@ -352,6 +352,19 @@ func Test_GetMeta_tabular(t *testing.T) {
 			assert.Equal(t, tc.want, have)
 		})
 	}
+
+	t.Run("masked cause metadata stays inspectable", func(t *testing.T) {
+		// --- Given ---
+		cause := New("internal", "ECI", Meta().Str("secret", "s").Option())
+		lead := New("public", "ECP")
+		err := Wrap(Mask(cause, lead))
+
+		// --- When ---
+		have := GetMeta(err)
+
+		// --- Then ---
+		assert.Equal(t, map[string]any{"secret": "s"}, have)
+	})
 }
 
 func Test_GetBool(t *testing.T) {
@@ -756,7 +769,7 @@ func Test_walkErrorsReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkErrorsReverse(e, cb)
+		walkErrorsReverse(e, false, cb)
 
 		// --- Then ---
 		assert.Equal(t, "gfdecba", have)
@@ -770,7 +783,7 @@ func Test_walkErrorsReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkErrorsReverse(e, cb)
+		walkErrorsReverse(e, false, cb)
 
 		// --- Then ---
 		assert.Equal(t, "igfdhecba", have)
@@ -784,7 +797,7 @@ func Test_walkErrorsReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkErrorsReverse(e, cb)
+		walkErrorsReverse(e, false, cb)
 
 		// --- Then ---
 		assert.Equal(t, "gifdhecba", have)
@@ -798,7 +811,7 @@ func Test_walkErrorsReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkErrorsReverse(e, cb)
+		walkErrorsReverse(e, false, cb)
 
 		// --- Then ---
 		assert.Equal(t, "edbca", have)
@@ -812,7 +825,7 @@ func Test_walkErrorsReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return true }
 
 		// --- When ---
-		walkErrorsReverse(e, cb)
+		walkErrorsReverse(e, false, cb)
 
 		// --- Then ---
 		assert.Equal(t, "hgedba", have)
@@ -826,7 +839,7 @@ func Test_walkErrorsReverse(t *testing.T) {
 		cb := func(err error) bool { have += GetCode(err); return false }
 
 		// --- When ---
-		walkErrorsReverse(e, cb)
+		walkErrorsReverse(e, false, cb)
 
 		// --- Then ---
 		assert.Equal(t, "g", have)
@@ -843,9 +856,37 @@ func Test_walkErrorsReverse(t *testing.T) {
 		}
 
 		// --- When ---
-		walkErrorsReverse(e, cb)
+		walkErrorsReverse(e, false, cb)
 
 		// --- Then ---
 		assert.Equal(t, "gif", have)
+	})
+
+	t.Run("lead only skips masked cause", func(t *testing.T) {
+		// --- Given ---
+		e := Wrap(Mask(New("cause", "c"), New("lead", "l")), WithCode("w"))
+
+		var have string
+		cb := func(err error) bool { have += GetCode(err); return true }
+
+		// --- When ---
+		walkErrorsReverse(e, true, cb)
+
+		// --- Then ---
+		assert.Equal(t, "lw", have)
+	})
+
+	t.Run("masked cause visited without lead only", func(t *testing.T) {
+		// --- Given ---
+		e := Wrap(Mask(New("cause", "c"), New("lead", "l")), WithCode("w"))
+
+		var have string
+		cb := func(err error) bool { have += GetCode(err); return true }
+
+		// --- When ---
+		walkErrorsReverse(e, false, cb)
+
+		// --- Then ---
+		assert.Equal(t, "lcw", have)
 	})
 }

@@ -390,6 +390,20 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		assert.Equal(t, want, jme.Error())
 		assert.Nil(t, data)
 	})
+
+	t.Run("wrapped masked cause hides cause metadata", func(t *testing.T) {
+		// --- Given ---
+		cause := New("internal", "ECI", Meta().Str("secret", "s").Option())
+		lead := New("public", "ECP")
+		env := Envelop(Wrap(Mask(cause, lead)))
+
+		// --- When ---
+		have, err := json.Marshal(env)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		assert.JSON(t, `{"error": "public", "code": "ECP"}`, string(have))
+	})
 }
 
 func Test_envelopeFieldsToJSON(t *testing.T) {

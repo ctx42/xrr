@@ -393,6 +393,21 @@ func Test_GenericError_MarshalJSON(t *testing.T) {
 		}`
 		assert.JSON(t, want, string(data))
 	})
+
+	t.Run("wrapped masked error hides cause metadata", func(t *testing.T) {
+		// --- Given ---
+		cause := New("internal", "ECI", Meta().Str("secret", "s").Option())
+		lead := New("public", "ECP", Meta().Str("pub", "p").Option())
+		gen := Wrap(Mask(cause, lead))
+
+		// --- When ---
+		have, err := json.Marshal(gen)
+
+		// --- Then ---
+		assert.NoError(t, err)
+		want := `{"error":"public", "code":"ECP", "meta":{"pub":"p"}}`
+		assert.JSON(t, want, string(have))
+	})
 }
 
 func Test_GenericError_UnmarshalJSON(t *testing.T) {

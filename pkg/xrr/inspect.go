@@ -58,7 +58,13 @@ func GetCodes(err error) []string {
 // GetMeta recursively retrieves metadata from an error and its wrapped errors
 // (using walkErrorsReverse so that metadata closer to the root takes
 // precedence).
-func GetMeta(err error) map[string]any {
+func GetMeta(err error) map[string]any { return collectMeta(err, false) }
+
+// collectMeta merges metadata from err and its wrapped errors, with metadata
+// closer to the root taking precedence. When leadOnly is true, a [Masked]
+// error contributes only its lead, so the masked cause's metadata is left
+// out; JSON serialization uses this mode.
+func collectMeta(err error, leadOnly bool) map[string]any {
 	var m map[string]any
 	cb := func(err error) bool {
 		if e, ok := err.(Metadater); ok {
@@ -73,7 +79,7 @@ func GetMeta(err error) map[string]any {
 		}
 		return true
 	}
-	walkErrorsReverse(err, cb)
+	walkErrorsReverse(err, leadOnly, cb)
 	return m
 }
 
@@ -222,15 +228,24 @@ func walkErrors(err error, cb func(err error) bool) bool {
 // walkErrorsReverse traverses an error chain/tree in reverse depth-first
 // order (children before parents).
 //
-// It is primarily used by [GetMeta] so that metadata attached to errors
+// It is primarily used by collectMeta so that metadata attached to errors
 // closer to the root of the chain takes precedence over metadata from deeper
-// errors.
+// errors. When leadOnly is true, a [Masked] error is replaced by its lead, so
+// its cause is never visited.
 //
 // The three supported error structures and callback semantics are the same
 // as walkErrors.
-func walkErrorsReverse(err error, cb func(err error) bool) bool {
+func walkErrorsReverse(
+	err error,
+	leadOnly bool,
+	cb func(err error) bool,
+) bool {
+
 	if err == nil || isNil(err) {
 		return true
+	}
+	if msk, ok := err.(Masked); ok && leadOnly { //nolint:errorlint
+		return walkErrorsReverse(msk.lead, leadOnly, cb)
 	}
 
 	// Same three error shapes as walkErrors(), but we always visit children
@@ -241,7 +256,7 @@ func walkErrorsReverse(err error, cb func(err error) bool) bool {
 		// Recurse first (children before parent) so that deeper errors are
 		// visited before this one.
 		if e := x.Unwrap(); e != nil {
-			if !walkErrorsReverse(e, cb) {
+			if !walkErrorsReverse(e, leadOnly, cb) {
 				return false
 			}
 		}
@@ -249,7 +264,7 @@ func walkErrorsReverse(err error, cb func(err error) bool) bool {
 	case Fielder:
 		_, ers := sortFieldErrors(x.ErrorFields())
 		for i := len(ers) - 1; i >= 0; i-- {
-			if !walkErrorsReverse(ers[i], cb) {
+			if !walkErrorsReverse(ers[i], leadOnly, cb) {
 				return false
 			}
 		}
@@ -263,7 +278,7 @@ func walkErrorsReverse(err error, cb func(err error) bool) bool {
 	case joined:
 		ers := x.Unwrap()
 		for i := len(ers) - 1; i >= 0; i-- {
-			if !walkErrorsReverse(ers[i], cb) {
+			if !walkErrorsReverse(ers[i], leadOnly, cb) {
 				return false
 			}
 		}
