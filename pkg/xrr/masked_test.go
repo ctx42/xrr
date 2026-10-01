@@ -45,45 +45,49 @@ func Test_Mask(t *testing.T) {
 }
 
 func Test_Masked_Error(t *testing.T) {
+	// --- Given ---
+	msk := Masked{cause: New("cause", "ECC"), lead: New("lead", "ECL")}
+
 	// --- When ---
-	err := Mask(New("cause", "ECC"), New("lead", "ECL"))
+	have := msk.Error()
 
 	// --- Then ---
-	assert.Equal(t, "lead", err.Error())
+	assert.Equal(t, "lead", have)
 }
 
 func Test_Masked_ErrorCode(t *testing.T) {
+	// --- Given ---
+	msk := Masked{cause: New("cause", "ECC"), lead: New("lead", "ECL")}
+
 	// --- When ---
-	err := Mask(New("cause", "ECC"), New("lead", "ECL"))
+	have := msk.ErrorCode()
 
 	// --- Then ---
-	assert.Equal(t, "ECL", GetCode(err))
+	assert.Equal(t, "ECL", have)
 }
 
 func Test_Masked_Cause(t *testing.T) {
 	// --- Given ---
 	cause := New("cause", "ECC")
+	msk := Masked{cause: cause, lead: New("lead", "ECL")}
 
 	// --- When ---
-	err := Mask(cause, New("lead", "ECL"))
+	have := msk.Cause()
 
 	// --- Then ---
-	var msk Masked
-	assert.ErrorAs(t, &msk, err)
-	assert.Same(t, cause, msk.Cause())
+	assert.Same(t, cause, have)
 }
 
 func Test_Masked_Lead(t *testing.T) {
 	// --- Given ---
 	lead := New("lead", "ECL")
+	msk := Masked{cause: New("cause", "ECC"), lead: lead}
 
 	// --- When ---
-	err := Mask(New("cause", "ECC"), lead)
+	have := msk.Lead()
 
 	// --- Then ---
-	var msk Masked
-	assert.ErrorAs(t, &msk, err)
-	assert.Same(t, lead, msk.Lead())
+	assert.Same(t, lead, have)
 }
 
 func Test_Masked_MarshalJSON(t *testing.T) {
@@ -119,17 +123,15 @@ func Test_Masked_Unwrap(t *testing.T) {
 		// --- Given ---
 		cause := New("cause", "ECC")
 		lead := New("lead", "ECL")
+		msk := Masked{cause: cause, lead: lead}
 
 		// --- When ---
-		err := Mask(cause, lead)
+		have := msk.Unwrap()
 
 		// --- Then ---
-		var msk Masked
-		assert.ErrorAs(t, &msk, err)
-		errs := msk.Unwrap()
-		assert.Equal(t, 2, len(errs))
-		assert.Same(t, cause, errs[0])
-		assert.Same(t, lead, errs[1])
+		assert.Len(t, 2, have)
+		assert.Same(t, cause, have[0])
+		assert.Same(t, lead, have[1])
 	})
 
 	t.Run("Is finds both cause and lead in chain", func(t *testing.T) {
