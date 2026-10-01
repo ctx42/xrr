@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/ctx42/testing/pkg/assert"
-	"github.com/ctx42/testing/pkg/must"
 )
 
 func Test_Mask(t *testing.T) {
@@ -102,11 +101,11 @@ func Test_Masked_MarshalJSON(t *testing.T) {
 		e := Mask(New("cause", "ECC"), New("lead", "ECL"))
 
 		// --- When ---
-		data := must.Value(json.Marshal(e))
+		have, err := json.Marshal(e)
 
 		// --- Then ---
-		want := `{"error":"lead","code":"ECL"}`
-		assert.JSON(t, want, string(data))
+		assert.NoError(t, err)
+		assert.JSON(t, `{"error":"lead","code":"ECL"}`, string(have))
 	})
 
 	t.Run("lead with metadata", func(t *testing.T) {
@@ -116,11 +115,12 @@ func Test_Masked_MarshalJSON(t *testing.T) {
 		e := Mask(cause, lead)
 
 		// --- When ---
-		data := must.Value(json.Marshal(e))
+		have, err := json.Marshal(e)
 
 		// --- Then ---
+		assert.NoError(t, err)
 		want := `{"error":"lead","code":"ECL","meta":{"Y":2}}`
-		assert.JSON(t, want, string(data))
+		assert.JSON(t, want, string(have))
 	})
 }
 
