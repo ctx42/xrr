@@ -154,7 +154,7 @@ func Test_WithMetaFrom(t *testing.T) {
 }
 
 func Test_WithCause(t *testing.T) {
-	t.Run("sets err and inherits code when ops.code is empty", func(t *testing.T) {
+	t.Run("sets err and inherits code when code is empty", func(t *testing.T) {
 		// --- Given ---
 		cause := New("cause", "ECCause")
 		ops := &Options{}

@@ -120,7 +120,7 @@ func Test_AssertEqual(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - error is not an instance of xrr.Error", func(t *testing.T) {
+	t.Run("error - not a GenericError", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
@@ -171,7 +171,7 @@ func Test_AssertCode(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - error is not an instance of xrr.Coder", func(t *testing.T) {
+	t.Run("error - not a Coder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
@@ -913,7 +913,7 @@ func Test_AssertTime(t *testing.T) {
 }
 
 func Test_AssertFields(t *testing.T) {
-	t.Run("success - error is an instance of xrr.Fielder", func(t *testing.T) {
+	t.Run("is a Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.Close()
@@ -928,7 +928,7 @@ func Test_AssertFields(t *testing.T) {
 		assert.Same(t, err, have)
 	})
 
-	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
+	t.Run("error - not a Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
@@ -1094,7 +1094,7 @@ func Test_AssertFieldCnt(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
+	t.Run("error - not a Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
@@ -1179,7 +1179,7 @@ func Test_AssertHasField(t *testing.T) {
 		assert.False(t, success)
 	})
 
-	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
+	t.Run("error - not a Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
@@ -1295,7 +1295,7 @@ func Test_AssertFieldEqual(t *testing.T) {
 		assert.False(t, have)
 	})
 
-	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
+	t.Run("error - not a Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()
@@ -1393,7 +1393,7 @@ func Test_AssertFieldCode(t *testing.T) {
 		// --- Then ---
 		assert.False(t, have)
 	})
-	t.Run("error - error not an instance of xrr.Fielder", func(t *testing.T) {
+	t.Run("error - not a Fielder", func(t *testing.T) {
 		// --- Given ---
 		tspy := tester.New(t)
 		tspy.ExpectError()

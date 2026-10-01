@@ -116,7 +116,7 @@ func Test_ErrorfFunc(t *testing.T) {
 		assert.ErrorEqual(t, "msg", err)
 	})
 
-	t.Run("wraps error via %w", func(t *testing.T) {
+	t.Run("wraps error via w verb", func(t *testing.T) {
 		// --- Given ---
 		cause := errors.New("original")
 		have := ErrorfFunc[EDXrr]()

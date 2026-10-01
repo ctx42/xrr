@@ -90,7 +90,7 @@ func Test_Newf(t *testing.T) {
 		assert.Nil(t, e.err)
 	})
 
-	t.Run("wraps error via %w", func(t *testing.T) {
+	t.Run("wraps error via w verb", func(t *testing.T) {
 		// --- Given ---
 		cause := errors.New("original")
 
