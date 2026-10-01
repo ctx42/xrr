@@ -96,18 +96,18 @@ func Envelop(cause error, lead ...error) error {
 	//
 	// nolint: errorlint
 	//goland:noinspection ALL
-	if e, ok := cause.(Envelope); ok {
+	if env, ok := cause.(Envelope); ok {
 		if len(lead) > 0 {
-			e.lead = lead[0]
+			env.lead = lead[0]
 		}
-		return e
+		return env
 	}
 
-	enc := Envelope{cause: cause}
+	env := Envelope{cause: cause}
 	if len(lead) > 0 {
-		enc.lead = lead[0]
+		env.lead = lead[0]
 	}
-	return enc
+	return env
 }
 
 func (env Envelope) Error() string { return env.cause.Error() }

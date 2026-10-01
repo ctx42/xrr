@@ -362,11 +362,11 @@ func (fs *GenericFields[T]) UnmarshalJSON(data []byte) error {
 	}
 	fs.fields = make(map[string]error, len(raw))
 	for k, v := range raw {
-		var e GenericError[T]
-		if err := json.Unmarshal(v, &e); err != nil {
+		var gen GenericError[T]
+		if err := json.Unmarshal(v, &gen); err != nil {
 			return New(fmt.Sprintf("field %q", k), WithCause(err))
 		}
-		fs.fields[k] = &e
+		fs.fields[k] = &gen
 	}
 	return nil
 }

@@ -44,10 +44,10 @@ func Test_Envelop(t *testing.T) {
 		err := Envelop(cause, lead)
 
 		// --- Then ---
-		var enc Envelope
-		assert.ErrorAs(t, &enc, err)
-		assert.Same(t, cause, enc.cause)
-		assert.Same(t, lead, enc.lead)
+		var env Envelope
+		assert.ErrorAs(t, &env, err)
+		assert.Same(t, cause, env.cause)
+		assert.Same(t, lead, env.lead)
 	})
 
 	t.Run("multiple lead provided", func(t *testing.T) {
@@ -60,34 +60,34 @@ func Test_Envelop(t *testing.T) {
 		err := Envelop(cause, lead0, lead1)
 
 		// --- Then ---
-		var enc Envelope
-		assert.ErrorAs(t, &enc, err)
-		assert.Same(t, cause, enc.cause)
-		assert.Same(t, lead0, enc.lead)
+		var env Envelope
+		assert.ErrorAs(t, &env, err)
+		assert.Same(t, cause, env.cause)
+		assert.Same(t, lead0, env.lead)
 	})
 
 	t.Run("use passed Envelope - do not nest", func(t *testing.T) {
 		// --- Given ---
-		evp := Envelope{cause: New("cause", "ECC"), lead: New("lead", "ECL")}
+		env := Envelope{cause: New("cause", "ECC"), lead: New("lead", "ECL")}
 
 		// --- When ---
-		err := Envelop(evp)
+		err := Envelop(env)
 
 		// --- Then ---
-		assert.Same(t, evp.cause, err.(Envelope).cause) // nolint: errorlint
-		assert.Same(t, evp.lead, err.(Envelope).lead)   // nolint: errorlint
+		assert.Same(t, env.cause, err.(Envelope).cause) // nolint: errorlint
+		assert.Same(t, env.lead, err.(Envelope).lead)   // nolint: errorlint
 	})
 
 	t.Run("use passed Envelope - override leading", func(t *testing.T) {
 		// --- Given ---
 		other := New("other", "ECO")
-		evp := Envelope{cause: New("cause", "ECC"), lead: New("lead", "ECL")}
+		env := Envelope{cause: New("cause", "ECC"), lead: New("lead", "ECL")}
 
 		// --- When ---
-		err := Envelop(evp, other)
+		err := Envelop(env, other)
 
 		// --- Then ---
-		assert.Same(t, evp.cause, err.(Envelope).cause) // nolint: errorlint
+		assert.Same(t, env.cause, err.(Envelope).cause) // nolint: errorlint
 		assert.Same(t, other, err.(Envelope).lead)      // nolint: errorlint
 	})
 }
@@ -96,10 +96,10 @@ func Test_Envelope_Error(t *testing.T) {
 	// --- Given ---
 	cause := New("cause", "ECC")
 	lead := New("lead", "ECL")
-	e := Envelope{cause: cause, lead: lead}
+	env := Envelope{cause: cause, lead: lead}
 
 	// --- When ---
-	have := e.Error()
+	have := env.Error()
 
 	// --- Then ---
 	assert.Equal(t, "cause", have)
@@ -109,10 +109,10 @@ func Test_Envelope_ErrorCode(t *testing.T) {
 	// --- Given ---
 	cause := New("cause", "ECC")
 	lead := New("lead", "ECL")
-	e := Envelope{cause: cause, lead: lead}
+	env := Envelope{cause: cause, lead: lead}
 
 	// --- When ---
-	have := e.ErrorCode()
+	have := env.ErrorCode()
 
 	// --- Then ---
 	assert.Equal(t, "ECC", have)
@@ -122,10 +122,10 @@ func Test_Envelope_Unwrap(t *testing.T) {
 	// --- Given ---
 	cause := New("cause", "ECC")
 	lead := New("lead", "ECL")
-	e := Envelope{cause: cause, lead: lead}
+	env := Envelope{cause: cause, lead: lead}
 
 	// --- When ---
-	err := e.Unwrap()
+	err := env.Unwrap()
 
 	// --- Then ---
 	assert.Same(t, cause, err)
@@ -135,10 +135,10 @@ func Test_Envelope_Lead(t *testing.T) {
 	// --- Given ---
 	cause := New("cause", "ECC")
 	lead := New("lead", "ECL")
-	e := Envelope{cause: cause, lead: lead}
+	env := Envelope{cause: cause, lead: lead}
 
 	// --- When ---
-	err := e.Lead()
+	err := env.Lead()
 
 	// --- Then ---
 	assert.Same(t, lead, err)

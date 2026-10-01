@@ -37,10 +37,10 @@ func Test_Mask(t *testing.T) {
 		err := Mask(cause, lead)
 
 		// --- Then ---
-		var enc Masked
-		assert.ErrorAs(t, &enc, err)
-		assert.Same(t, cause, enc.cause)
-		assert.Same(t, lead, enc.lead)
+		var msk Masked
+		assert.ErrorAs(t, &msk, err)
+		assert.Same(t, cause, msk.cause)
+		assert.Same(t, lead, msk.lead)
 	})
 }
 
@@ -68,9 +68,9 @@ func Test_Masked_Cause(t *testing.T) {
 	err := Mask(cause, New("lead", "ECL"))
 
 	// --- Then ---
-	var me Masked
-	assert.ErrorAs(t, &me, err)
-	assert.Same(t, cause, me.Cause())
+	var msk Masked
+	assert.ErrorAs(t, &msk, err)
+	assert.Same(t, cause, msk.Cause())
 }
 
 func Test_Masked_Lead(t *testing.T) {
@@ -81,9 +81,9 @@ func Test_Masked_Lead(t *testing.T) {
 	err := Mask(New("cause", "ECC"), lead)
 
 	// --- Then ---
-	var me Masked
-	assert.ErrorAs(t, &me, err)
-	assert.Same(t, lead, me.Lead())
+	var msk Masked
+	assert.ErrorAs(t, &msk, err)
+	assert.Same(t, lead, msk.Lead())
 }
 
 func Test_Masked_MarshalJSON(t *testing.T) {
@@ -124,9 +124,9 @@ func Test_Masked_Unwrap(t *testing.T) {
 		err := Mask(cause, lead)
 
 		// --- Then ---
-		var me Masked
-		assert.ErrorAs(t, &me, err)
-		errs := me.Unwrap()
+		var msk Masked
+		assert.ErrorAs(t, &msk, err)
+		errs := msk.Unwrap()
 		assert.Equal(t, 2, len(errs))
 		assert.Same(t, cause, errs[0])
 		assert.Same(t, lead, errs[1])
