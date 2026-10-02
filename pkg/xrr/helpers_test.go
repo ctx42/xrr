@@ -723,7 +723,7 @@ func Test_wrapsError_tabular(t *testing.T) {
 		want bool
 	}{
 		{"plain message", fmt.Errorf("msg"), false},
-		{"error formatted with v", fmt.Errorf("msg: %v", e0), false},
+		{"error formatted as text", fmt.Errorf("msg: %s", e0.Error()), false},
 		{"escaped percent before w", fmt.Errorf("100%%w"), false},
 		{"single w", fmt.Errorf("msg: %w", e0), true},
 		{"indexed w", fmt.Errorf("msg: %[1]w", e0), true},

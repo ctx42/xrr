@@ -235,6 +235,8 @@ func walkErrors(err error, cb func(err error) bool) bool {
 //
 // The three supported error structures and callback semantics are the same
 // as walkErrors.
+//
+//nolint:cyclop
 func walkErrorsReverse(
 	err error,
 	leadOnly bool,
