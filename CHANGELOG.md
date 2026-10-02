@@ -1,3 +1,45 @@
+## v0.18.0 (Fri, 02 Oct 2026 07:41:02 UTC)
+- build: update github.com/ctx42/testing to v0.56.0.
+- fix(xrr): keep masked cause out of messages and envelopes.
+- fix(xrr): stop Join from modifying the caller's slice.
+- fix(xrr): merge field errors into a fresh map.
+- fix(xrr)!: return error from NewFieldError and FieldsFunc.
+- fix(xrr): make GenericFields methods safe on a nil receiver.
+- fix(xrr): return nil from Flatten when all inputs are nil.
+- docs(xrr): document Masked.Cause and Masked.Lead.
+- test(xrr): assert syntax error cause in GenericFields.UnmarshalJSON.
+- fix(xrr): clear wrapped error in GenericError.UnmarshalJSON.
+- fix(xrr): handle empty and nil-element joined errors in messages.
+- fix(xrr): detect %w wrapping in Newf from the fmt.Errorf result.
+- docs(xrr): describe error traversal as depth-first.
+- fix(xrrtest): report missing field instead of length mismatch.
+- fix(xrr): name the failing field in GenericFields.UnmarshalJSON.
+- fix(xrr): fall back to standard error JSON for non-object output.
+- style(xrr): use three-letter receiver names.
+- style(xrr): name Envelope, Masked, and GenericError locals after receivers.
+- test(xrr): call the method under test in Masked method tests.
+- test(xrr): prepare call arguments in the Given step.
+- test(xrr): check the marshal error in Masked.MarshalJSON tests.
+- test(xrr): name tests after ErrorFunc, FieldsFunc, and Meta.
+- test(xrr): rename got to have in GenericFields.UnmarshalJSON tests.
+- test: drop punctuation from subtest names.
+- test(xrr): prefix invalid JSON subtest name with "error - ".
+- refactor(xrr): move sentinel codes and errors into xrr.go.
+- style: fit source and test lines within 80 columns.
+- docs(xrr): name unexported helpers in plain text in godoc.
+- style: write nolint directives as //nolint:name.
+- docs: fix godoc grammar and stale statements.
+- style(xrrtest): put each AssertError parameter on its own line.
+- docs(xrr): describe the verbs handled by Format.
+- docs(xrr): use a compilable option in New and ErrorFunc examples.
+- refactor(xrr): inline withAdditionalCause and drop duplicate meta.
+- style(xrr): name GenericError test locals gen.
+- test(xrr): use separate When and Then steps in nil-receiver tests.
+- docs: build slog example metadata one setter per line.
+- fix(xrr): keep masked cause metadata out of JSON of wrapping errors.
+- docs: switch README example markers to gmmce.
+- style(xrr): resolve cyclop and errorlint lint offenses.
+
 ## v0.17.0 (Mon, 01 Jun 2026 20:27:28 UTC)
 - feat!: rename Enclose to Envelop + introduce Masked.
 - docs: add project guidelines and bring codebase into full compliance.
