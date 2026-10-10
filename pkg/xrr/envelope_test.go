@@ -383,11 +383,12 @@ func Test_Envelope_MarshalJSON(t *testing.T) {
 		data, err := json.Marshal(have)
 		var jme *json.MarshalerError
 		assert.ErrorAs(t, &jme, err)
+		// Go 1.27 names the type *xrr.Envelope, earlier releases xrr.Envelope.
 		want := "" +
-			"json: error calling MarshalJSON for type xrr.Envelope: " +
-			"json: error calling MarshalJSON for type " +
-			"*xrr.TErrMarshalJSON: msg a"
-		assert.Equal(t, want, jme.Error())
+			`^json: error calling MarshalJSON for type \*?xrr\.Envelope: ` +
+			`json: error calling MarshalJSON for type ` +
+			`\*xrr\.TErrMarshalJSON: msg a$`
+		assert.ErrorRegexp(t, want, jme)
 		assert.Nil(t, data)
 	})
 
