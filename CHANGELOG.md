@@ -1,3 +1,6 @@
+## v0.18.1 (Sat, 10 Oct 2026 19:13:59 UTC)
+- build(deps): update github.com/ctx42/testing to v0.57.0.
+
 ## v0.18.0 (Fri, 02 Oct 2026 07:41:02 UTC)
 - build: update github.com/ctx42/testing to v0.56.0.
 - fix(xrr): keep masked cause out of messages and envelopes.
