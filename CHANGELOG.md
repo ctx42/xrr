@@ -1,3 +1,6 @@
+## v0.18.2 (Thu, 15 Oct 2026 14:59:27 UTC)
+- test(xrr): accept both Envelope type names in marshal error.
+
 ## v0.18.1 (Sat, 10 Oct 2026 19:13:59 UTC)
 - build(deps): update github.com/ctx42/testing to v0.57.0.
 
