@@ -1,3 +1,7 @@
+## v0.18.3 (Sat, 17 Oct 2026 22:02:44 UTC)
+- ci: set C42_CC_RUN_ID in the workflow environment.
+- chore(deps): update dependencies.
+
 ## v0.18.2 (Thu, 15 Oct 2026 14:59:27 UTC)
 - test(xrr): accept both Envelope type names in marshal error.
 
